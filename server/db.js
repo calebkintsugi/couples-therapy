@@ -14,6 +14,8 @@ export async function initDb() {
       id TEXT PRIMARY KEY,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       unfaithful_partner TEXT CHECK (unfaithful_partner IN ('A', 'B')),
+      partner_a_name TEXT,
+      partner_b_name TEXT,
       partner_a_completed BOOLEAN DEFAULT FALSE,
       partner_b_completed BOOLEAN DEFAULT FALSE,
       partner_a_advice TEXT,
@@ -31,6 +33,14 @@ export async function initDb() {
       UNIQUE(session_id, partner, question_id)
     );
   `);
+
+  // Add name columns if they don't exist (for existing databases)
+  try {
+    await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_a_name TEXT`);
+    await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_b_name TEXT`);
+  } catch (e) {
+    // Columns may already exist
+  }
 }
 
 export default pool;

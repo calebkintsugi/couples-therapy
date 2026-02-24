@@ -23,7 +23,7 @@ router.get('/:id', async (req, res) => {
 
   try {
     const result = await db.query(
-      'SELECT id, unfaithful_partner, partner_a_completed, partner_b_completed, created_at FROM sessions WHERE id = $1',
+      'SELECT id, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed, created_at FROM sessions WHERE id = $1',
       [id]
     );
 
@@ -35,6 +35,8 @@ router.get('/:id', async (req, res) => {
     res.json({
       id: session.id,
       unfaithfulPartner: session.unfaithful_partner,
+      partnerAName: session.partner_a_name,
+      partnerBName: session.partner_b_name,
       partnerACompleted: Boolean(session.partner_a_completed),
       partnerBCompleted: Boolean(session.partner_b_completed),
       createdAt: session.created_at
@@ -68,6 +70,38 @@ router.patch('/:id/role', async (req, res) => {
   } catch (error) {
     console.error('Error setting role:', error);
     res.status(500).json({ error: 'Failed to set role' });
+  }
+});
+
+// Set partner name
+router.patch('/:id/name', async (req, res) => {
+  const { id } = req.params;
+  const { partner, name } = req.body;
+
+  if (!['A', 'B'].includes(partner)) {
+    return res.status(400).json({ error: 'Invalid partner (must be A or B)' });
+  }
+
+  if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    return res.status(400).json({ error: 'Name is required' });
+  }
+
+  const nameField = partner === 'A' ? 'partner_a_name' : 'partner_b_name';
+
+  try {
+    const result = await db.query(
+      `UPDATE sessions SET ${nameField} = $1 WHERE id = $2 RETURNING *`,
+      [name.trim(), id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error setting name:', error);
+    res.status(500).json({ error: 'Failed to set name' });
   }
 });
 

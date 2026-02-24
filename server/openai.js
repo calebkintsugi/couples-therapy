@@ -4,14 +4,16 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, unfaithfulPartner) {
+export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, unfaithfulPartner, partnerAName = 'Partner A', partnerBName = 'Partner B') {
   // Determine roles
   const partnerARole = unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed';
   const partnerBRole = unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed';
   const targetRole = targetPartner === 'A' ? partnerARole : partnerBRole;
   const otherRole = targetPartner === 'A' ? partnerBRole : partnerARole;
+  const targetName = targetPartner === 'A' ? partnerAName : partnerBName;
+  const otherName = targetPartner === 'A' ? partnerBName : partnerAName;
 
-  const formatResponses = (responses, label, role) => {
+  const formatResponses = (responses, name, role) => {
     const scaleAnswers = responses
       .filter(r => r.question_type === 'scale')
       .map(r => `- ${r.question_id}: ${r.answer}/5`)
@@ -22,11 +24,11 @@ export async function generateAdvice(partnerAResponses, partnerBResponses, targe
       .map(r => `- ${r.question_id}: "${r.answer}"`)
       .join('\n');
 
-    return `${label} (${role} partner)'s Responses:\n\nScale Questions (1-5):\n${scaleAnswers}\n\nOpen-Ended Questions:\n${textAnswers}`;
+    return `${name} (${role} partner)'s Responses:\n\nScale Questions (1-5):\n${scaleAnswers}\n\nOpen-Ended Questions:\n${textAnswers}`;
   };
 
-  const partnerAFormatted = formatResponses(partnerAResponses, 'Partner A', partnerARole);
-  const partnerBFormatted = formatResponses(partnerBResponses, 'Partner B', partnerBRole);
+  const partnerAFormatted = formatResponses(partnerAResponses, partnerAName, partnerARole);
+  const partnerBFormatted = formatResponses(partnerBResponses, partnerBName, partnerBRole);
 
   const systemPrompt = `You are a direct, insightful relationship coach specializing in helping couples navigate healing after infidelity. You provide honest, specific guidance - not generic platitudes. You analyze the actual data provided and give real, actionable insights.
 
@@ -42,13 +44,11 @@ Guardrails for balanced honesty:
 - PRIORITIZE SAFETY: If the emotional_safety scores are very low (1-2), prioritize "Establishing Boundaries" over "Rebuilding Intimacy."
 - THE "WE" VS "I" CHECK: Look at how they use collective vs individual language in their open-ended responses. If one says "we" and the other says "I/me," flag this as a blind spot about shared vs individual framing.`;
 
-  const otherPartner = targetPartner === 'A' ? 'B' : 'A';
-
   const userPrompt = `Analyze these questionnaire responses from a couple dealing with infidelity.
 
-Partner A is the ${partnerARole} partner. Partner B is the ${partnerBRole} partner.
+${partnerAName} is the ${partnerARole} partner. ${partnerBName} is the ${partnerBRole} partner.
 
-Write a report specifically for Partner ${targetPartner} (the ${targetRole} partner).
+Write a report specifically for ${targetName} (the ${targetRole} partner). Address them directly by name.
 
 ${partnerAFormatted}
 

@@ -17,11 +17,13 @@ function Questionnaire() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // Flow state: 'role' -> 'share' -> 'questions' (Partner A)
-  // Flow state: 'role-display' -> 'questions' (Partner B)
+  // Flow state: 'name' -> 'role' -> 'share' -> 'questions' (Partner A)
+  // Flow state: 'name' -> 'role-display' -> 'questions' (Partner B)
   const [step, setStep] = useState('loading');
   const [role, setRole] = useState(null); // 'betrayed' or 'unfaithful'
   const [sessionData, setSessionData] = useState(null);
+  const [name, setName] = useState('');
+  const [partnerName, setPartnerName] = useState('');
 
   const allQuestions = [...scaleQuestions, ...textQuestions];
   const totalQuestions = allQuestions.length;
@@ -47,26 +49,66 @@ function Questionnaire() {
         setSessionData(data);
 
         if (partner === 'A') {
-          // Partner A: check if role already set
-          if (data.unfaithfulPartner) {
-            setRole(data.unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed');
-            setStep('share');
+          // Partner A
+          if (data.partnerAName) {
+            setName(data.partnerAName);
+            if (data.unfaithfulPartner) {
+              setRole(data.unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed');
+              setStep('share');
+            } else {
+              setStep('role');
+            }
           } else {
-            setStep('role');
+            setStep('name');
           }
         } else {
-          // Partner B: show their role based on what A selected
-          if (data.unfaithfulPartner) {
-            setRole(data.unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed');
-            setStep('role-display');
+          // Partner B
+          setPartnerName(data.partnerAName || 'Your partner');
+          if (data.partnerBName) {
+            setName(data.partnerBName);
+            if (data.unfaithfulPartner) {
+              setRole(data.unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed');
+              setStep('role-display');
+            } else {
+              setStep('questions');
+            }
           } else {
-            // Partner A hasn't set role yet - unusual but handle it
-            setStep('questions');
+            setStep('name');
           }
         }
       })
       .catch(() => navigate('/'));
   }, [sessionId, partner, navigate]);
+
+  const handleNameSubmit = async () => {
+    if (!name.trim()) return;
+
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/name`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partner, name: name.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save name');
+      }
+
+      if (partner === 'A') {
+        setStep('role');
+      } else {
+        // Partner B - check if role is set
+        if (sessionData?.unfaithfulPartner) {
+          setRole(sessionData.unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed');
+          setStep('role-display');
+        } else {
+          setStep('questions');
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const handleRoleSelect = async (selectedRole) => {
     const unfaithfulPartner = selectedRole === 'unfaithful' ? 'A' : 'B';
@@ -171,11 +213,44 @@ function Questionnaire() {
     );
   }
 
+  // Name input
+  if (step === 'name') {
+    return (
+      <div className="card">
+        <h2>Welcome</h2>
+        <p style={{ marginBottom: '1.5rem' }}>
+          {partner === 'A'
+            ? 'Before we begin, how would you like to be called?'
+            : `${partnerName} has invited you to complete this questionnaire. How would you like to be called?`}
+        </p>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter your name or nickname"
+          style={{ marginBottom: '1.5rem' }}
+          onKeyDown={(e) => e.key === 'Enter' && name.trim() && handleNameSubmit()}
+        />
+
+        <button
+          className="btn btn-primary btn-block"
+          onClick={handleNameSubmit}
+          disabled={!name.trim()}
+        >
+          Continue
+        </button>
+      </div>
+    );
+  }
+
   // Partner A: Role selection
   if (step === 'role') {
     return (
       <div className="card">
-        <h2>Before We Begin</h2>
+        <h2>Hi {name}</h2>
         <p style={{ marginBottom: '2rem' }}>
           To provide the most relevant guidance, please indicate your role in this situation:
         </p>
@@ -206,7 +281,7 @@ function Questionnaire() {
       <div className="card">
         <h2>Share With Your Partner</h2>
         <p>
-          You identified as the <strong>{role}</strong> partner.
+          Thanks, {name}. You identified as the <strong>{role}</strong> partner.
         </p>
         <p>
           Share this link with your partner so they can complete their questionnaire:
@@ -228,10 +303,9 @@ function Questionnaire() {
   if (step === 'role-display') {
     return (
       <div className="card">
-        <h2>Welcome</h2>
+        <h2>Hi {name}</h2>
         <p style={{ marginBottom: '2rem' }}>
-          Your partner has invited you to complete this questionnaire. Based on their response,
-          you are participating as the <strong>{role}</strong> partner.
+          Based on {partnerName}&apos;s response, you are participating as the <strong>{role}</strong> partner.
         </p>
         <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
           Continue to Questionnaire
@@ -243,9 +317,7 @@ function Questionnaire() {
   // Questions
   return (
     <div className="card">
-      <h2>
-        {role ? `${role.charAt(0).toUpperCase() + role.slice(1)} Partner` : `Partner ${partner}`}&apos;s Questionnaire
-      </h2>
+      <h2>{name}&apos;s Questionnaire</h2>
 
       {currentQuestion === 0 && <Disclaimer />}
 
