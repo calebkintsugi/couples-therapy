@@ -9,6 +9,7 @@ function Results() {
 
   const [advice, setAdvice] = useState('');
   const [loading, setLoading] = useState(true);
+  const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -36,6 +37,26 @@ function Results() {
 
     fetchAdvice();
   }, [sessionId, partner, navigate]);
+
+  const regenerateAdvice = async () => {
+    setRegenerating(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/advice/${partner}?regenerate=true`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to regenerate advice');
+      }
+
+      setAdvice(data.advice);
+    } catch (err) {
+      setError(err.message);
+      console.error(err);
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -117,13 +138,23 @@ function Results() {
         </p>
       </div>
 
-      <button
-        className="btn btn-secondary btn-block"
-        onClick={() => navigate('/')}
-        style={{ marginTop: '2rem' }}
-      >
-        Start a New Session
-      </button>
+      <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
+        <button
+          className="btn btn-primary"
+          onClick={regenerateAdvice}
+          disabled={regenerating}
+          style={{ flex: 1 }}
+        >
+          {regenerating ? 'Regenerating...' : 'Regenerate Advice'}
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={() => navigate('/')}
+          style={{ flex: 1 }}
+        >
+          Start a New Session
+        </button>
+      </div>
     </div>
   );
 }

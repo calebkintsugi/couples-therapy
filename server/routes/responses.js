@@ -93,6 +93,7 @@ router.post('/:sessionId/responses', async (req, res) => {
 // Get advice for a partner
 router.get('/:sessionId/advice/:partner', async (req, res) => {
   const { sessionId, partner } = req.params;
+  const regenerate = req.query.regenerate === 'true';
 
   if (!['A', 'B'].includes(partner)) {
     return res.status(400).json({ error: 'Invalid partner (must be A or B)' });
@@ -116,8 +117,8 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
     const adviceField = partner === 'A' ? 'partner_a_advice' : 'partner_b_advice';
     let advice = session[adviceField];
 
-    // If advice not yet generated, try to generate it now
-    if (!advice) {
+    // If advice not yet generated OR regenerate requested, generate it
+    if (!advice || regenerate) {
       const partnerAResponses = db.prepare(
         'SELECT question_id, question_type, answer FROM responses WHERE session_id = ? AND partner = ?'
       ).all(sessionId, 'A');
