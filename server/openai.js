@@ -58,36 +58,38 @@ The scale questions measure (1=low, 5=high): trust (current trust level), commit
 
 The open-ended questions ask: tangible_action (one specific action their partner could take this week to help them feel secure), biggest_wall (the single biggest obstacle preventing them from moving forward), hesitant_thought (a thought/fear/realization they've been hesitant to share), own_struggle (an area where they've struggled to show up as the partner they want to be), do_differently (what they wish they could do differently to help healing).
 
-Write a personalized report in paragraph form. Use this exact structure:
+Write a personalized report using numbered lists. Use this exact structure:
 
-**The Mirror: 5 Observations**
+THE MIRROR: 5 OBSERVATIONS
 
-Write a paragraph with 5 observations that highlight the INTERSECTIONS between both partners' responses. Don't just list facts—show how both partners may be prioritizing the same things but going about them in ways that create conflict. Use this framing: "I see that both of you are currently prioritizing X, but you are going about it in ways that are causing Y." Focus on shared goals vs. divergent methods.
+Write 5 numbered observations (1. 2. 3. 4. 5.) that highlight the INTERSECTIONS between both partners' responses. Don't just list facts—show how both partners may be prioritizing the same things but going about them in ways that create conflict. Use framing like: "I see that both of you are currently prioritizing X, but you are going about it in ways that are causing Y." Focus on shared goals vs. divergent methods.
 
-**The Deep Dive: 5 Under-the-Surface Insights**
+THE DEEP DIVE: 5 UNDER-THE-SURFACE INSIGHTS
 
-This is where you prove your worth by reading between the lines. Use the open-ended questions (especially "hesitant_thought" and "own_struggle") to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Example framing: "While you are asking for more space, under the surface, it appears you are actually grieving the loss of the version of yourself you were before this happened." Be insightful and specific to what they wrote.
+Write 5 numbered insights (1. 2. 3. 4. 5.) that read between the lines. Use the open-ended questions (especially "hesitant_thought" and "own_struggle") to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Example framing: "While you are asking for more space, under the surface, it appears you are actually grieving the loss of the version of yourself you were before this happened." Be insightful and specific to what they wrote.
 
-**The Roadmap: 5 Pieces of Advice**
+THE ROADMAP: 5 PIECES OF ADVICE
 
-Infidelity recovery is often paralyzed by choice overload. Structure your advice as:
-- 1 IMMEDIATE TRIAGE STEP (to stop the bleeding—what they should do TODAY)
-- 2 COMMUNICATION SCRIPTS (exact phrases or approaches they can use with their partner)
-- 2 LONG-TERM MINDSET SHIFTS (bigger picture changes in how they think about the situation)
+Write 5 numbered pieces of advice structured as:
+1. IMMEDIATE TRIAGE (to stop the bleeding—what they should do TODAY)
+2. COMMUNICATION SCRIPT #1 (an exact phrase or approach they can use with their partner)
+3. COMMUNICATION SCRIPT #2 (another specific thing to say or do)
+4. MINDSET SHIFT #1 (a bigger picture change in how they think about the situation)
+5. MINDSET SHIFT #2 (another long-term perspective shift)
 
-**The Blind Spots: 3 Critical Warnings**
+THE BLIND SPOTS: 3 CRITICAL WARNINGS
 
-This is the most candid part. Use the SCALE QUESTIONS to find DATA MISMATCHES between partners. If Partner A thinks trust is 3/5 but Partner B thinks it's 1/5, the blind spot is "The Perceived Progress Gap." Name specific blind spots like:
+Write 3 numbered blind spots (1. 2. 3.) using the SCALE QUESTIONS to find DATA MISMATCHES between partners. If Partner A thinks trust is 3/5 but Partner B thinks it's 1/5, the blind spot is "The Perceived Progress Gap." Look for:
 - Perception gaps (where their view differs from their partner's)
 - The "we" vs "I" language patterns (if one uses collective language and the other doesn't)
 - Areas where they may be overestimating their own progress or underestimating their partner's pain
 
-**The North Star: 3 Main Focus Areas**
+THE NORTH STAR: 3 MAIN FOCUS AREAS
 
-This is the "if you do nothing else, do these" section. Provide exactly 3 focus areas:
-- One for TRUST (rebuilding or establishing it)
-- One for INTIMACY/CONNECTION (emotional or physical closeness)
-- One for INDIVIDUAL HEALING (their own personal work, regardless of the relationship outcome)
+Write 3 numbered focus areas (1. 2. 3.) - the "if you do nothing else, do these" items:
+1. One for TRUST (rebuilding or establishing it)
+2. One for INTIMACY/CONNECTION (emotional or physical closeness)
+3. One for INDIVIDUAL HEALING (their own personal work, regardless of the relationship outcome)
 
 Be warm but direct throughout. Write in a conversational, empathetic tone while being honest. Don't be neutral for neutrality's sake—if the data shows one partner is doing more work than the other, say so gently. Approximately 900-1100 words total.`;
 
