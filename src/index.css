@@ -267,20 +267,20 @@ textarea {
 }
 
 .crisis-resources {
-  background: #ffebee;
-  border: 1px solid var(--error);
+  background: #e8f5e9;
+  border: 1px solid #81c784;
   border-radius: 12px;
   padding: 1.5rem;
   margin-top: 2rem;
 }
 
 .crisis-resources h4 {
-  color: #c62828;
+  color: #2e7d32;
   margin-bottom: 0.5rem;
 }
 
 .crisis-resources p {
-  color: #b71c1c;
+  color: #1b5e20;
   font-size: 0.875rem;
 }
 
