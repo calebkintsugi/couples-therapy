@@ -39,23 +39,28 @@ export const scaleQuestions = [
 
 export const textQuestions = [
   {
-    id: 'my_needs',
-    question: 'What do you most need from your partner right now for the relationship to heal?',
-    placeholder: 'Take your time to reflect and share your thoughts...',
+    id: 'tangible_action',
+    question: 'What is one specific, tangible action your partner could take this week—no matter how small—that would make you feel more emotionally secure or respected?',
+    placeholder: 'Be as specific as possible...',
   },
   {
-    id: 'partner_needs',
-    question: 'What do you believe your partner most needs from you right now?',
-    placeholder: 'Reflect on what they might be needing from you...',
+    id: 'biggest_wall',
+    question: 'What do you believe is the single biggest "wall" or obstacle currently preventing the two of you from moving forward together?',
+    placeholder: 'What feels like the main barrier right now...',
   },
   {
-    id: 'understood',
-    question: 'What do you most wish your partner better understood about you as it relates to this crisis?',
-    placeholder: 'Share what you wish they could see or understand...',
+    id: 'hesitant_thought',
+    question: 'What is a thought, fear, or realization you\'ve had recently about the relationship that you have been hesitant to share with your partner?',
+    placeholder: 'This is a safe space to be honest...',
   },
   {
-    id: 'fears',
-    question: 'What fears or concerns do you have about the recovery process?',
-    placeholder: 'It\'s okay to express your worries...',
+    id: 'own_struggle',
+    question: 'Reflecting on your own reactions and behaviors since the crisis began, what is one area where you feel you\'ve struggled to show up as the partner you want to be?',
+    placeholder: 'Reflect on your own growth areas...',
+  },
+  {
+    id: 'do_differently',
+    question: 'What do you wish you could do differently to help the healing of this marriage?',
+    placeholder: 'What would you change about your own approach...',
   },
 ];
