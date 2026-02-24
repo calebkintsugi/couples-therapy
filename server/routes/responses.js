@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
-import { generateAdvice } from '../openai.js';
+import { generateAdvice, chatFollowUp } from '../openai.js';
 
 const router = Router();
 
@@ -142,10 +142,55 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
       );
     }
 
-    res.json({ advice });
+    res.json({ advice, unfaithfulPartner: session.unfaithful_partner });
   } catch (error) {
     console.error('Error fetching advice:', error);
     res.status(500).json({ error: 'Failed to fetch advice' });
+  }
+});
+
+// Chat follow-up endpoint
+router.post('/:sessionId/chat/:partner', async (req, res) => {
+  const { sessionId, partner } = req.params;
+  const { message, conversationHistory } = req.body;
+
+  if (!['A', 'B'].includes(partner)) {
+    return res.status(400).json({ error: 'Invalid partner (must be A or B)' });
+  }
+
+  if (!message || typeof message !== 'string') {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+
+  try {
+    const sessionResult = await db.query('SELECT * FROM sessions WHERE id = $1', [sessionId]);
+
+    if (sessionResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const session = sessionResult.rows[0];
+    const adviceField = partner === 'A' ? 'partner_a_advice' : 'partner_b_advice';
+    const advice = session[adviceField];
+
+    if (!advice) {
+      return res.status(400).json({ error: 'No advice found for this partner' });
+    }
+
+    // Determine role
+    const targetRole = session.unfaithful_partner === partner ? 'unfaithful' : 'betrayed';
+
+    const response = await chatFollowUp(
+      advice,
+      conversationHistory || [],
+      message,
+      targetRole
+    );
+
+    res.json({ response });
+  } catch (error) {
+    console.error('Error in chat:', error);
+    res.status(500).json({ error: 'Failed to process chat message' });
   }
 });
 

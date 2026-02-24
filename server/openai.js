@@ -53,24 +53,25 @@ The scale questions measure: trust (current trust level), commitment (how import
 
 The open-ended questions ask: my_needs (what they need from their partner), partner_needs (what they believe their partner needs from them), understood (what they wish their partner better understood about them), fears (their fears about recovery).
 
-Write a detailed, personalized report with these exact sections:
+Write a personalized report in paragraph form (not bullet points or numbered lists within sections). Use this exact structure:
 
-## 1. Where Things Stand: An Honest Assessment
-Give your honest assessment of this relationship based on all the responses. How hopeful are you as a coach looking at this data? What is the overall health of this relationship right now? What do you see as the most critical thing needed for this relationship to heal? Don't just recite scores back - synthesize everything into a clear-eyed view of where they are.
+**This is what I'm seeing in your relationship:**
 
-## 2. What Your Partner Needs From You
-Based specifically on what the ${otherRole} partner (Partner ${otherPartner}) wrote in their open-ended responses, what are they asking for? Quote their actual words. What concrete actions would address their stated needs? Be specific to what they wrote, not generic advice. Consider how their needs relate to their role as the ${otherRole} partner.
+Write a flowing paragraph that weaves together 5 key observations about the current state of the relationship. Ground each observation in specific scores or quotes from the responses. Address the dynamics between the ${targetRole} and ${otherRole} partner directly.
 
-## 3. What You Both Need to Do
-Based on both partners' responses, what shared work is needed? Where do your answers align or conflict? What would a path forward look like that honors both people's stated needs?
+**Here are 5 things happening under the surface that you might not be naming:**
 
-## 4. Difficult Truths
-What hard realities do the responses reveal that you, as the ${targetRole} partner, need to hear? Don't shy away from uncomfortable observations. If there are concerning patterns or gaps, name them directly. Address what you specifically need to confront given your role in this situation.
+Write a paragraph that surfaces 5 deeper dynamics, unspoken tensions, or patterns that the responses reveal but the couple may not be consciously aware of. Be insightful and direct. These should be things that require reading between the lines.
 
-## 5. Reasons for Hope — And Should You Keep Going?
-What genuine positive signs exist in the responses? Where is there alignment? What strengths can be built upon? Only cite real evidence from their answers - no false optimism. Finally, give your honest opinion: based on what you see in these responses, should this couple keep working on the marriage, or is divorce worth considering? Be direct.
+**Here are 5 pieces of advice:**
 
-Be direct and specific throughout. Reference actual scores and quotes. Avoid generic relationship advice - everything should be grounded in what these two people actually wrote. Approximately 600-800 words.`;
+Write a paragraph containing 5 specific, actionable pieces of advice tailored to this person as the ${targetRole} partner. Each piece of advice should connect to something specific from the questionnaire responses.
+
+**If you want to improve this relationship, here are the 3 main things I would focus on:**
+
+Write a concluding paragraph with the 3 most important priorities. Be direct about what matters most and why. If appropriate, include an honest assessment of whether continuing to work on this relationship makes sense based on what you see.
+
+Be warm but direct throughout. Write in a conversational, empathetic tone while still being honest. Reference specific answers and scores naturally within your paragraphs. Approximately 700-900 words total.`;
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
@@ -80,6 +81,35 @@ Be direct and specific throughout. Reference actual scores and quotes. Avoid gen
     ],
     temperature: 0.7,
     max_tokens: 1500,
+  });
+
+  return response.choices[0].message.content;
+}
+
+export async function chatFollowUp(initialAdvice, conversationHistory, userMessage, targetRole) {
+  const systemPrompt = `You are a compassionate relationship coach continuing a conversation about healing after infidelity. You previously provided advice to the ${targetRole} partner, and now they have follow-up questions.
+
+Your initial advice was:
+${initialAdvice}
+
+Guidelines:
+- You are NOT a licensed therapist - recommend professional help for serious concerns
+- Be warm, direct, and helpful
+- Stay grounded in the context of their relationship situation
+- Give specific, actionable guidance
+- Keep responses concise but thorough (2-4 paragraphs typically)`;
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...conversationHistory,
+    { role: 'user', content: userMessage }
+  ];
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages,
+    temperature: 0.7,
+    max_tokens: 800,
   });
 
   return response.choices[0].message.content;
