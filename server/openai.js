@@ -49,7 +49,7 @@ ${partnerAFormatted}
 
 ${partnerBFormatted}
 
-The scale questions measure: trust (current trust level), commitment (how important it is to stay married and rebuild to a place of love, health, and trust), personal_change (how much they've changed their approach to the marriage since the crisis), safety (feeling safe to express feelings), partner_safety (how safe they believe their partner feels expressing feelings to them), hope (hopefulness about the future).
+The scale questions measure (1=low, 5=high): trust (current trust level), commitment (commitment to doing the difficult emotional work to stay together), transparency (satisfaction with honesty and open-book communication), emotional_safety (feeling safe sharing triggers or difficult thoughts without it becoming a fight), empathy_gap (how much they feel their partner understands their pain/stress), hope (belief that a "Version 2.0" of the relationship is possible).
 
 The open-ended questions ask: my_needs (what they need from their partner), partner_needs (what they believe their partner needs from them), understood (what they wish their partner better understood about them), fears (their fears about recovery).
 
