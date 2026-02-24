@@ -58,7 +58,9 @@ The scale questions measure (1=low, 5=high): trust (current trust level), commit
 
 The open-ended questions ask: tangible_action (one specific action their partner could take this week to help them feel secure), biggest_wall (the single biggest obstacle preventing them from moving forward), hesitant_thought (a thought/fear/realization they've been hesitant to share), own_struggle (an area where they've struggled to show up as the partner they want to be), do_differently (what they wish they could do differently to help healing).
 
-Write a personalized report using numbered lists. Use this exact structure:
+Write a personalized report using numbered lists. IMPORTANT: Do NOT use any markdown formatting - no asterisks, no hashtags, no bold, no headers. Just plain text with section titles in ALL CAPS on their own line.
+
+Use this exact structure:
 
 WHAT I'M SEEING
 
@@ -89,7 +91,9 @@ Write 3 numbered focus areas (1. 2. 3.) - the "if you do nothing else, do these"
 2. One for INTIMACY/CONNECTION (emotional or physical closeness)
 3. One for INDIVIDUAL HEALING (their own personal work, regardless of the relationship outcome)
 
-Be warm but direct throughout. Write in a conversational, empathetic tone while being honest. Don't be neutral for neutrality's sake—if the data shows one partner is doing more work than the other, say so gently. Approximately 600-800 words total.`;
+Be warm but direct throughout. Write in a conversational, empathetic tone while being honest. Don't be neutral for neutrality's sake—if the data shows one partner is doing more work than the other, say so gently. Approximately 600-800 words total.
+
+CRITICAL: Output plain text only. No markdown, no asterisks (*), no hashtags (#), no bold formatting. Section headers should just be plain text in ALL CAPS on their own line.`;
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
