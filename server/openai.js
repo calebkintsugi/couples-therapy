@@ -60,29 +60,29 @@ The open-ended questions ask: tangible_action (one specific action their partner
 
 Write a personalized report using numbered lists. Use this exact structure:
 
-THE MIRROR: 3 OBSERVATIONS
+WHAT I'M SEEING
 
 Write 3 numbered observations (1. 2. 3.) that highlight the INTERSECTIONS between both partners' responses. Don't just list facts—show how both partners may be prioritizing the same things but going about them in ways that create conflict. Use framing like: "I see that both of you are currently prioritizing X, but you are going about it in ways that are causing Y." Focus on shared goals vs. divergent methods.
 
-THE DEEP DIVE: 3 UNDER-THE-SURFACE INSIGHTS
+WHAT'S HAPPENING UNDER-THE-SURFACE
 
 Write 3 numbered insights (1. 2. 3.) that read between the lines. Use the open-ended questions (especially "hesitant_thought" and "own_struggle") to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Example framing: "While you are asking for more space, under the surface, it appears you are actually grieving the loss of the version of yourself you were before this happened." Be insightful and specific to what they wrote.
 
-THE ROADMAP: 3 PIECES OF ADVICE
+A ROADMAP FORWARD
 
 Write 3 numbered pieces of advice structured as:
 1. IMMEDIATE TRIAGE (to stop the bleeding—what they should do TODAY)
 2. COMMUNICATION SCRIPT (an exact phrase or approach they can use with their partner)
 3. MINDSET SHIFT (a bigger picture change in how they think about the situation)
 
-THE BLIND SPOTS: 3 CRITICAL WARNINGS
+BLIND SPOTS
 
 Write 3 numbered blind spots (1. 2. 3.) using the SCALE QUESTIONS to find DATA MISMATCHES between partners. If Partner A thinks trust is 3/5 but Partner B thinks it's 1/5, the blind spot is "The Perceived Progress Gap." Look for:
 - Perception gaps (where their view differs from their partner's)
 - The "we" vs "I" language patterns (if one uses collective language and the other doesn't)
 - Areas where they may be overestimating their own progress or underestimating their partner's pain
 
-THE NORTH STAR: 3 MAIN FOCUS AREAS
+FOCUS AREAS
 
 Write 3 numbered focus areas (1. 2. 3.) - the "if you do nothing else, do these" items:
 1. One for TRUST (rebuilding or establishing it)
