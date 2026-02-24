@@ -60,22 +60,20 @@ The open-ended questions ask: tangible_action (one specific action their partner
 
 Write a personalized report using numbered lists. Use this exact structure:
 
-THE MIRROR: 5 OBSERVATIONS
+THE MIRROR: 3 OBSERVATIONS
 
-Write 5 numbered observations (1. 2. 3. 4. 5.) that highlight the INTERSECTIONS between both partners' responses. Don't just list facts—show how both partners may be prioritizing the same things but going about them in ways that create conflict. Use framing like: "I see that both of you are currently prioritizing X, but you are going about it in ways that are causing Y." Focus on shared goals vs. divergent methods.
+Write 3 numbered observations (1. 2. 3.) that highlight the INTERSECTIONS between both partners' responses. Don't just list facts—show how both partners may be prioritizing the same things but going about them in ways that create conflict. Use framing like: "I see that both of you are currently prioritizing X, but you are going about it in ways that are causing Y." Focus on shared goals vs. divergent methods.
 
-THE DEEP DIVE: 5 UNDER-THE-SURFACE INSIGHTS
+THE DEEP DIVE: 3 UNDER-THE-SURFACE INSIGHTS
 
-Write 5 numbered insights (1. 2. 3. 4. 5.) that read between the lines. Use the open-ended questions (especially "hesitant_thought" and "own_struggle") to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Example framing: "While you are asking for more space, under the surface, it appears you are actually grieving the loss of the version of yourself you were before this happened." Be insightful and specific to what they wrote.
+Write 3 numbered insights (1. 2. 3.) that read between the lines. Use the open-ended questions (especially "hesitant_thought" and "own_struggle") to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Example framing: "While you are asking for more space, under the surface, it appears you are actually grieving the loss of the version of yourself you were before this happened." Be insightful and specific to what they wrote.
 
-THE ROADMAP: 5 PIECES OF ADVICE
+THE ROADMAP: 3 PIECES OF ADVICE
 
-Write 5 numbered pieces of advice structured as:
+Write 3 numbered pieces of advice structured as:
 1. IMMEDIATE TRIAGE (to stop the bleeding—what they should do TODAY)
-2. COMMUNICATION SCRIPT #1 (an exact phrase or approach they can use with their partner)
-3. COMMUNICATION SCRIPT #2 (another specific thing to say or do)
-4. MINDSET SHIFT #1 (a bigger picture change in how they think about the situation)
-5. MINDSET SHIFT #2 (another long-term perspective shift)
+2. COMMUNICATION SCRIPT (an exact phrase or approach they can use with their partner)
+3. MINDSET SHIFT (a bigger picture change in how they think about the situation)
 
 THE BLIND SPOTS: 3 CRITICAL WARNINGS
 
@@ -91,7 +89,7 @@ Write 3 numbered focus areas (1. 2. 3.) - the "if you do nothing else, do these"
 2. One for INTIMACY/CONNECTION (emotional or physical closeness)
 3. One for INDIVIDUAL HEALING (their own personal work, regardless of the relationship outcome)
 
-Be warm but direct throughout. Write in a conversational, empathetic tone while being honest. Don't be neutral for neutrality's sake—if the data shows one partner is doing more work than the other, say so gently. Approximately 900-1100 words total.`;
+Be warm but direct throughout. Write in a conversational, empathetic tone while being honest. Don't be neutral for neutrality's sake—if the data shows one partner is doing more work than the other, say so gently. Approximately 600-800 words total.`;
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
