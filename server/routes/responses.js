@@ -19,10 +19,11 @@ router.post('/:sessionId/responses', async (req, res) => {
 
   try {
     // Check if session exists
-    const session = db.prepare('SELECT * FROM sessions WHERE id = ?').get(sessionId);
-    if (!session) {
+    const sessionResult = await db.query('SELECT * FROM sessions WHERE id = $1', [sessionId]);
+    if (sessionResult.rows.length === 0) {
       return res.status(404).json({ error: 'Session not found' });
     }
+    const session = sessionResult.rows[0];
 
     // Check if partner already completed
     const completedField = partner === 'A' ? 'partner_a_completed' : 'partner_b_completed';
@@ -31,46 +32,48 @@ router.post('/:sessionId/responses', async (req, res) => {
     }
 
     // Insert responses
-    const insertStmt = db.prepare(`
-      INSERT OR REPLACE INTO responses (session_id, partner, question_id, question_type, answer)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-
-    const insertMany = db.transaction((responses) => {
-      for (const response of responses) {
-        insertStmt.run(sessionId, partner, response.questionId, response.type, response.answer);
-      }
-    });
-
-    insertMany(responses);
+    for (const response of responses) {
+      await db.query(
+        `INSERT INTO responses (session_id, partner, question_id, question_type, answer)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (session_id, partner, question_id) DO UPDATE SET answer = $5`,
+        [sessionId, partner, response.questionId, response.type, response.answer]
+      );
+    }
 
     // Mark partner as completed
-    db.prepare(`UPDATE sessions SET ${completedField} = 1 WHERE id = ?`).run(sessionId);
+    await db.query(
+      `UPDATE sessions SET ${completedField} = TRUE WHERE id = $1`,
+      [sessionId]
+    );
 
     // Check if both partners have completed
-    const updatedSession = db.prepare('SELECT * FROM sessions WHERE id = ?').get(sessionId);
+    const updatedResult = await db.query('SELECT * FROM sessions WHERE id = $1', [sessionId]);
+    const updatedSession = updatedResult.rows[0];
     const bothCompleted = updatedSession.partner_a_completed && updatedSession.partner_b_completed;
 
     // If both completed, generate advice
     if (bothCompleted && !updatedSession.partner_a_advice) {
       try {
-        const partnerAResponses = db.prepare(
-          'SELECT question_id, question_type, answer FROM responses WHERE session_id = ? AND partner = ?'
-        ).all(sessionId, 'A');
-
-        const partnerBResponses = db.prepare(
-          'SELECT question_id, question_type, answer FROM responses WHERE session_id = ? AND partner = ?'
-        ).all(sessionId, 'B');
+        const partnerAResult = await db.query(
+          'SELECT question_id, question_type, answer FROM responses WHERE session_id = $1 AND partner = $2',
+          [sessionId, 'A']
+        );
+        const partnerBResult = await db.query(
+          'SELECT question_id, question_type, answer FROM responses WHERE session_id = $1 AND partner = $2',
+          [sessionId, 'B']
+        );
 
         // Generate advice for both partners
         const [adviceA, adviceB] = await Promise.all([
-          generateAdvice(partnerAResponses, partnerBResponses, 'A'),
-          generateAdvice(partnerAResponses, partnerBResponses, 'B')
+          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'A'),
+          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B')
         ]);
 
-        db.prepare(`
-          UPDATE sessions SET partner_a_advice = ?, partner_b_advice = ? WHERE id = ?
-        `).run(adviceA, adviceB, sessionId);
+        await db.query(
+          'UPDATE sessions SET partner_a_advice = $1, partner_b_advice = $2 WHERE id = $3',
+          [adviceA, adviceB, sessionId]
+        );
       } catch (aiError) {
         console.error('Error generating advice:', aiError);
         // Continue without failing - advice can be generated later
@@ -100,11 +103,13 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
   }
 
   try {
-    const session = db.prepare('SELECT * FROM sessions WHERE id = ?').get(sessionId);
+    const sessionResult = await db.query('SELECT * FROM sessions WHERE id = $1', [sessionId]);
 
-    if (!session) {
+    if (sessionResult.rows.length === 0) {
       return res.status(404).json({ error: 'Session not found' });
     }
+
+    const session = sessionResult.rows[0];
 
     if (!session.partner_a_completed || !session.partner_b_completed) {
       return res.status(400).json({
@@ -119,17 +124,21 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
 
     // If advice not yet generated OR regenerate requested, generate it
     if (!advice || regenerate) {
-      const partnerAResponses = db.prepare(
-        'SELECT question_id, question_type, answer FROM responses WHERE session_id = ? AND partner = ?'
-      ).all(sessionId, 'A');
+      const partnerAResult = await db.query(
+        'SELECT question_id, question_type, answer FROM responses WHERE session_id = $1 AND partner = $2',
+        [sessionId, 'A']
+      );
+      const partnerBResult = await db.query(
+        'SELECT question_id, question_type, answer FROM responses WHERE session_id = $1 AND partner = $2',
+        [sessionId, 'B']
+      );
 
-      const partnerBResponses = db.prepare(
-        'SELECT question_id, question_type, answer FROM responses WHERE session_id = ? AND partner = ?'
-      ).all(sessionId, 'B');
+      advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner);
 
-      advice = await generateAdvice(partnerAResponses, partnerBResponses, partner);
-
-      db.prepare(`UPDATE sessions SET ${adviceField} = ? WHERE id = ?`).run(advice, sessionId);
+      await db.query(
+        `UPDATE sessions SET ${adviceField} = $1 WHERE id = $2`,
+        [advice, sessionId]
+      );
     }
 
     res.json({ advice });
