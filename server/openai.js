@@ -67,11 +67,15 @@ Write a paragraph that surfaces 5 deeper dynamics, unspoken tensions, or pattern
 
 Write a paragraph containing 5 specific, actionable pieces of advice tailored to this person as the ${targetRole} partner. Each piece of advice should connect to something specific from the questionnaire responses.
 
+**Here are 3 possible blind spots you might have:**
+
+Write a paragraph identifying 3 blind spots this person may have based on their responses—things they might not see about themselves, ways their perception might differ from their partner's reality, or patterns in their thinking that could be holding them back. Be compassionate but honest.
+
 **If you want to improve this relationship, here are the 3 main things I would focus on:**
 
 Write a concluding paragraph with the 3 most important priorities. Be direct about what matters most and why. If appropriate, include an honest assessment of whether continuing to work on this relationship makes sense based on what you see.
 
-Be warm but direct throughout. Write in a conversational, empathetic tone while still being honest. Reference specific answers and scores naturally within your paragraphs. Approximately 700-900 words total.`;
+Be warm but direct throughout. Write in a conversational, empathetic tone while still being honest. Reference specific answers and scores naturally within your paragraphs. Approximately 800-1000 words total.`;
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
@@ -80,7 +84,7 @@ Be warm but direct throughout. Write in a conversational, empathetic tone while 
       { role: 'user', content: userPrompt }
     ],
     temperature: 0.7,
-    max_tokens: 1500,
+    max_tokens: 2000,
   });
 
   return response.choices[0].message.content;
