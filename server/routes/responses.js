@@ -65,9 +65,10 @@ router.post('/:sessionId/responses', async (req, res) => {
         );
 
         // Generate advice for both partners
+        const unfaithfulPartner = updatedSession.unfaithful_partner;
         const [adviceA, adviceB] = await Promise.all([
-          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'A'),
-          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B')
+          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'A', unfaithfulPartner),
+          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B', unfaithfulPartner)
         ]);
 
         await db.query(
@@ -133,7 +134,7 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
         [sessionId, 'B']
       );
 
-      advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner);
+      advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner, session.unfaithful_partner);
 
       await db.query(
         `UPDATE sessions SET ${adviceField} = $1 WHERE id = $2`,

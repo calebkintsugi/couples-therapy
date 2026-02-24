@@ -23,7 +23,7 @@ router.get('/:id', async (req, res) => {
 
   try {
     const result = await db.query(
-      'SELECT id, partner_a_completed, partner_b_completed, created_at FROM sessions WHERE id = $1',
+      'SELECT id, unfaithful_partner, partner_a_completed, partner_b_completed, created_at FROM sessions WHERE id = $1',
       [id]
     );
 
@@ -34,6 +34,7 @@ router.get('/:id', async (req, res) => {
     const session = result.rows[0];
     res.json({
       id: session.id,
+      unfaithfulPartner: session.unfaithful_partner,
       partnerACompleted: Boolean(session.partner_a_completed),
       partnerBCompleted: Boolean(session.partner_b_completed),
       createdAt: session.created_at
@@ -41,6 +42,32 @@ router.get('/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching session:', error);
     res.status(500).json({ error: 'Failed to fetch session' });
+  }
+});
+
+// Set unfaithful partner (called by Partner A)
+router.patch('/:id/role', async (req, res) => {
+  const { id } = req.params;
+  const { unfaithfulPartner } = req.body;
+
+  if (!['A', 'B'].includes(unfaithfulPartner)) {
+    return res.status(400).json({ error: 'Invalid role (must be A or B)' });
+  }
+
+  try {
+    const result = await db.query(
+      'UPDATE sessions SET unfaithful_partner = $1 WHERE id = $2 RETURNING *',
+      [unfaithfulPartner, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error setting role:', error);
+    res.status(500).json({ error: 'Failed to set role' });
   }
 });
 

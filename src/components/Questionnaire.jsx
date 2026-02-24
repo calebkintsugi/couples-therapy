@@ -15,8 +15,13 @@ function Questionnaire() {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [showShareLink, setShowShareLink] = useState(partner === 'A');
   const [copied, setCopied] = useState(false);
+
+  // Flow state: 'role' -> 'share' -> 'questions' (Partner A)
+  // Flow state: 'role-display' -> 'questions' (Partner B)
+  const [step, setStep] = useState('loading');
+  const [role, setRole] = useState(null); // 'betrayed' or 'unfaithful'
+  const [sessionData, setSessionData] = useState(null);
 
   const allQuestions = [...scaleQuestions, ...textQuestions];
   const totalQuestions = allQuestions.length;
@@ -28,15 +33,61 @@ function Questionnaire() {
   const partnerBLink = `${window.location.origin}/session/${sessionId}?partner=B`;
 
   useEffect(() => {
-    // Verify session exists
+    // Fetch session data
     fetch(`/api/sessions/${sessionId}`)
       .then((res) => {
         if (!res.ok) {
           navigate('/');
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        setSessionData(data);
+
+        if (partner === 'A') {
+          // Partner A: check if role already set
+          if (data.unfaithfulPartner) {
+            setRole(data.unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed');
+            setStep('share');
+          } else {
+            setStep('role');
+          }
+        } else {
+          // Partner B: show their role based on what A selected
+          if (data.unfaithfulPartner) {
+            setRole(data.unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed');
+            setStep('role-display');
+          } else {
+            // Partner A hasn't set role yet - unusual but handle it
+            setStep('questions');
+          }
         }
       })
       .catch(() => navigate('/'));
-  }, [sessionId, navigate]);
+  }, [sessionId, partner, navigate]);
+
+  const handleRoleSelect = async (selectedRole) => {
+    const unfaithfulPartner = selectedRole === 'unfaithful' ? 'A' : 'B';
+
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/role`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ unfaithfulPartner }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save role');
+      }
+
+      setRole(selectedRole);
+      setStep('share');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const handleAnswer = (value) => {
     setAnswers((prev) => ({
@@ -111,24 +162,61 @@ function Questionnaire() {
     }
   };
 
-  const dismissShareLink = () => {
-    setShowShareLink(false);
-  };
+  // Loading state
+  if (step === 'loading') {
+    return (
+      <div className="card">
+        <div className="loading">Loading...</div>
+      </div>
+    );
+  }
 
-  if (showShareLink && partner === 'A' && currentQuestion === 0) {
+  // Partner A: Role selection
+  if (step === 'role') {
+    return (
+      <div className="card">
+        <h2>Before We Begin</h2>
+        <p style={{ marginBottom: '2rem' }}>
+          To provide the most relevant guidance, please indicate your role in this situation:
+        </p>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <button
+            className="btn btn-primary btn-block"
+            onClick={() => handleRoleSelect('betrayed')}
+          >
+            I am the betrayed partner
+          </button>
+          <button
+            className="btn btn-primary btn-block"
+            onClick={() => handleRoleSelect('unfaithful')}
+          >
+            I am the unfaithful partner
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Partner A: Share link
+  if (step === 'share') {
     return (
       <div className="card">
         <h2>Share With Your Partner</h2>
         <p>
-          Before you begin, share this link with your partner so they can complete
-          their questionnaire:
+          You identified as the <strong>{role}</strong> partner.
+        </p>
+        <p>
+          Share this link with your partner so they can complete their questionnaire:
         </p>
         <div className="share-link">{partnerBLink}</div>
         <button className="btn btn-secondary copy-btn" onClick={copyLink}>
           {copied ? 'Copied!' : 'Copy Link'}
         </button>
         <div style={{ marginTop: '2rem' }}>
-          <button className="btn btn-primary btn-block" onClick={dismissShareLink}>
+          <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
             Continue to Questionnaire
           </button>
         </div>
@@ -136,9 +224,28 @@ function Questionnaire() {
     );
   }
 
+  // Partner B: Role display
+  if (step === 'role-display') {
+    return (
+      <div className="card">
+        <h2>Welcome</h2>
+        <p style={{ marginBottom: '2rem' }}>
+          Your partner has invited you to complete this questionnaire. Based on their response,
+          you are participating as the <strong>{role}</strong> partner.
+        </p>
+        <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
+          Continue to Questionnaire
+        </button>
+      </div>
+    );
+  }
+
+  // Questions
   return (
     <div className="card">
-      <h2>Partner {partner}&apos;s Questionnaire</h2>
+      <h2>
+        {role ? `${role.charAt(0).toUpperCase() + role.slice(1)} Partner` : `Partner ${partner}`}&apos;s Questionnaire
+      </h2>
 
       {currentQuestion === 0 && <Disclaimer />}
 

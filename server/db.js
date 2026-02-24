@@ -13,6 +13,7 @@ export async function initDb() {
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      unfaithful_partner TEXT CHECK (unfaithful_partner IN ('A', 'B')),
       partner_a_completed BOOLEAN DEFAULT FALSE,
       partner_b_completed BOOLEAN DEFAULT FALSE,
       partner_a_advice TEXT,
