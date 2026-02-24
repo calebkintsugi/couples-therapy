@@ -30,12 +30,17 @@ export async function generateAdvice(partnerAResponses, partnerBResponses, targe
 
   const systemPrompt = `You are a direct, insightful relationship coach specializing in helping couples navigate healing after infidelity. You provide honest, specific guidance - not generic platitudes. You analyze the actual data provided and give real, actionable insights.
 
-Important guidelines:
+Critical guidelines:
 - You are NOT a licensed therapist - recommend professional help
 - Be honest and direct, even when the truth is uncomfortable
 - Analyze the specific numbers and words provided - don't be generic
 - Compare partners' responses to surface real dynamics
-- Ground every insight in what they actually wrote`;
+- Ground every insight in what they actually wrote
+
+Guardrails for balanced honesty:
+- AVOID NEUTRALITY FOR NEUTRALITY'S SAKE: If one partner is being transparent and the other is being defensive, gently call out the defensiveness. True advice isn't always 50/50.
+- PRIORITIZE SAFETY: If the emotional_safety scores are very low (1-2), prioritize "Establishing Boundaries" over "Rebuilding Intimacy."
+- THE "WE" VS "I" CHECK: Look at how they use collective vs individual language in their open-ended responses. If one says "we" and the other says "I/me," flag this as a blind spot about shared vs individual framing.`;
 
   const otherPartner = targetPartner === 'A' ? 'B' : 'A';
 
@@ -53,29 +58,38 @@ The scale questions measure (1=low, 5=high): trust (current trust level), commit
 
 The open-ended questions ask: tangible_action (one specific action their partner could take this week to help them feel secure), biggest_wall (the single biggest obstacle preventing them from moving forward), hesitant_thought (a thought/fear/realization they've been hesitant to share), own_struggle (an area where they've struggled to show up as the partner they want to be), do_differently (what they wish they could do differently to help healing).
 
-Write a personalized report in paragraph form (not bullet points or numbered lists within sections). Use this exact structure:
+Write a personalized report in paragraph form. Use this exact structure:
 
-**This is what I'm seeing in your relationship:**
+**The Mirror: 5 Observations**
 
-Write a flowing paragraph that weaves together 5 key observations about the current state of the relationship. Ground each observation in specific scores or quotes from the responses. Address the dynamics between the ${targetRole} and ${otherRole} partner directly.
+Write a paragraph with 5 observations that highlight the INTERSECTIONS between both partners' responses. Don't just list facts—show how both partners may be prioritizing the same things but going about them in ways that create conflict. Use this framing: "I see that both of you are currently prioritizing X, but you are going about it in ways that are causing Y." Focus on shared goals vs. divergent methods.
 
-**Here are 5 things happening under the surface that you might not be naming:**
+**The Deep Dive: 5 Under-the-Surface Insights**
 
-Write a paragraph that surfaces 5 deeper dynamics, unspoken tensions, or patterns that the responses reveal but the couple may not be consciously aware of. Be insightful and direct. These should be things that require reading between the lines.
+This is where you prove your worth by reading between the lines. Use the open-ended questions (especially "hesitant_thought" and "own_struggle") to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Example framing: "While you are asking for more space, under the surface, it appears you are actually grieving the loss of the version of yourself you were before this happened." Be insightful and specific to what they wrote.
 
-**Here are 5 pieces of advice:**
+**The Roadmap: 5 Pieces of Advice**
 
-Write a paragraph containing 5 specific, actionable pieces of advice tailored to this person as the ${targetRole} partner. Each piece of advice should connect to something specific from the questionnaire responses.
+Infidelity recovery is often paralyzed by choice overload. Structure your advice as:
+- 1 IMMEDIATE TRIAGE STEP (to stop the bleeding—what they should do TODAY)
+- 2 COMMUNICATION SCRIPTS (exact phrases or approaches they can use with their partner)
+- 2 LONG-TERM MINDSET SHIFTS (bigger picture changes in how they think about the situation)
 
-**Here are 3 possible blind spots you might have:**
+**The Blind Spots: 3 Critical Warnings**
 
-Write a paragraph identifying 3 blind spots this person may have based on their responses—things they might not see about themselves, ways their perception might differ from their partner's reality, or patterns in their thinking that could be holding them back. Be compassionate but honest.
+This is the most candid part. Use the SCALE QUESTIONS to find DATA MISMATCHES between partners. If Partner A thinks trust is 3/5 but Partner B thinks it's 1/5, the blind spot is "The Perceived Progress Gap." Name specific blind spots like:
+- Perception gaps (where their view differs from their partner's)
+- The "we" vs "I" language patterns (if one uses collective language and the other doesn't)
+- Areas where they may be overestimating their own progress or underestimating their partner's pain
 
-**If you want to improve this relationship, here are the 3 main things I would focus on:**
+**The North Star: 3 Main Focus Areas**
 
-Write a concluding paragraph with the 3 most important priorities. Be direct about what matters most and why. If appropriate, include an honest assessment of whether continuing to work on this relationship makes sense based on what you see.
+This is the "if you do nothing else, do these" section. Provide exactly 3 focus areas:
+- One for TRUST (rebuilding or establishing it)
+- One for INTIMACY/CONNECTION (emotional or physical closeness)
+- One for INDIVIDUAL HEALING (their own personal work, regardless of the relationship outcome)
 
-Be warm but direct throughout. Write in a conversational, empathetic tone while still being honest. Reference specific answers and scores naturally within your paragraphs. Approximately 800-1000 words total.`;
+Be warm but direct throughout. Write in a conversational, empathetic tone while being honest. Don't be neutral for neutrality's sake—if the data shows one partner is doing more work than the other, say so gently. Approximately 900-1100 words total.`;
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
@@ -84,7 +98,7 @@ Be warm but direct throughout. Write in a conversational, empathetic tone while 
       { role: 'user', content: userPrompt }
     ],
     temperature: 0.7,
-    max_tokens: 2000,
+    max_tokens: 2500,
   });
 
   return response.choices[0].message.content;
