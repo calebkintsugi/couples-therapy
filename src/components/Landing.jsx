@@ -32,53 +32,44 @@ function Landing() {
   };
 
   return (
-    <div className="card">
-      <h1>Repair Coach</h1>
-      <p style={{ fontSize: '1.125rem', marginBottom: '1.5rem' }}>
-        A supportive space for couples navigating the path to healing after infidelity.
-      </p>
+    <div className="landing-hero">
+      <div className="landing-card">
+        <h1>Repair Coach</h1>
+        <p className="tagline">
+          A supportive space for couples navigating the path to healing after infidelity.
+          Answer a few questions independently, then receive personalized guidance for your journey forward.
+        </p>
 
-      <Disclaimer />
-
-      <div style={{ marginBottom: '2rem' }}>
-        <h3>How It Works</h3>
-        <ol style={{ paddingLeft: '1.5rem', color: 'var(--text-secondary)' }}>
-          <li style={{ marginBottom: '0.5rem' }}>
-            Create a new session and share the link with your partner
-          </li>
-          <li style={{ marginBottom: '0.5rem' }}>
-            Each partner answers a brief questionnaire independently
-          </li>
-          <li style={{ marginBottom: '0.5rem' }}>
-            Once both complete, receive personalized guidance for your healing journey
-          </li>
+        <ol>
+          <li>Create a session and share the private link with your partner</li>
+          <li>Each partner answers a brief questionnaire independently</li>
+          <li>Receive personalized, AI-powered guidance for healing</li>
         </ol>
-      </div>
 
-      {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message">{error}</div>}
 
-      <button
-        className="btn btn-primary btn-block"
-        onClick={createSession}
-        disabled={loading}
-      >
-        {loading ? 'Creating Session...' : 'Start New Session'}
-      </button>
+        <button
+          className="btn btn-primary btn-block"
+          onClick={createSession}
+          disabled={loading}
+        >
+          {loading ? 'Creating Session...' : 'Begin Your Healing Journey'}
+        </button>
 
-      <div className="crisis-resources">
-        <h4>Crisis Resources</h4>
-        <p>
-          If you or someone you know is in crisis, please reach out for help:
-        </p>
-        <p>
-          <strong>National Suicide Prevention Lifeline:</strong> 988 (call or text)
-        </p>
-        <p>
-          <strong>Crisis Text Line:</strong> Text HOME to 741741
-        </p>
-        <p>
-          <strong>National Domestic Violence Hotline:</strong> 1-800-799-7233
-        </p>
+        <Disclaimer />
+
+        <div className="crisis-resources">
+          <h4>Crisis Resources</h4>
+          <p>
+            If you or someone you know is in crisis, please reach out:
+          </p>
+          <p>
+            <strong>National Suicide Prevention Lifeline:</strong> 988
+          </p>
+          <p>
+            <strong>Crisis Text Line:</strong> Text HOME to 741741
+          </p>
+        </div>
       </div>
     </div>
   );

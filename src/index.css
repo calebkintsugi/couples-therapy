@@ -5,18 +5,19 @@
 }
 
 :root {
-  --primary: #5c6bc0;
-  --primary-dark: #3f51b5;
-  --primary-light: #7986cb;
-  --secondary: #26a69a;
-  --background: #f5f7fa;
+  --primary: #7c5c6b;
+  --primary-dark: #5d4450;
+  --primary-light: #a88b97;
+  --secondary: #6b8e7c;
+  --background: #faf8f6;
   --surface: #ffffff;
-  --text-primary: #2c3e50;
-  --text-secondary: #607d8b;
-  --border: #e0e6ed;
-  --error: #e57373;
-  --success: #81c784;
-  --warning: #ffb74d;
+  --text-primary: #3d3235;
+  --text-secondary: #6b5d60;
+  --border: #e8e2df;
+  --error: #c57b7b;
+  --success: #7bab84;
+  --warning: #d4a574;
+  --accent: #c9b8a8;
 }
 
 body {
@@ -48,22 +49,28 @@ body {
 }
 
 h1 {
-  font-size: 2rem;
-  font-weight: 700;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 2.5rem;
+  font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.75rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 1rem;
+  letter-spacing: -0.01em;
 }
 
 h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 0.75rem;
 }
@@ -310,6 +317,106 @@ textarea {
   color: var(--text-secondary);
 }
 
+/* Landing page hero styles */
+.landing-hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.landing-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1493836512294-502baa1986e2?w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.4);
+  z-index: -2;
+}
+
+.landing-hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(125, 92, 107, 0.85) 0%, rgba(107, 142, 124, 0.75) 100%);
+  z-index: -1;
+}
+
+.landing-card {
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 24px;
+  padding: 3rem;
+  max-width: 560px;
+  width: 100%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+}
+
+.landing-card h1 {
+  font-size: 2.75rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.landing-card .tagline {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+
+.landing-card ol {
+  padding-left: 1.5rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.landing-card ol li {
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+}
+
+.landing-card ol li::marker {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Improved buttons */
+.btn {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  box-shadow: 0 4px 14px rgba(125, 92, 107, 0.35);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  box-shadow: 0 6px 20px rgba(125, 92, 107, 0.45);
+  transform: translateY(-2px);
+}
+
+/* Card hover effect */
+.card {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
 @media (max-width: 600px) {
   .container {
     padding: 1rem;
@@ -321,7 +428,7 @@ textarea {
   }
 
   h1 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
   }
 
   .scale-btn {
@@ -330,5 +437,22 @@ textarea {
 
   .nav-buttons {
     flex-direction: column;
+  }
+
+  .landing-hero {
+    padding: 1rem;
+  }
+
+  .landing-card {
+    padding: 2rem;
+    border-radius: 16px;
+  }
+
+  .landing-card h1 {
+    font-size: 2rem;
+  }
+
+  .landing-card .tagline {
+    font-size: 1.05rem;
   }
 }
