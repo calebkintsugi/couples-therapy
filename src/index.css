@@ -335,7 +335,7 @@ textarea {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('https://images.unsplash.com/photo-1493836512294-502baa1986e2?w=1920&q=80');
+  background-image: url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=1920&q=80');
   background-size: cover;
   background-position: center;
   filter: brightness(0.4);
@@ -393,6 +393,10 @@ textarea {
 .landing-card ol li::marker {
   color: var(--primary);
   font-weight: 600;
+}
+
+.landing-card .btn {
+  margin-bottom: 2rem;
 }
 
 /* Improved buttons */
