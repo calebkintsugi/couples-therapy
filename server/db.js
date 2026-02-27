@@ -13,6 +13,7 @@ export async function initDb() {
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      category TEXT,
       unfaithful_partner TEXT CHECK (unfaithful_partner IN ('A', 'B')),
       partner_a_name TEXT,
       partner_b_name TEXT,
@@ -34,10 +35,11 @@ export async function initDb() {
     );
   `);
 
-  // Add name columns if they don't exist (for existing databases)
+  // Add columns if they don't exist (for existing databases)
   try {
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_a_name TEXT`);
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_b_name TEXT`);
+    await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS category TEXT`);
   } catch (e) {
     // Columns may already exist
   }

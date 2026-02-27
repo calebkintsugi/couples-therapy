@@ -4,16 +4,59 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, unfaithfulPartner, partnerAName = 'Partner A', partnerBName = 'Partner B') {
-  // Determine roles
-  const partnerARole = unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed';
-  const partnerBRole = unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed';
-  const targetRole = targetPartner === 'A' ? partnerARole : partnerBRole;
-  const otherRole = targetPartner === 'A' ? partnerBRole : partnerARole;
+const categoryDescriptions = {
+  infidelity: {
+    name: 'Infidelity Recovery',
+    context: 'healing after betrayal and rebuilding trust',
+    roleInfo: true,
+  },
+  communication: {
+    name: 'Communication Breakdown',
+    context: 'improving how they talk, listen, and understand each other',
+    roleInfo: false,
+  },
+  emotional_distance: {
+    name: 'Emotional Distance',
+    context: 'reconnecting when feeling like roommates or strangers',
+    roleInfo: false,
+  },
+  life_stress: {
+    name: 'Life Stress',
+    context: 'navigating external pressures together (work, family, health, finances)',
+    roleInfo: false,
+  },
+  intimacy: {
+    name: 'Sexual & Physical Intimacy',
+    context: 'addressing mismatched needs and reconnecting physically',
+    roleInfo: false,
+  },
+  strengthening: {
+    name: 'Pre-Commitment Strengthening',
+    context: 'building a stronger foundation before marriage or major commitment',
+    roleInfo: false,
+  },
+};
+
+export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, category, unfaithfulPartner = null, partnerAName = 'Partner A', partnerBName = 'Partner B') {
+  const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
+
+  // Determine roles for infidelity category
+  let partnerARole = '';
+  let partnerBRole = '';
+  let targetRole = '';
+  let otherRole = '';
+
+  if (category === 'infidelity' && unfaithfulPartner) {
+    partnerARole = unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed';
+    partnerBRole = unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed';
+    targetRole = targetPartner === 'A' ? partnerARole : partnerBRole;
+    otherRole = targetPartner === 'A' ? partnerBRole : partnerARole;
+  }
+
   const targetName = targetPartner === 'A' ? partnerAName : partnerBName;
   const otherName = targetPartner === 'A' ? partnerBName : partnerAName;
 
-  const formatResponses = (responses, name, role) => {
+  const formatResponses = (responses, name, role = '') => {
     const scaleAnswers = responses
       .filter(r => r.question_type === 'scale')
       .map(r => `- ${r.question_id}: ${r.answer}/5`)
@@ -24,13 +67,18 @@ export async function generateAdvice(partnerAResponses, partnerBResponses, targe
       .map(r => `- ${r.question_id}: "${r.answer}"`)
       .join('\n');
 
-    return `${name} (${role} partner)'s Responses:\n\nScale Questions (1-5):\n${scaleAnswers}\n\nOpen-Ended Questions:\n${textAnswers}`;
+    const roleLabel = role ? ` (${role} partner)` : '';
+    return `${name}${roleLabel}'s Responses:\n\nScale Questions (1-5):\n${scaleAnswers}\n\nOpen-Ended Questions:\n${textAnswers}`;
   };
 
   const partnerAFormatted = formatResponses(partnerAResponses, partnerAName, partnerARole);
   const partnerBFormatted = formatResponses(partnerBResponses, partnerBName, partnerBRole);
 
-  const systemPrompt = `You are a direct, insightful relationship coach specializing in helping couples navigate healing after infidelity. You provide honest, specific guidance - not generic platitudes. You analyze the actual data provided and give real, actionable insights.
+  const roleContext = category === 'infidelity' && targetRole
+    ? `\n\n${targetName} is the ${targetRole} partner. ${otherName} is the ${otherRole} partner. Keep this dynamic in mind when providing guidance.`
+    : '';
+
+  const systemPrompt = `You are a direct, insightful relationship coach specializing in helping couples with ${categoryInfo.context}. You provide honest, specific guidance - not generic platitudes. You analyze the actual data provided and give real, actionable insights.
 
 Critical guidelines:
 - You are NOT a licensed therapist - recommend professional help
@@ -40,23 +88,16 @@ Critical guidelines:
 - Ground every insight in what they actually wrote
 
 Guardrails for balanced honesty:
-- AVOID NEUTRALITY FOR NEUTRALITY'S SAKE: If one partner is being transparent and the other is being defensive, gently call out the defensiveness. True advice isn't always 50/50.
-- PRIORITIZE SAFETY: If the emotional_safety scores are very low (1-2), prioritize "Establishing Boundaries" over "Rebuilding Intimacy."
+- AVOID NEUTRALITY FOR NEUTRALITY'S SAKE: If one partner is putting in more effort, gently acknowledge that. True advice isn't always 50/50.
 - THE "WE" VS "I" CHECK: Look at how they use collective vs individual language in their open-ended responses. If one says "we" and the other says "I/me," flag this as a blind spot about shared vs individual framing.`;
 
-  const userPrompt = `Analyze these questionnaire responses from a couple dealing with infidelity.
+  const userPrompt = `Analyze these questionnaire responses from a couple focused on: ${categoryInfo.name} (${categoryInfo.context}).
 
-${partnerAName} is the ${partnerARole} partner. ${partnerBName} is the ${partnerBRole} partner.
-
-Write a report specifically for ${targetName} (the ${targetRole} partner). Address them directly by name.
+Write a report specifically for ${targetName}. Address them directly by name.${roleContext}
 
 ${partnerAFormatted}
 
 ${partnerBFormatted}
-
-The scale questions measure (1=low, 5=high): trust (current trust level), commitment (commitment to doing the difficult emotional work to stay together), transparency (satisfaction with honesty and open-book communication), emotional_safety (feeling safe sharing triggers or difficult thoughts without it becoming a fight), empathy_gap (how much they feel their partner understands their pain/stress), hope (belief that a "Version 2.0" of the relationship is possible).
-
-The open-ended questions ask: tangible_action (one specific action their partner could take this week to help them feel secure), biggest_wall (the single biggest obstacle preventing them from moving forward), hesitant_thought (a thought/fear/realization they've been hesitant to share), own_struggle (an area where they've struggled to show up as the partner they want to be), do_differently (what they wish they could do differently to help healing).
 
 Write a personalized report using numbered lists. IMPORTANT: Do NOT use any markdown formatting - no asterisks, no hashtags, no bold, no headers. Just plain text with section titles in ALL CAPS on their own line.
 
@@ -68,28 +109,25 @@ Write 3 numbered observations (1. 2. 3.) that highlight the INTERSECTIONS betwee
 
 🌊 WHAT'S HAPPENING UNDER THE SURFACE
 
-Write 3 numbered insights (1. 2. 3.) that read between the lines. Use the open-ended questions (especially "hesitant_thought" and "own_struggle") to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Example framing: "While you are asking for more space, under the surface, it appears you are actually grieving the loss of the version of yourself you were before this happened." Be insightful and specific to what they wrote.
+Write 3 numbered insights (1. 2. 3.) that read between the lines. Use the open-ended questions to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Be insightful and specific to what they wrote.
 
 🗺️ A ROADMAP FORWARD
 
 Write 3 numbered pieces of advice structured as:
-1. IMMEDIATE TRIAGE (to stop the bleeding—what they should do TODAY)
+1. IMMEDIATE TRIAGE (what they should do TODAY or this week)
 2. COMMUNICATION SCRIPT (an exact phrase or approach they can use with their partner)
 3. MINDSET SHIFT (a bigger picture change in how they think about the situation)
 
 🔦 BLIND SPOTS
 
-Write 3 numbered blind spots (1. 2. 3.) using the SCALE QUESTIONS to find DATA MISMATCHES between partners. If Partner A thinks trust is 3/5 but Partner B thinks it's 1/5, the blind spot is "The Perceived Progress Gap." Look for:
+Write 3 numbered blind spots (1. 2. 3.) using the SCALE QUESTIONS to find DATA MISMATCHES between partners. Look for:
 - Perception gaps (where their view differs from their partner's)
-- The "we" vs "I" language patterns (if one uses collective language and the other doesn't)
-- Areas where they may be overestimating their own progress or underestimating their partner's pain
+- The "we" vs "I" language patterns
+- Areas where they may be overestimating their own progress or underestimating their partner's experience
 
 🎯 FOCUS AREAS
 
-Write 3 numbered focus areas (1. 2. 3.) - the "if you do nothing else, do these" items:
-1. One for TRUST (rebuilding or establishing it)
-2. One for INTIMACY/CONNECTION (emotional or physical closeness)
-3. One for INDIVIDUAL HEALING (their own personal work, regardless of the relationship outcome)
+Write 3 numbered focus areas (1. 2. 3.) - the "if you do nothing else, do these" items specific to ${categoryInfo.context}.
 
 Be warm but direct throughout. Write in a conversational, empathetic tone while being honest. Don't be neutral for neutrality's sake—if the data shows one partner is doing more work than the other, say so gently. Approximately 600-800 words total.
 
@@ -108,8 +146,11 @@ CRITICAL: Output plain text only. No markdown, no asterisks (*), no hashtags (#)
   return response.choices[0].message.content;
 }
 
-export async function chatFollowUp(initialAdvice, conversationHistory, userMessage, targetRole) {
-  const systemPrompt = `You are a compassionate relationship coach continuing a conversation about healing after infidelity. You previously provided advice to the ${targetRole} partner, and now they have follow-up questions.
+export async function chatFollowUp(initialAdvice, conversationHistory, userMessage, category, targetRole = null) {
+  const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
+  const roleContext = targetRole ? ` (${targetRole} partner)` : '';
+
+  const systemPrompt = `You are a compassionate relationship coach continuing a conversation about ${categoryInfo.context}. You previously provided advice to this person${roleContext}, and now they have follow-up questions.
 
 Your initial advice was:
 ${initialAdvice}

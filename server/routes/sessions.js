@@ -23,7 +23,7 @@ router.get('/:id', async (req, res) => {
 
   try {
     const result = await db.query(
-      'SELECT id, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed, created_at FROM sessions WHERE id = $1',
+      'SELECT id, category, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed, created_at FROM sessions WHERE id = $1',
       [id]
     );
 
@@ -34,6 +34,7 @@ router.get('/:id', async (req, res) => {
     const session = result.rows[0];
     res.json({
       id: session.id,
+      category: session.category,
       unfaithfulPartner: session.unfaithful_partner,
       partnerAName: session.partner_a_name,
       partnerBName: session.partner_b_name,
@@ -44,6 +45,33 @@ router.get('/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching session:', error);
     res.status(500).json({ error: 'Failed to fetch session' });
+  }
+});
+
+// Set category (called by Partner A)
+router.patch('/:id/category', async (req, res) => {
+  const { id } = req.params;
+  const { category } = req.body;
+
+  const validCategories = ['infidelity', 'communication', 'emotional_distance', 'life_stress', 'intimacy', 'strengthening'];
+  if (!validCategories.includes(category)) {
+    return res.status(400).json({ error: 'Invalid category' });
+  }
+
+  try {
+    const result = await db.query(
+      'UPDATE sessions SET category = $1 WHERE id = $2 RETURNING *',
+      [category, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error setting category:', error);
+    res.status(500).json({ error: 'Failed to set category' });
   }
 });
 

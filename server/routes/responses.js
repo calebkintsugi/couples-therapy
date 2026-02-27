@@ -65,12 +65,13 @@ router.post('/:sessionId/responses', async (req, res) => {
         );
 
         // Generate advice for both partners
+        const category = updatedSession.category || 'communication';
         const unfaithfulPartner = updatedSession.unfaithful_partner;
         const partnerAName = updatedSession.partner_a_name || 'Partner A';
         const partnerBName = updatedSession.partner_b_name || 'Partner B';
         const [adviceA, adviceB] = await Promise.all([
-          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'A', unfaithfulPartner, partnerAName, partnerBName),
-          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B', unfaithfulPartner, partnerAName, partnerBName)
+          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'A', category, unfaithfulPartner, partnerAName, partnerBName),
+          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B', category, unfaithfulPartner, partnerAName, partnerBName)
         ]);
 
         await db.query(
@@ -136,9 +137,10 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
         [sessionId, 'B']
       );
 
+      const category = session.category || 'communication';
       const partnerAName = session.partner_a_name || 'Partner A';
       const partnerBName = session.partner_b_name || 'Partner B';
-      advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner, session.unfaithful_partner, partnerAName, partnerBName);
+      advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner, category, session.unfaithful_partner, partnerAName, partnerBName);
 
       await db.query(
         `UPDATE sessions SET ${adviceField} = $1 WHERE id = $2`,
@@ -146,7 +148,7 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
       );
     }
 
-    res.json({ advice, unfaithfulPartner: session.unfaithful_partner });
+    res.json({ advice, category: session.category, unfaithfulPartner: session.unfaithful_partner });
   } catch (error) {
     console.error('Error fetching advice:', error);
     res.status(500).json({ error: 'Failed to fetch advice' });
@@ -181,14 +183,16 @@ router.post('/:sessionId/chat/:partner', async (req, res) => {
       return res.status(400).json({ error: 'No advice found for this partner' });
     }
 
-    // Determine role
+    // Determine category and role
+    const category = session.category || 'communication';
     const targetRole = session.unfaithful_partner === partner ? 'unfaithful' : 'betrayed';
 
     const response = await chatFollowUp(
       advice,
       conversationHistory || [],
       message,
-      targetRole
+      category,
+      category === 'infidelity' ? targetRole : null
     );
 
     res.json({ response });

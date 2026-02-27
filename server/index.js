@@ -34,9 +34,9 @@ app.post('/api/test/create-sample', async (req, res) => {
   try {
     // Create session
     await db.query(
-      `INSERT INTO sessions (id, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed)
-       VALUES ($1, $2, $3, $4, true, true)`,
-      [sessionId, 'B', 'Sarah', 'Michael']
+      `INSERT INTO sessions (id, category, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed)
+       VALUES ($1, $2, $3, $4, $5, true, true)`,
+      [sessionId, 'infidelity', 'B', 'Sarah', 'Michael']
     );
 
     // Sample responses for Sarah (betrayed partner)

@@ -3,7 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import ScaleQuestion from './ScaleQuestion';
 import TextQuestion from './TextQuestion';
 import Disclaimer from './Disclaimer';
-import { scaleQuestions, textQuestions } from '../questions';
+import { categories, questionsByCategory, getCategoryById } from '../questions';
 
 function Questionnaire() {
   const { sessionId } = useParams();
@@ -17,17 +17,22 @@ function Questionnaire() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // Flow state: 'name' -> 'role' -> 'share' -> 'questions' (Partner A)
-  // Flow state: 'name' -> 'role-display' -> 'questions' (Partner B)
+  // Flow state for Partner A: 'name' -> 'category' -> 'role' (if infidelity) -> 'share' -> 'questions'
+  // Flow state for Partner B: 'name' -> 'category-display' -> 'role-display' (if infidelity) -> 'questions'
   const [step, setStep] = useState('loading');
-  const [role, setRole] = useState(null); // 'betrayed' or 'unfaithful'
+  const [category, setCategory] = useState(null);
+  const [role, setRole] = useState(null); // 'betrayed' or 'unfaithful' (only for infidelity)
   const [sessionData, setSessionData] = useState(null);
   const [name, setName] = useState('');
   const [partnerName, setPartnerName] = useState('');
 
+  // Get questions for the selected category
+  const categoryQuestions = category ? questionsByCategory[category] : null;
+  const scaleQuestions = categoryQuestions?.scale || [];
+  const textQuestions = categoryQuestions?.text || [];
   const allQuestions = [...scaleQuestions, ...textQuestions];
   const totalQuestions = allQuestions.length;
-  const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+  const progress = totalQuestions > 0 ? ((currentQuestion + 1) / totalQuestions) * 100 : 0;
 
   const currentQ = allQuestions[currentQuestion];
   const isScale = currentQuestion < scaleQuestions.length;
@@ -48,27 +53,39 @@ function Questionnaire() {
         if (!data) return;
         setSessionData(data);
 
+        if (data.category) {
+          setCategory(data.category);
+        }
+
         if (partner === 'A') {
-          // Partner A
+          // Partner A flow
           if (data.partnerAName) {
             setName(data.partnerAName);
-            if (data.unfaithfulPartner) {
-              setRole(data.unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed');
-              setStep('share');
+            if (data.category) {
+              if (data.category === 'infidelity' && data.unfaithfulPartner) {
+                setRole(data.unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed');
+                setStep('share');
+              } else if (data.category === 'infidelity') {
+                setStep('role');
+              } else {
+                setStep('share');
+              }
             } else {
-              setStep('role');
+              setStep('category');
             }
           } else {
             setStep('name');
           }
         } else {
-          // Partner B
+          // Partner B flow
           setPartnerName(data.partnerAName || 'Your partner');
           if (data.partnerBName) {
             setName(data.partnerBName);
-            if (data.unfaithfulPartner) {
+            if (data.category === 'infidelity' && data.unfaithfulPartner) {
               setRole(data.unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed');
               setStep('role-display');
+            } else if (data.category) {
+              setStep('category-display');
             } else {
               setStep('questions');
             }
@@ -95,15 +112,43 @@ function Questionnaire() {
       }
 
       if (partner === 'A') {
-        setStep('role');
+        setStep('category');
       } else {
-        // Partner B - check if role is set
-        if (sessionData?.unfaithfulPartner) {
-          setRole(sessionData.unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed');
-          setStep('role-display');
+        // Partner B
+        if (sessionData?.category) {
+          if (sessionData.category === 'infidelity' && sessionData.unfaithfulPartner) {
+            setRole(sessionData.unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed');
+            setStep('role-display');
+          } else {
+            setStep('category-display');
+          }
         } else {
           setStep('questions');
         }
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleCategorySelect = async (selectedCategory) => {
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/category`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: selectedCategory }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save category');
+      }
+
+      setCategory(selectedCategory);
+
+      if (selectedCategory === 'infidelity') {
+        setStep('role');
+      } else {
+        setStep('share');
       }
     } catch (err) {
       setError(err.message);
@@ -246,13 +291,83 @@ function Questionnaire() {
     );
   }
 
-  // Partner A: Role selection
-  if (step === 'role') {
+  // Partner A: Category selection
+  if (step === 'category') {
     return (
       <div className="card">
         <h2>Hi {name}</h2>
+        <p style={{ marginBottom: '1.5rem' }}>
+          What area would you like to focus on?
+        </p>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              className="btn btn-secondary btn-block"
+              onClick={() => handleCategorySelect(cat.id)}
+              style={{
+                textAlign: 'left',
+                padding: '1rem 1.25rem',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.75rem'
+              }}
+            >
+              <span style={{ fontSize: '1.5rem' }}>{cat.icon}</span>
+              <div>
+                <strong>{cat.name}</strong>
+                <div style={{ fontSize: '0.875rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                  {cat.description}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Partner B: Category display
+  if (step === 'category-display') {
+    const categoryInfo = getCategoryById(category);
+    return (
+      <div className="card">
+        <h2>Hi {name}</h2>
+        <p style={{ marginBottom: '1.5rem' }}>
+          {partnerName} has selected the focus area:
+        </p>
+        <div style={{
+          background: 'var(--background)',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <span style={{ fontSize: '2rem' }}>{categoryInfo?.icon}</span>
+          <div>
+            <strong style={{ fontSize: '1.25rem' }}>{categoryInfo?.name}</strong>
+            <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>{categoryInfo?.description}</p>
+          </div>
+        </div>
+        <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
+          Continue to Questionnaire
+        </button>
+      </div>
+    );
+  }
+
+  // Partner A: Role selection (only for infidelity)
+  if (step === 'role') {
+    return (
+      <div className="card">
+        <h2>One More Question</h2>
         <p style={{ marginBottom: '2rem' }}>
-          To provide the most relevant guidance, please indicate your role in this situation:
+          To provide the most relevant guidance, please indicate your role:
         </p>
 
         {error && <div className="error-message">{error}</div>}
@@ -277,11 +392,13 @@ function Questionnaire() {
 
   // Partner A: Share link
   if (step === 'share') {
+    const categoryInfo = getCategoryById(category);
     return (
       <div className="card">
         <h2>Share With Your Partner</h2>
         <p>
-          Thanks, {name}. You identified as the <strong>{role}</strong> partner.
+          Thanks, {name}. You selected <strong>{categoryInfo?.name}</strong>
+          {role && <> and identified as the <strong>{role}</strong> partner</>}.
         </p>
         <p>
           Share this link with your partner so they can complete their questionnaire:
@@ -299,13 +416,17 @@ function Questionnaire() {
     );
   }
 
-  // Partner B: Role display
+  // Partner B: Role display (only for infidelity)
   if (step === 'role-display') {
+    const categoryInfo = getCategoryById(category);
     return (
       <div className="card">
         <h2>Hi {name}</h2>
+        <p>
+          {partnerName} has selected <strong>{categoryInfo?.name}</strong> as the focus area.
+        </p>
         <p style={{ marginBottom: '2rem' }}>
-          Based on {partnerName}&apos;s response, you are participating as the <strong>{role}</strong> partner.
+          Based on their response, you are participating as the <strong>{role}</strong> partner.
         </p>
         <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
           Continue to Questionnaire
@@ -315,9 +436,22 @@ function Questionnaire() {
   }
 
   // Questions
+  if (!currentQ) {
+    return (
+      <div className="card">
+        <div className="loading">Loading questions...</div>
+      </div>
+    );
+  }
+
+  const categoryInfo = getCategoryById(category);
+
   return (
     <div className="card">
       <h2>{name}&apos;s Questionnaire</h2>
+      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+        {categoryInfo?.icon} {categoryInfo?.name}
+      </p>
 
       {currentQuestion === 0 && <Disclaimer />}
 
