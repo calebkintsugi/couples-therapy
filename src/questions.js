@@ -70,18 +70,6 @@ export const questionsByCategory = {
         lowLabel: "They Don't Get It",
         highLabel: 'They See Me Completely',
       },
-      {
-        id: 'hope',
-        question: 'Do you believe a "Version 2.0" of this relationship is possible?',
-        lowLabel: 'No',
-        highLabel: 'Absolutely',
-      },
-      {
-        id: 'progress',
-        question: 'How much progress do you feel you\'ve made as a couple since discovery?',
-        lowLabel: 'None',
-        highLabel: 'Significant',
-      },
     ],
     text: [
       {
@@ -98,6 +86,11 @@ export const questionsByCategory = {
         id: 'unspoken',
         question: 'What thought, fear, or realization have you been hesitant to share with your partner?',
         placeholder: 'This is a safe space to be honest...',
+      },
+      {
+        id: 'vulnerability',
+        question: 'What do you need to feel safe being vulnerable with your partner again?',
+        placeholder: 'What would help you open up...',
       },
       {
         id: 'understand_me',
@@ -128,12 +121,6 @@ export const questionsByCategory = {
         highLabel: 'Almost Always',
       },
       {
-        id: 'understood',
-        question: 'How well does your partner understand your perspective, even when they disagree?',
-        lowLabel: 'Not At All',
-        highLabel: 'Completely',
-      },
-      {
         id: 'escalation',
         question: 'How often do small disagreements escalate into larger fights?',
         lowLabel: 'Almost Always',
@@ -144,12 +131,6 @@ export const questionsByCategory = {
         question: 'After an argument, how well do you repair and reconnect?',
         lowLabel: 'We Don\'t',
         highLabel: 'Very Well',
-      },
-      {
-        id: 'daily_connection',
-        question: 'How satisfied are you with your day-to-day communication and check-ins?',
-        lowLabel: 'Very Dissatisfied',
-        highLabel: 'Very Satisfied',
       },
     ],
     text: [
@@ -167,6 +148,11 @@ export const questionsByCategory = {
         id: 'own_pattern',
         question: 'What communication pattern of your own do you know isn\'t working but struggle to change?',
         placeholder: 'Be honest about your own habits...',
+      },
+      {
+        id: 'recent_conversation',
+        question: 'Describe a recent conversation that went poorly. What do you wish had happened differently?',
+        placeholder: 'What would you change about how it went...',
       },
       {
         id: 'understand_me',
@@ -197,12 +183,6 @@ export const questionsByCategory = {
         highLabel: 'Very Satisfied',
       },
       {
-        id: 'affection',
-        question: 'How satisfied are you with the level of affection and warmth between you?',
-        lowLabel: 'Very Dissatisfied',
-        highLabel: 'Very Satisfied',
-      },
-      {
         id: 'loneliness',
         question: 'How often do you feel lonely even when your partner is present?',
         lowLabel: 'Very Often',
@@ -213,12 +193,6 @@ export const questionsByCategory = {
         question: 'How much do you share about your inner life, thoughts, and feelings with each other?',
         lowLabel: 'Nothing',
         highLabel: 'Everything',
-      },
-      {
-        id: 'drift_concern',
-        question: 'How concerned are you about the emotional distance in your relationship?',
-        lowLabel: 'Extremely Concerned',
-        highLabel: 'Not Concerned',
       },
     ],
     text: [
@@ -236,6 +210,11 @@ export const questionsByCategory = {
         id: 'reconnect',
         question: 'What would help you feel more emotionally connected to your partner this week?',
         placeholder: 'Something specific and actionable...',
+      },
+      {
+        id: 'barrier_to_reaching',
+        question: 'What keeps you from reaching out to connect with your partner?',
+        placeholder: 'What stops you from initiating closeness...',
       },
       {
         id: 'understand_me',
@@ -272,22 +251,10 @@ export const questionsByCategory = {
         highLabel: 'Rarely',
       },
       {
-        id: 'boundaries',
-        question: 'How well do you protect your relationship time from work and other demands?',
-        lowLabel: 'Not At All',
-        highLabel: 'Very Well',
-      },
-      {
         id: 'coping',
         question: 'How well do your individual coping styles work together?',
         lowLabel: 'They Clash',
         highLabel: 'They Complement',
-      },
-      {
-        id: 'future',
-        question: 'How aligned are you on plans for managing the current stressors?',
-        lowLabel: 'Not At All',
-        highLabel: 'Completely',
       },
     ],
     text: [
@@ -305,6 +272,11 @@ export const questionsByCategory = {
         id: 'own_contribution',
         question: 'How might your own stress reactions be affecting your partner or the relationship?',
         placeholder: 'Reflect honestly on your patterns...',
+      },
+      {
+        id: 'support_wish',
+        question: 'When you\'re at your most stressed, what do you wish your partner knew about how to support you?',
+        placeholder: 'What would be most helpful...',
       },
       {
         id: 'understand_me',
@@ -346,18 +318,6 @@ export const questionsByCategory = {
         lowLabel: 'Disconnected',
         highLabel: 'Deeply Connected',
       },
-      {
-        id: 'frequency_match',
-        question: 'How aligned are you and your partner on desired frequency of intimacy?',
-        lowLabel: 'Very Misaligned',
-        highLabel: 'Perfectly Aligned',
-      },
-      {
-        id: 'affection_nonsexual',
-        question: 'How satisfied are you with non-sexual physical affection (holding hands, hugging, etc.)?',
-        lowLabel: 'Very Dissatisfied',
-        highLabel: 'Very Satisfied',
-      },
     ],
     text: [
       {
@@ -374,6 +334,11 @@ export const questionsByCategory = {
         id: 'unsaid',
         question: 'What have you been hesitant to express about your physical needs or desires?',
         placeholder: 'This is a safe space to be honest...',
+      },
+      {
+        id: 'change_over_time',
+        question: 'How has your physical connection changed over time, and how do you feel about that?',
+        placeholder: 'Reflect on the evolution...',
       },
       {
         id: 'understand_me',
@@ -415,18 +380,6 @@ export const questionsByCategory = {
         lowLabel: 'Not At All',
         highLabel: 'Very Much',
       },
-      {
-        id: 'foundation',
-        question: 'How strong do you feel your foundation is for long-term commitment?',
-        lowLabel: 'Shaky',
-        highLabel: 'Rock Solid',
-      },
-      {
-        id: 'excitement',
-        question: 'How excited are you about your future together?',
-        lowLabel: 'Anxious',
-        highLabel: 'Very Excited',
-      },
     ],
     text: [
       {
@@ -443,6 +396,11 @@ export const questionsByCategory = {
         id: 'strength',
         question: 'What do you see as the greatest strength of your relationship?',
         placeholder: 'What makes you confident in your partnership...',
+      },
+      {
+        id: 'dream_unsupported',
+        question: 'What is one dream or goal you have that you\'re not sure your partner fully supports?',
+        placeholder: 'Something you want but haven\'t fully shared...',
       },
       {
         id: 'understand_me',
