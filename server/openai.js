@@ -31,8 +31,8 @@ const categoryDescriptions = {
     roleInfo: false,
   },
   strengthening: {
-    name: 'Pre-Commitment Strengthening',
-    context: 'building a stronger foundation before marriage or major commitment',
+    name: 'Everything is Great, But Let\'s Do the Work Anyway',
+    context: 'proactively strengthening an already healthy relationship',
     roleInfo: false,
   },
 };

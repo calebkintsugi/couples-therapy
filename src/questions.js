@@ -31,8 +31,8 @@ export const categories = [
   },
   {
     id: 'strengthening',
-    name: 'Pre-Commitment Strengthening',
-    description: 'Building a stronger foundation before marriage or major commitment',
+    name: 'Everything is Great, But Let\'s Do the Work Anyway',
+    description: 'Proactively strengthening a healthy relationship',
     icon: '🌱',
   },
 ];
