@@ -99,6 +99,11 @@ export const questionsByCategory = {
         question: 'What thought, fear, or realization have you been hesitant to share with your partner?',
         placeholder: 'This is a safe space to be honest...',
       },
+      {
+        id: 'understand_me',
+        question: 'What is one thing you wish your partner better understood about you?',
+        placeholder: 'What do you wish they could see...',
+      },
     ],
   },
 
@@ -162,6 +167,11 @@ export const questionsByCategory = {
         id: 'own_pattern',
         question: 'What communication pattern of your own do you know isn\'t working but struggle to change?',
         placeholder: 'Be honest about your own habits...',
+      },
+      {
+        id: 'understand_me',
+        question: 'What is one thing you wish your partner better understood about you?',
+        placeholder: 'What do you wish they could see...',
       },
     ],
   },
@@ -227,6 +237,11 @@ export const questionsByCategory = {
         question: 'What would help you feel more emotionally connected to your partner this week?',
         placeholder: 'Something specific and actionable...',
       },
+      {
+        id: 'understand_me',
+        question: 'What is one thing you wish your partner better understood about you?',
+        placeholder: 'What do you wish they could see...',
+      },
     ],
   },
 
@@ -290,6 +305,11 @@ export const questionsByCategory = {
         id: 'own_contribution',
         question: 'How might your own stress reactions be affecting your partner or the relationship?',
         placeholder: 'Reflect honestly on your patterns...',
+      },
+      {
+        id: 'understand_me',
+        question: 'What is one thing you wish your partner better understood about you?',
+        placeholder: 'What do you wish they could see...',
       },
     ],
   },
@@ -355,6 +375,11 @@ export const questionsByCategory = {
         question: 'What have you been hesitant to express about your physical needs or desires?',
         placeholder: 'This is a safe space to be honest...',
       },
+      {
+        id: 'understand_me',
+        question: 'What is one thing you wish your partner better understood about you?',
+        placeholder: 'What do you wish they could see...',
+      },
     ],
   },
 
@@ -418,6 +443,11 @@ export const questionsByCategory = {
         id: 'strength',
         question: 'What do you see as the greatest strength of your relationship?',
         placeholder: 'What makes you confident in your partnership...',
+      },
+      {
+        id: 'understand_me',
+        question: 'What is one thing you wish your partner better understood about you?',
+        placeholder: 'What do you wish they could see...',
       },
     ],
   },
