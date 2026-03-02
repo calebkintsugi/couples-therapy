@@ -631,8 +631,8 @@ function Results() {
           {/* RIGHT COLUMN — Next Step */}
           <div className="next-step-column">
             <div className="next-step-card">
-              <h2>Your Next Conversation</h2>
-              <p className="next-step-subtitle">Answer this separately, then discuss together.</p>
+              <h2>Continue the Conversation</h2>
+              <p className="next-step-subtitle">A follow-up prompt for you both to answer</p>
 
               {/* Show pending question that needs my answer */}
               {pendingQuestion ? (
