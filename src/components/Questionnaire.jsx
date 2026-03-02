@@ -313,6 +313,7 @@ function Questionnaire() {
                 padding: '1rem 1.25rem',
                 display: 'flex',
                 alignItems: 'flex-start',
+                justifyContent: 'flex-start',
                 gap: '0.75rem'
               }}
             >
