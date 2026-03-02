@@ -48,32 +48,32 @@ app.post('/api/test/create-sample', async (req, res) => {
 
     // Sample responses for Sarah (betrayed partner)
     const sarahResponses = [
-      { questionId: 'trust', type: 'scale', answer: '2' },
-      { questionId: 'commitment', type: 'scale', answer: '4' },
-      { questionId: 'transparency', type: 'scale', answer: '3' },
+      { questionId: 'trust', type: 'scale', answer: '1' },
+      { questionId: 'commitment', type: 'scale', answer: '3' },
+      { questionId: 'transparency', type: 'scale', answer: '2' },
       { questionId: 'emotional_safety', type: 'scale', answer: '2' },
-      { questionId: 'empathy_gap', type: 'scale', answer: '2' },
-      { questionId: 'hope', type: 'scale', answer: '3' },
-      { questionId: 'tangible_action', type: 'text', answer: 'I need him to check in with me during the day without me having to ask. Even a simple text saying he\'s thinking of me would help me feel like I matter.' },
-      { questionId: 'biggest_wall', type: 'text', answer: 'The lies. It\'s not even the affair itself anymore—it\'s that he looked me in the eyes and lied for months. I don\'t know how to trust anything he says now.' },
-      { questionId: 'hesitant_thought', type: 'text', answer: 'Sometimes I wonder if I\'m only staying because I\'m scared of being alone and starting over at 42. I haven\'t told him that.' },
-      { questionId: 'own_struggle', type: 'text', answer: 'I know I\'ve been cold and withdrawn. I push him away and then get angry when he gives me space. I can\'t seem to find a middle ground.' },
-      { questionId: 'do_differently', type: 'text', answer: 'I wish I could stop bringing up the affair every time we argue about something unrelated. I know it\'s not fair but I can\'t help it.' },
+      { questionId: 'empathy_gap', type: 'scale', answer: '3' },
+      { questionId: 'hope', type: 'scale', answer: '2' },
+      { questionId: 'tangible_action', type: 'text', answer: 'I need complete access to his phone and accounts. Not forever, but for now. And I need him to actually initiate conversations about what happened instead of waiting for me to bring it up.' },
+      { questionId: 'biggest_wall', type: 'text', answer: 'I keep imagining them together. The mental images won\'t stop. Every time he touches me, I wonder if he touched her the same way. It\'s making me physically sick.' },
+      { questionId: 'hesitant_thought', type: 'text', answer: 'Part of me wants to hurt him back. I\'ve thought about reaching out to an old boyfriend just so he knows what it feels like. I know that\'s destructive but the urge is there.' },
+      { questionId: 'own_struggle', type: 'text', answer: 'I\'ve become obsessive. I check his location constantly, I go through his phone when he\'s sleeping, I interrogate him about every detail of his day. I\'m turning into someone I don\'t recognize.' },
+      { questionId: 'do_differently', type: 'text', answer: 'I need to stop researching the other woman online. I\'ve memorized her social media. It\'s torture but I can\'t stop. I think I\'m addicted to the pain.' },
     ];
 
     // Sample responses for Michael (unfaithful partner)
     const michaelResponses = [
-      { questionId: 'trust', type: 'scale', answer: '4' },
+      { questionId: 'trust', type: 'scale', answer: '3' },
       { questionId: 'commitment', type: 'scale', answer: '5' },
-      { questionId: 'transparency', type: 'scale', answer: '4' },
-      { questionId: 'emotional_safety', type: 'scale', answer: '3' },
-      { questionId: 'empathy_gap', type: 'scale', answer: '3' },
-      { questionId: 'hope', type: 'scale', answer: '4' },
-      { questionId: 'tangible_action', type: 'text', answer: 'I wish she would let me hold her sometimes without pulling away. Physical touch used to be how we connected and I miss that.' },
-      { questionId: 'biggest_wall', type: 'text', answer: 'She says she wants to move forward but then won\'t let me forget the past. I feel like I\'m being punished forever and nothing I do will ever be enough.' },
-      { questionId: 'hesitant_thought', type: 'text', answer: 'I\'m terrified that I broke something that can\'t be fixed. And I\'m scared that if she knew how much shame I carry, she\'d see me as weak.' },
-      { questionId: 'own_struggle', type: 'text', answer: 'I get defensive too quickly when she brings things up. Instead of listening, I start making excuses or trying to "fix" things instead of just being present.' },
-      { questionId: 'do_differently', type: 'text', answer: 'I need to stop waiting for her to heal on my timeline. This is going to take as long as it takes and my impatience is making it worse.' },
+      { questionId: 'transparency', type: 'scale', answer: '5' },
+      { questionId: 'emotional_safety', type: 'scale', answer: '2' },
+      { questionId: 'empathy_gap', type: 'scale', answer: '4' },
+      { questionId: 'hope', type: 'scale', answer: '3' },
+      { questionId: 'tangible_action', type: 'text', answer: 'I need her to eventually see me as more than just "the person who cheated." I\'m trying so hard to be a better husband but sometimes I feel like I\'ll always be defined by my worst mistake.' },
+      { questionId: 'biggest_wall', type: 'text', answer: 'The constant surveillance is suffocating. I understand why she needs it, but living under a microscope 24/7 makes me feel like a prisoner. I\'m afraid to even talk to a female coworker about work stuff.' },
+      { questionId: 'hesitant_thought', type: 'text', answer: 'There were real problems in our marriage before this happened. I\'m not using that as an excuse, but I wish we could also talk about the loneliness I felt for years. It doesn\'t justify what I did, but it\'s part of the story.' },
+      { questionId: 'own_struggle', type: 'text', answer: 'Sometimes I minimize what I did. I catch myself thinking "it was only three months" or "at least I didn\'t leave." That\'s me trying to feel less guilty and it\'s not fair to her.' },
+      { questionId: 'do_differently', type: 'text', answer: 'I need to stop getting frustrated when she has a bad day about this. Six months later and I still expect her to be "over it." That\'s unrealistic and selfish of me.' },
     ];
 
     // Insert Sarah's responses
