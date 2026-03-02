@@ -9,6 +9,7 @@ import sessionsRouter from './routes/sessions.js';
 import responsesRouter from './routes/responses.js';
 import couplesRouter from './routes/couples.js';
 import followupRouter from './routes/followup.js';
+import partnerQuestionsRouter from './routes/partnerQuestions.js';
 import { generateAdvice } from './openai.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,6 +27,7 @@ app.use('/api/sessions', sessionsRouter);
 app.use('/api/sessions', responsesRouter);
 app.use('/api/couples', couplesRouter);
 app.use('/api/followup', followupRouter);
+app.use('/api/partner-questions', partnerQuestionsRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -131,6 +131,12 @@ function Results() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [activeFollowupId, setActiveFollowupId] = useState(null);
 
+  // Partner questions state
+  const [partnerQuestions, setPartnerQuestions] = useState([]);
+  const [sentQuestions, setSentQuestions] = useState([]);
+  const [newQuestion, setNewQuestion] = useState('');
+  const [sendingQuestion, setSendingQuestion] = useState(false);
+
   // Memoize parsed advice sections
   const adviceSections = useMemo(() => parseAdviceSections(advice), [advice]);
 
@@ -388,10 +394,47 @@ function Results() {
     }
   };
 
+  // Partner questions functions
+  const fetchPartnerQuestions = async () => {
+    try {
+      const response = await fetch(`/api/partner-questions/${sessionId}/for/${token}`);
+      const data = await response.json();
+      if (response.ok) {
+        setPartnerQuestions(data.received || []);
+        setSentQuestions(data.sent || []);
+      }
+    } catch (err) {
+      console.error('Error fetching partner questions:', err);
+    }
+  };
+
+  const sendPartnerQuestion = async () => {
+    if (!newQuestion.trim() || sendingQuestion) return;
+
+    setSendingQuestion(true);
+    try {
+      const response = await fetch(`/api/partner-questions/${sessionId}/send/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: newQuestion.trim() }),
+      });
+
+      if (response.ok) {
+        setNewQuestion('');
+        await fetchPartnerQuestions();
+      }
+    } catch (err) {
+      console.error('Error sending question:', err);
+    } finally {
+      setSendingQuestion(false);
+    }
+  };
+
   // Load followups after advice loads
   useEffect(() => {
     if (pinVerified && advice && token) {
       fetchFollowups();
+      fetchPartnerQuestions();
     }
   }, [pinVerified, advice, token]);
 
@@ -642,6 +685,21 @@ function Results() {
 
           {/* RIGHT COLUMN — Next Step */}
           <div className="next-step-column">
+            {/* Questions from Partner */}
+            {partnerQuestions.length > 0 && (
+              <div className="partner-question-card">
+                <h2>Question from {partnerName || 'Your Partner'}</h2>
+                {partnerQuestions.map((q) => (
+                  <div key={q.id} className="partner-question-item">
+                    <p className="partner-question-text">"{q.question_text}"</p>
+                    <span className="partner-question-time">
+                      {new Date(q.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="next-step-card">
               <h2>Your Next Step Together</h2>
               <p className="next-step-subtitle">A follow-up prompt for you both to answer</p>
@@ -807,6 +865,42 @@ function Results() {
                 })}
               </div>
             )}
+
+            {/* Ask Your Partner a Question */}
+            <div className="ask-partner-card">
+              <h3>Ask {partnerName || 'Your Partner'} a Question</h3>
+              <p className="ask-partner-subtitle">Send a question directly to your partner</p>
+              <div className="ask-partner-form">
+                <textarea
+                  value={newQuestion}
+                  onChange={(e) => setNewQuestion(e.target.value)}
+                  placeholder="What would you like to ask your partner?"
+                  rows={3}
+                />
+                <button
+                  className="btn btn-primary btn-block"
+                  onClick={sendPartnerQuestion}
+                  disabled={sendingQuestion || !newQuestion.trim()}
+                >
+                  {sendingQuestion ? 'Sending...' : 'Send Question'}
+                </button>
+              </div>
+
+              {/* Sent questions */}
+              {sentQuestions.length > 0 && (
+                <div className="sent-questions">
+                  <h4>Questions You've Sent</h4>
+                  {sentQuestions.map((q) => (
+                    <div key={q.id} className="sent-question-item">
+                      <p>"{q.question_text}"</p>
+                      <span className="sent-question-time">
+                        {new Date(q.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

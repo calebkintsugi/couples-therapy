@@ -74,6 +74,19 @@ export async function initDb() {
         UNIQUE(session_id, question_number)
       )
     `);
+
+    // Create partner_questions table for direct partner-to-partner questions
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS partner_questions (
+        id SERIAL PRIMARY KEY,
+        session_id TEXT NOT NULL REFERENCES sessions(id),
+        from_partner TEXT NOT NULL CHECK (from_partner IN ('A', 'B')),
+        to_partner TEXT NOT NULL CHECK (to_partner IN ('A', 'B')),
+        question_text TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
   } catch (e) {
     // Columns may already exist
   }

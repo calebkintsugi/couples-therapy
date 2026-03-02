@@ -938,10 +938,11 @@ textarea {
 }
 
 .text-question-hint {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: var(--space-sm);
+  font-size: 15px;
+  color: var(--primary);
+  margin-top: var(--space-md);
   margin-bottom: 0;
+  font-weight: 500;
 }
 
 .scale-container {
@@ -2523,4 +2524,103 @@ textarea {
     text-align: center;
     gap: var(--space-md);
   }
+}
+
+/* ========================================
+   Partner Questions
+   ======================================== */
+
+.partner-question-card {
+  background: linear-gradient(to bottom, #f0f7ff, #e8f2ff);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.partner-question-card h2 {
+  font-size: 18px;
+  margin-bottom: var(--space-md);
+  color: var(--primary);
+}
+
+.partner-question-item {
+  background: white;
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.partner-question-item:last-child {
+  margin-bottom: 0;
+}
+
+.partner-question-text {
+  font-size: 16px;
+  font-style: italic;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.partner-question-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ask-partner-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+.ask-partner-card h3 {
+  font-size: 18px;
+  margin-bottom: var(--space-xs);
+}
+
+.ask-partner-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.ask-partner-form textarea {
+  width: 100%;
+  margin-bottom: var(--space-md);
+  resize: vertical;
+}
+
+.sent-questions {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border);
+}
+
+.sent-questions h4 {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.sent-question-item {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.sent-question-item:last-child {
+  border-bottom: none;
+}
+
+.sent-question-item p {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.sent-question-time {
+  font-size: 12px;
+  color: var(--text-muted);
 }
