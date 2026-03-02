@@ -74,9 +74,6 @@ function Landing() {
           ))}
         </div>
 
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', textAlign: 'center' }}>
-          Your answers stay private. Partners never see each other's responses.
-        </p>
 
         {error && <div className="error-message">{error}</div>}
 
