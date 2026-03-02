@@ -74,8 +74,8 @@ function Landing() {
 
               <p className="hero-description">
                 A supportive space for couples to strengthen their relationship.
-                Answer a few questions independently, then receive personalized
-                guidance for your journey forward.
+                Answer questions independently, then receive personalized
+                guidance for strengthening your relationship.
               </p>
 
               <ul className="hero-benefits">
