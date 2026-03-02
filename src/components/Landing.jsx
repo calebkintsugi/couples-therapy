@@ -147,7 +147,7 @@ function Landing() {
                   <div className="step-number">4</div>
                   <div className="step-content">
                     <h4>Continue the conversation</h4>
-                    <p>Ask follow-up questions and go deeper with AI-suggested prompts.</p>
+                    <p>Ask follow-up questions and go deeper with your partner with follow-up prompts.</p>
                   </div>
                 </div>
               </div>
@@ -161,7 +161,7 @@ function Landing() {
         <div className="landing-container">
           <div className="hero-image-wrapper">
             <img
-              src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=80"
+              src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=80"
               alt="Couple reconnecting together"
               className="hero-image"
             />
