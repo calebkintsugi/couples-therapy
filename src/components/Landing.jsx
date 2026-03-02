@@ -92,13 +92,13 @@ function Landing() {
                   onClick={() => createSession()}
                   disabled={loading}
                 >
-                  {loading ? 'Creating Session...' : 'Get Started'}
+                  {loading ? 'Creating Session...' : 'New Couples: Get Started'}
                 </button>
                 <button
                   className="btn btn-secondary"
                   onClick={() => setShowReturning(true)}
                 >
-                  I Have a Code
+                  Returning Couples: Enter Code
                 </button>
               </div>
 
