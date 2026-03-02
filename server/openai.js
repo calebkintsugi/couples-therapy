@@ -79,7 +79,7 @@ async function callAI(systemPrompt, userPrompt, aiModel = 'openai', maxTokens = 
   return callOpenAI(systemPrompt, userPrompt, maxTokens);
 }
 
-export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, category, unfaithfulPartner = null, partnerAName = 'Partner A', partnerBName = 'Partner B', aiModel = 'openai') {
+export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, category, unfaithfulPartner = null, partnerAName = 'Partner A', partnerBName = 'Partner B', aiModel = 'openai', intakeType = 'long') {
   const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
 
   // Determine roles for infidelity category
@@ -133,7 +133,48 @@ Guardrails for balanced honesty:
 - AVOID NEUTRALITY FOR NEUTRALITY'S SAKE: If one partner is putting in more effort, gently acknowledge that. True advice isn't always 50/50.
 - THE "WE" VS "I" CHECK: Look at how they use collective vs individual language in their open-ended responses. If one says "we" and the other says "I/me," flag this as a blind spot about shared vs individual framing.`;
 
-  const userPrompt = `Analyze these questionnaire responses from a couple focused on: ${categoryInfo.name} (${categoryInfo.context}).
+  let userPrompt;
+
+  if (intakeType === 'short') {
+    // Condensed prompt for short intake (3 questions)
+    userPrompt = `Analyze these brief questionnaire responses from a couple focused on: ${categoryInfo.name} (${categoryInfo.context}).
+
+Write a report specifically for ${targetName}. Address them directly by name.${roleContext}
+
+${partnerAFormatted}
+
+${partnerBFormatted}
+
+Write a personalized report. IMPORTANT: Do NOT use any markdown formatting - no asterisks, no hashtags, no bold, no headers. Just plain text with section titles in ALL CAPS on their own line.
+
+Use this exact structure with these exact headers (including emojis):
+
+📍 QUICK ASSESSMENT
+
+Write 3-4 sentences that cut to the core of what's happening. Be punchy, observant, and insightful. What's the real dynamic here based on what they shared? If there's something positive to note, include it.
+
+End with: "Here's one thing that might surprise you about your partner:" followed by a specific insight from their response.
+
+🗺️ THREE STEPS FORWARD
+
+Write 3 numbered action items (1. 2. 3.):
+1. Something specific to do THIS WEEK
+2. A conversation starter or script to use with your partner
+3. A longer-term mindset or habit to develop
+
+💬 CONVERSATION PROMPT
+
+Write one specific question they should ask their partner to deepen understanding, based on what both partners shared.
+
+Be warm but direct. Since this is a quick check-in, keep the total response to approximately 300-400 words.
+
+CRITICAL: Output plain text only. No markdown, no asterisks (*), no hashtags (#), no bold formatting.`;
+
+    return callAI(systemPrompt, userPrompt, aiModel, 1200);
+  }
+
+  // Full prompt for long intake (10 questions)
+  userPrompt = `Analyze these questionnaire responses from a couple focused on: ${categoryInfo.name} (${categoryInfo.context}).
 
 Write a report specifically for ${targetName}. Address them directly by name.${roleContext}
 

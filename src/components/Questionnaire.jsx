@@ -3,7 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import ScaleQuestion from './ScaleQuestion';
 import TextQuestion from './TextQuestion';
 import Disclaimer from './Disclaimer';
-import { categories, questionsByCategory, getCategoryById } from '../questions';
+import { categories, questionsByCategory, shortIntakeQuestions, getCategoryById } from '../questions';
 
 function Questionnaire() {
   const { sessionId } = useParams();
@@ -17,17 +17,30 @@ function Questionnaire() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // Flow state for Partner A: 'name' -> 'category' -> 'role' (if infidelity) -> 'share' -> 'questions'
+  // Flow state for Partner A: 'setup' -> 'share' -> 'questions'
   // Flow state for Partner B: 'name' -> 'category-display' -> 'role-display' (if infidelity) -> 'questions'
   const [step, setStep] = useState('loading');
   const [category, setCategory] = useState(null);
+  const [intakeType, setIntakeType] = useState('long');
   const [role, setRole] = useState(null); // 'betrayed' or 'unfaithful' (only for infidelity)
   const [sessionData, setSessionData] = useState(null);
   const [name, setName] = useState('');
   const [partnerName, setPartnerName] = useState('');
 
-  // Get questions for the selected category
-  const categoryQuestions = category ? questionsByCategory[category] : null;
+  // Setup form state (for Partner A combined screen)
+  const [setupCategory, setSetupCategory] = useState(null);
+  const [setupIntakeType, setSetupIntakeType] = useState('long');
+  const [setupRole, setSetupRole] = useState(null);
+
+  // Get questions based on category and intake type
+  const getQuestions = () => {
+    if (intakeType === 'short') {
+      return shortIntakeQuestions;
+    }
+    return category ? questionsByCategory[category] : null;
+  };
+
+  const categoryQuestions = getQuestions();
   const scaleQuestions = categoryQuestions?.scale || [];
   const textQuestions = categoryQuestions?.text || [];
   const allQuestions = [...scaleQuestions, ...textQuestions];
@@ -55,26 +68,23 @@ function Questionnaire() {
 
         if (data.category) {
           setCategory(data.category);
+          setSetupCategory(data.category);
+        }
+        if (data.intakeType) {
+          setIntakeType(data.intakeType);
+          setSetupIntakeType(data.intakeType);
         }
 
         if (partner === 'A') {
           // Partner A flow
-          if (data.partnerAName) {
+          if (data.partnerAName && data.category) {
             setName(data.partnerAName);
-            if (data.category) {
-              if (data.category === 'infidelity' && data.unfaithfulPartner) {
-                setRole(data.unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed');
-                setStep('share');
-              } else if (data.category === 'infidelity') {
-                setStep('role');
-              } else {
-                setStep('share');
-              }
-            } else {
-              setStep('category');
+            if (data.category === 'infidelity' && data.unfaithfulPartner) {
+              setRole(data.unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed');
             }
+            setStep('share');
           } else {
-            setStep('name');
+            setStep('setup');
           }
         } else {
           // Partner B flow
@@ -97,6 +107,39 @@ function Questionnaire() {
       .catch(() => navigate('/'));
   }, [sessionId, partner, navigate]);
 
+  const handleSetupSubmit = async () => {
+    if (!name.trim() || !setupCategory || !setupIntakeType) return;
+    if (setupCategory === 'infidelity' && !setupRole) return;
+
+    setError('');
+
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/setup`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          category: setupCategory,
+          intakeType: setupIntakeType,
+          unfaithfulPartner: setupCategory === 'infidelity' ? (setupRole === 'unfaithful' ? 'A' : 'B') : null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save setup');
+      }
+
+      setCategory(setupCategory);
+      setIntakeType(setupIntakeType);
+      if (setupCategory === 'infidelity') {
+        setRole(setupRole);
+      }
+      setStep('share');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleNameSubmit = async () => {
     if (!name.trim()) return;
 
@@ -111,66 +154,17 @@ function Questionnaire() {
         throw new Error('Failed to save name');
       }
 
-      if (partner === 'A') {
-        setStep('category');
-      } else {
-        // Partner B
-        if (sessionData?.category) {
-          if (sessionData.category === 'infidelity' && sessionData.unfaithfulPartner) {
-            setRole(sessionData.unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed');
-            setStep('role-display');
-          } else {
-            setStep('category-display');
-          }
+      // Partner B flow
+      if (sessionData?.category) {
+        if (sessionData.category === 'infidelity' && sessionData.unfaithfulPartner) {
+          setRole(sessionData.unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed');
+          setStep('role-display');
         } else {
-          setStep('questions');
+          setStep('category-display');
         }
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleCategorySelect = async (selectedCategory) => {
-    try {
-      const response = await fetch(`/api/sessions/${sessionId}/category`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: selectedCategory }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save category');
-      }
-
-      setCategory(selectedCategory);
-
-      if (selectedCategory === 'infidelity') {
-        setStep('role');
       } else {
-        setStep('share');
+        setStep('questions');
       }
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleRoleSelect = async (selectedRole) => {
-    const unfaithfulPartner = selectedRole === 'unfaithful' ? 'A' : 'B';
-
-    try {
-      const response = await fetch(`/api/sessions/${sessionId}/role`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ unfaithfulPartner }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save role');
-      }
-
-      setRole(selectedRole);
-      setStep('share');
     } catch (err) {
       setError(err.message);
     }
@@ -258,15 +252,171 @@ function Questionnaire() {
     );
   }
 
-  // Name input
+  // Partner A: Combined setup screen
+  if (step === 'setup') {
+    const canSubmitSetup = name.trim() && setupCategory && setupIntakeType &&
+      (setupCategory !== 'infidelity' || setupRole);
+
+    return (
+      <div className="card">
+        <h2>Let&apos;s Get Started</h2>
+
+        {error && <div className="error-message">{error}</div>}
+
+        {/* Name */}
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+            What should we call you?
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name or nickname"
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        {/* Category */}
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
+            What area would you like to focus on?
+          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => {
+                  setSetupCategory(cat.id);
+                  if (cat.id !== 'infidelity') {
+                    setSetupRole(null);
+                  }
+                }}
+                style={{
+                  padding: '0.75rem 1rem',
+                  border: setupCategory === cat.id ? '2px solid var(--primary)' : '2px solid var(--border)',
+                  borderRadius: '8px',
+                  background: setupCategory === cat.id ? 'var(--primary-light)' : 'var(--surface)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                }}
+              >
+                <span style={{ fontSize: '1.25rem' }}>{cat.icon}</span>
+                <div>
+                  <strong>{cat.name}</strong>
+                  <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '0.125rem' }}>
+                    {cat.description}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Role (only for infidelity) */}
+        {setupCategory === 'infidelity' && (
+          <div style={{ marginBottom: '2rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
+              Which role applies to you?
+            </label>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setSetupRole('betrayed')}
+                style={{
+                  flex: 1,
+                  padding: '1rem',
+                  border: setupRole === 'betrayed' ? '2px solid var(--primary)' : '2px solid var(--border)',
+                  borderRadius: '8px',
+                  background: setupRole === 'betrayed' ? 'var(--primary-light)' : 'var(--surface)',
+                  cursor: 'pointer',
+                }}
+              >
+                I am the <strong>betrayed</strong> partner
+              </button>
+              <button
+                type="button"
+                onClick={() => setSetupRole('unfaithful')}
+                style={{
+                  flex: 1,
+                  padding: '1rem',
+                  border: setupRole === 'unfaithful' ? '2px solid var(--primary)' : '2px solid var(--border)',
+                  borderRadius: '8px',
+                  background: setupRole === 'unfaithful' ? 'var(--primary-light)' : 'var(--surface)',
+                  cursor: 'pointer',
+                }}
+              >
+                I am the <strong>unfaithful</strong> partner
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Intake Type */}
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
+            How much time do you have?
+          </label>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              type="button"
+              onClick={() => setSetupIntakeType('short')}
+              style={{
+                flex: 1,
+                padding: '1rem',
+                border: setupIntakeType === 'short' ? '2px solid var(--primary)' : '2px solid var(--border)',
+                borderRadius: '8px',
+                background: setupIntakeType === 'short' ? 'var(--primary-light)' : 'var(--surface)',
+                cursor: 'pointer',
+              }}
+            >
+              <strong>Quick Check-In</strong>
+              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.25rem' }}>
+                3 questions (~2 min)
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSetupIntakeType('long')}
+              style={{
+                flex: 1,
+                padding: '1rem',
+                border: setupIntakeType === 'long' ? '2px solid var(--primary)' : '2px solid var(--border)',
+                borderRadius: '8px',
+                background: setupIntakeType === 'long' ? 'var(--primary-light)' : 'var(--surface)',
+                cursor: 'pointer',
+              }}
+            >
+              <strong>Full Assessment</strong>
+              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.25rem' }}>
+                10 questions (~5-10 min)
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <button
+          className="btn btn-primary btn-block"
+          onClick={handleSetupSubmit}
+          disabled={!canSubmitSetup}
+        >
+          Continue
+        </button>
+      </div>
+    );
+  }
+
+  // Partner B: Name input
   if (step === 'name') {
     return (
       <div className="card">
         <h2>Welcome</h2>
         <p style={{ marginBottom: '1.5rem' }}>
-          {partner === 'A'
-            ? 'Before we begin, how would you like to be called?'
-            : `${partnerName} has invited you to complete this questionnaire. How would you like to be called?`}
+          {partnerName} has invited you to complete this questionnaire. How would you like to be called?
         </p>
 
         {error && <div className="error-message">{error}</div>}
@@ -291,60 +441,21 @@ function Questionnaire() {
     );
   }
 
-  // Partner A: Category selection
-  if (step === 'category') {
-    return (
-      <div className="card">
-        <h2>Hi {name}</h2>
-        <p style={{ marginBottom: '1.5rem' }}>
-          What area would you like to focus on?
-        </p>
-
-        {error && <div className="error-message">{error}</div>}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              className="btn btn-secondary btn-block"
-              onClick={() => handleCategorySelect(cat.id)}
-              style={{
-                textAlign: 'left',
-                padding: '1rem 1.25rem',
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-                gap: '0.75rem'
-              }}
-            >
-              <span style={{ fontSize: '1.5rem' }}>{cat.icon}</span>
-              <div>
-                <strong>{cat.name}</strong>
-                <div style={{ fontSize: '0.875rem', opacity: 0.8, marginTop: '0.25rem' }}>
-                  {cat.description}
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   // Partner B: Category display
   if (step === 'category-display') {
     const categoryInfo = getCategoryById(category);
+    const intakeLabel = intakeType === 'short' ? 'Quick Check-In (3 questions)' : 'Full Assessment (10 questions)';
     return (
       <div className="card">
         <h2>Hi {name}</h2>
-        <p style={{ marginBottom: '1.5rem' }}>
-          {partnerName} has selected the focus area:
+        <p style={{ marginBottom: '1rem' }}>
+          {partnerName} has selected:
         </p>
         <div style={{
           background: 'var(--background)',
           padding: '1.5rem',
           borderRadius: '12px',
-          marginBottom: '1.5rem',
+          marginBottom: '1rem',
           display: 'flex',
           alignItems: 'center',
           gap: '1rem'
@@ -355,6 +466,9 @@ function Questionnaire() {
             <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>{categoryInfo?.description}</p>
           </div>
         </div>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+          Format: {intakeLabel}
+        </p>
         <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
           Continue to Questionnaire
         </button>
@@ -362,43 +476,15 @@ function Questionnaire() {
     );
   }
 
-  // Partner A: Role selection (only for infidelity)
-  if (step === 'role') {
-    return (
-      <div className="card">
-        <h2>One More Question</h2>
-        <p style={{ marginBottom: '2rem' }}>
-          To provide the most relevant guidance, please indicate your role:
-        </p>
-
-        {error && <div className="error-message">{error}</div>}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <button
-            className="btn btn-primary btn-block"
-            onClick={() => handleRoleSelect('betrayed')}
-          >
-            I am the betrayed partner
-          </button>
-          <button
-            className="btn btn-primary btn-block"
-            onClick={() => handleRoleSelect('unfaithful')}
-          >
-            I am the unfaithful partner
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // Partner A: Share link
   if (step === 'share') {
     const categoryInfo = getCategoryById(category);
+    const intakeLabel = intakeType === 'short' ? 'Quick Check-In' : 'Full Assessment';
     return (
       <div className="card">
         <h2>Share With Your Partner</h2>
         <p>
-          Thanks, {name}. You selected <strong>{categoryInfo?.name}</strong>
+          Thanks, {name}. You selected <strong>{categoryInfo?.name}</strong> with the <strong>{intakeLabel}</strong>
           {role && <> and identified as the <strong>{role}</strong> partner</>}.
         </p>
         <p>
@@ -420,14 +506,18 @@ function Questionnaire() {
   // Partner B: Role display (only for infidelity)
   if (step === 'role-display') {
     const categoryInfo = getCategoryById(category);
+    const intakeLabel = intakeType === 'short' ? 'Quick Check-In (3 questions)' : 'Full Assessment (10 questions)';
     return (
       <div className="card">
         <h2>Hi {name}</h2>
         <p>
           {partnerName} has selected <strong>{categoryInfo?.name}</strong> as the focus area.
         </p>
-        <p style={{ marginBottom: '2rem' }}>
+        <p>
           Based on their response, you are participating as the <strong>{role}</strong> partner.
+        </p>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+          Format: {intakeLabel}
         </p>
         <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
           Continue to Questionnaire
@@ -452,6 +542,7 @@ function Questionnaire() {
       <h2>{name}&apos;s Questionnaire</h2>
       <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
         {categoryInfo?.icon} {categoryInfo?.name}
+        {intakeType === 'short' && ' (Quick Check-In)'}
       </p>
 
       {currentQuestion === 0 && <Disclaimer />}

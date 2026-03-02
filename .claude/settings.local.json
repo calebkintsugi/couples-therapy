@@ -10,7 +10,8 @@
       "Bash(npm install)",
       "Bash(git push:*)",
       "WebFetch(domain:unsplash.com)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(/opt/homebrew/bin/node:*)"
     ]
   }
 }

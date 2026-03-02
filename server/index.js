@@ -109,7 +109,8 @@ app.post('/api/test/generate-advice', async (req, res) => {
     partnerBRole,
     partnerAResponses,
     partnerBResponses,
-    aiModel = 'openai'
+    aiModel = 'openai',
+    intakeType = 'long'
   } = req.body;
 
   try {
@@ -136,7 +137,8 @@ app.post('/api/test/generate-advice', async (req, res) => {
       unfaithfulPartner,
       partnerAName,
       partnerBName,
-      aiModel
+      aiModel,
+      intakeType
     );
 
     res.json({ advice, model: aiModel });

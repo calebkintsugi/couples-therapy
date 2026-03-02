@@ -69,9 +69,10 @@ router.post('/:sessionId/responses', async (req, res) => {
         const unfaithfulPartner = updatedSession.unfaithful_partner;
         const partnerAName = updatedSession.partner_a_name || 'Partner A';
         const partnerBName = updatedSession.partner_b_name || 'Partner B';
+        const intakeType = updatedSession.intake_type || 'long';
         const [adviceA, adviceB] = await Promise.all([
-          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'A', category, unfaithfulPartner, partnerAName, partnerBName),
-          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B', category, unfaithfulPartner, partnerAName, partnerBName)
+          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'A', category, unfaithfulPartner, partnerAName, partnerBName, 'openai', intakeType),
+          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B', category, unfaithfulPartner, partnerAName, partnerBName, 'openai', intakeType)
         ]);
 
         await db.query(
@@ -140,7 +141,8 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
       const category = session.category || 'communication';
       const partnerAName = session.partner_a_name || 'Partner A';
       const partnerBName = session.partner_b_name || 'Partner B';
-      advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner, category, session.unfaithful_partner, partnerAName, partnerBName);
+      const intakeType = session.intake_type || 'long';
+      advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner, category, session.unfaithful_partner, partnerAName, partnerBName, 'openai', intakeType);
 
       await db.query(
         `UPDATE sessions SET ${adviceField} = $1 WHERE id = $2`,
