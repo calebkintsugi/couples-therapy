@@ -131,6 +131,16 @@ function Results() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [activeFollowupId, setActiveFollowupId] = useState(null);
 
+  // Word counts
+  const [yourWordCount, setYourWordCount] = useState(0);
+  const [partnerWordCount, setPartnerWordCount] = useState(0);
+
+  // Edit mode state
+  const [showEditMode, setShowEditMode] = useState(false);
+  const [editResponses, setEditResponses] = useState([]);
+  const [loadingResponses, setLoadingResponses] = useState(false);
+  const [savingResponses, setSavingResponses] = useState(false);
+
   // Partner questions state
   const [partnerQuestions, setPartnerQuestions] = useState([]);
   const [sentQuestions, setSentQuestions] = useState([]);
@@ -219,12 +229,68 @@ function Results() {
       if (data.partnerName) {
         setPartnerName(data.partnerName);
       }
+      if (data.yourWordCount !== undefined) {
+        setYourWordCount(data.yourWordCount);
+      }
+      if (data.partnerWordCount !== undefined) {
+        setPartnerWordCount(data.partnerWordCount);
+      }
     } catch (err) {
       setError(err.message);
       console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadResponsesForEditing = async () => {
+    setLoadingResponses(true);
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/responses-by-token/${token}`);
+      const data = await response.json();
+      if (response.ok) {
+        setEditResponses(data.responses.filter(r => r.question_type === 'text'));
+        setShowEditMode(true);
+      }
+    } catch (err) {
+      console.error('Error loading responses:', err);
+    } finally {
+      setLoadingResponses(false);
+    }
+  };
+
+  const saveEditedResponses = async () => {
+    setSavingResponses(true);
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/responses-by-token/${token}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          responses: editResponses.map(r => ({
+            questionId: r.question_id,
+            answer: r.answer
+          }))
+        }),
+      });
+
+      if (response.ok) {
+        setShowEditMode(false);
+        // Regenerate advice with updated responses
+        await regenerateAdvice();
+      }
+    } catch (err) {
+      console.error('Error saving responses:', err);
+    } finally {
+      setSavingResponses(false);
+    }
+  };
+
+  const updateEditResponse = (questionId, newAnswer) => {
+    setEditResponses(prev =>
+      prev.map(r =>
+        r.question_id === questionId ? { ...r, answer: newAnswer } : r
+      )
+    );
   };
 
   const regenerateAdvice = async () => {
@@ -902,6 +968,74 @@ function Results() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Word counts and edit section */}
+        <div className="word-count-section">
+          <div className="word-count-stats">
+            <div className="word-count-item">
+              <span className="word-count-label">Your responses:</span>
+              <span className="word-count-value">{yourWordCount} words</span>
+            </div>
+            <div className="word-count-item">
+              <span className="word-count-label">{partnerName || 'Partner'}'s responses:</span>
+              <span className="word-count-value">{partnerWordCount} words</span>
+            </div>
+          </div>
+
+          {(yourWordCount < 100 || partnerWordCount < 100) && (
+            <p className="word-count-suggestion">
+              {yourWordCount < 100 && partnerWordCount < 100
+                ? 'Both of your responses were fairly brief. More detailed answers can lead to richer, more personalized guidance.'
+                : yourWordCount < 100
+                ? 'Your responses were fairly brief. Adding more detail could help generate richer guidance.'
+                : `${partnerName || 'Your partner'}'s responses were brief. They might consider adding more detail for better insights.`}
+            </p>
+          )}
+
+          {!showEditMode ? (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={loadResponsesForEditing}
+              disabled={loadingResponses}
+            >
+              {loadingResponses ? 'Loading...' : 'Edit Your Responses'}
+            </button>
+          ) : (
+            <div className="edit-responses-panel">
+              <h3>Edit Your Responses</h3>
+              <p className="edit-responses-hint">Update your answers below. Your guidance will be regenerated after saving.</p>
+
+              {editResponses.map((r) => (
+                <div key={r.question_id} className="edit-response-item">
+                  <label>{r.question_id.replace(/_/g, ' ')}</label>
+                  <textarea
+                    value={r.answer}
+                    onChange={(e) => updateEditResponse(r.question_id, e.target.value)}
+                    rows={4}
+                  />
+                </div>
+              ))}
+
+              <div className="edit-responses-actions">
+                <button
+                  className="btn btn-primary"
+                  onClick={saveEditedResponses}
+                  disabled={savingResponses}
+                >
+                  {savingResponses ? 'Saving & Regenerating...' : 'Save & Regenerate Guidance'}
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setShowEditMode(false)}
+                  disabled={savingResponses}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer actions */}

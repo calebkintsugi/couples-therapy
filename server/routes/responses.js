@@ -358,6 +358,25 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
       }
     }
 
+    // Calculate word counts for both partners
+    const partnerAResponses = await db.query(
+      'SELECT answer FROM responses WHERE session_id = $1 AND partner = $2 AND question_type = $3',
+      [sessionId, 'A', 'text']
+    );
+    const partnerBResponses = await db.query(
+      'SELECT answer FROM responses WHERE session_id = $1 AND partner = $2 AND question_type = $3',
+      [sessionId, 'B', 'text']
+    );
+
+    const countWords = (responses) => {
+      return responses.rows.reduce((total, r) => {
+        return total + (r.answer ? r.answer.trim().split(/\s+/).filter(w => w).length : 0);
+      }, 0);
+    };
+
+    const yourWordCount = partner === 'A' ? countWords(partnerAResponses) : countWords(partnerBResponses);
+    const partnerWordCount = partner === 'A' ? countWords(partnerBResponses) : countWords(partnerAResponses);
+
     res.json({
       advice,
       partner,
@@ -366,7 +385,9 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
       coupleCode: session.couple_code,
       aiModel: session.ai_model || 'openai',
       yourName: partner === 'A' ? session.partner_a_name : session.partner_b_name,
-      partnerName: partner === 'A' ? session.partner_b_name : session.partner_a_name
+      partnerName: partner === 'A' ? session.partner_b_name : session.partner_a_name,
+      yourWordCount,
+      partnerWordCount
     });
   } catch (error) {
     console.error('Error fetching advice:', error);
@@ -425,6 +446,96 @@ router.post('/:sessionId/chat-by-token/:token', async (req, res) => {
   } catch (error) {
     console.error('Error in chat:', error);
     res.status(500).json({ error: 'Failed to process chat message' });
+  }
+});
+
+// Get responses for editing
+router.get('/:sessionId/responses-by-token/:token', async (req, res) => {
+  const { sessionId, token } = req.params;
+
+  try {
+    const sessionResult = await db.query('SELECT * FROM sessions WHERE id = $1', [sessionId]);
+
+    if (sessionResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const session = sessionResult.rows[0];
+
+    // Determine which partner this token belongs to
+    let partner = null;
+    if (token === session.partner_a_token) {
+      partner = 'A';
+    } else if (token === session.partner_b_token) {
+      partner = 'B';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    const responses = await db.query(
+      'SELECT question_id, question_type, answer FROM responses WHERE session_id = $1 AND partner = $2',
+      [sessionId, partner]
+    );
+
+    res.json({
+      partner,
+      responses: responses.rows,
+      category: session.category,
+      intakeType: session.intake_type || 'long'
+    });
+  } catch (error) {
+    console.error('Error fetching responses:', error);
+    res.status(500).json({ error: 'Failed to fetch responses' });
+  }
+});
+
+// Update responses (for editing)
+router.put('/:sessionId/responses-by-token/:token', async (req, res) => {
+  const { sessionId, token } = req.params;
+  const { responses } = req.body;
+
+  if (!responses || !Array.isArray(responses)) {
+    return res.status(400).json({ error: 'Invalid responses format' });
+  }
+
+  try {
+    const sessionResult = await db.query('SELECT * FROM sessions WHERE id = $1', [sessionId]);
+
+    if (sessionResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const session = sessionResult.rows[0];
+
+    // Determine which partner this token belongs to
+    let partner = null;
+    if (token === session.partner_a_token) {
+      partner = 'A';
+    } else if (token === session.partner_b_token) {
+      partner = 'B';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    // Update responses
+    for (const response of responses) {
+      await db.query(
+        `UPDATE responses SET answer = $1 WHERE session_id = $2 AND partner = $3 AND question_id = $4`,
+        [response.answer, sessionId, partner, response.questionId]
+      );
+    }
+
+    // Clear the advice so it will be regenerated
+    const adviceField = partner === 'A' ? 'partner_a_advice' : 'partner_b_advice';
+    await db.query(
+      `UPDATE sessions SET ${adviceField} = NULL WHERE id = $1`,
+      [sessionId]
+    );
+
+    res.json({ success: true, message: 'Responses updated. Your guidance will be regenerated.' });
+  } catch (error) {
+    console.error('Error updating responses:', error);
+    res.status(500).json({ error: 'Failed to update responses' });
   }
 });
 
