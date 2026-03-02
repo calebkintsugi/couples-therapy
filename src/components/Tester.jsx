@@ -27,12 +27,54 @@ function Tester() {
   const [advice, setAdvice] = useState({});
   const [loading, setLoading] = useState({});
   const [error, setError] = useState({});
-  const [aiModel, setAiModel] = useState('openai'); // 'openai' or 'gemini'
+  const [aiModel, setAiModel] = useState(() => Math.random() < 0.5 ? 'openai' : 'gemini');
+  const [testSessions, setTestSessions] = useState({});
+  const [creatingSession, setCreatingSession] = useState(false);
 
   const couple = testCouples[activeCategory];
   const categoryInfo = testerCategories.find(c => c.id === activeCategory);
   const questionsKey = categoryInfo?.questionsKey || activeCategory;
   const questions = questionsByCategory[questionsKey];
+
+  const createTestSession = async () => {
+    setCreatingSession(true);
+    try {
+      const coupleData = testCouples[activeCategory];
+      const catInfo = testerCategories.find(c => c.id === activeCategory);
+      const actualCategory = catInfo?.questionsKey || activeCategory;
+
+      const response = await fetch('/api/test/create-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: actualCategory,
+          partnerAName: coupleData.partnerA.name,
+          partnerBName: coupleData.partnerB.name,
+          partnerARole: coupleData.partnerA.role,
+          partnerBRole: coupleData.partnerB.role,
+          partnerAResponses: [
+            ...coupleData.partnerA.scale.map(s => ({ questionId: s.id, type: 'scale', answer: s.answer })),
+            ...coupleData.partnerA.text.map(t => ({ questionId: t.id, type: 'text', answer: t.answer })),
+          ],
+          partnerBResponses: [
+            ...coupleData.partnerB.scale.map(s => ({ questionId: s.id, type: 'scale', answer: s.answer })),
+            ...coupleData.partnerB.text.map(t => ({ questionId: t.id, type: 'text', answer: t.answer })),
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create session');
+      }
+
+      const data = await response.json();
+      setTestSessions(prev => ({ ...prev, [activeCategory]: data.sessionId }));
+    } catch (err) {
+      console.error('Error creating test session:', err);
+    } finally {
+      setCreatingSession(false);
+    }
+  };
 
   const generateAdvice = async (category, partner, model = aiModel) => {
     const key = `${category}_${partner}_${model}`;
@@ -253,14 +295,62 @@ function Tester() {
         marginBottom: '1.5rem',
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
       }}>
-        <h3 style={{ marginBottom: '0.5rem' }}>{categoryInfo?.icon} {categoryInfo?.name}</h3>
-        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-          <strong>{couple.partnerA.name}</strong>
-          {couple.partnerA.role && ` (${couple.partnerA.role})`}
-          {' & '}
-          <strong>{couple.partnerB.name}</strong>
-          {couple.partnerB.role && ` (${couple.partnerB.role})`}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h3 style={{ marginBottom: '0.5rem' }}>{categoryInfo?.icon} {categoryInfo?.name}</h3>
+            <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+              <strong>{couple.partnerA.name}</strong>
+              {couple.partnerA.role && ` (${couple.partnerA.role})`}
+              {' & '}
+              <strong>{couple.partnerB.name}</strong>
+              {couple.partnerB.role && ` (${couple.partnerB.role})`}
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            {testSessions[activeCategory] ? (
+              <div style={{ fontSize: '0.85rem' }}>
+                <div style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                  Session: <code style={{ background: 'var(--background)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>{testSessions[activeCategory]}</code>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                  <a
+                    href={`/session/${testSessions[activeCategory]}/results?partner=A`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--primary)', textDecoration: 'underline' }}
+                  >
+                    {couple.partnerA.name}&apos;s View
+                  </a>
+                  <span style={{ color: 'var(--text-secondary)' }}>|</span>
+                  <a
+                    href={`/session/${testSessions[activeCategory]}/results?partner=B`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--primary)', textDecoration: 'underline' }}
+                  >
+                    {couple.partnerB.name}&apos;s View
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={createTestSession}
+                disabled={creatingSession}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: 'var(--secondary)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: creatingSession ? 'wait' : 'pointer',
+                  fontSize: '0.85rem',
+                }}
+              >
+                {creatingSession ? 'Creating...' : 'Create Test Session'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Sub-tabs */}

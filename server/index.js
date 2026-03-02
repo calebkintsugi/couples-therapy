@@ -98,6 +98,61 @@ app.post('/api/test/create-sample', async (req, res) => {
   }
 });
 
+// Create test session with dynamic data from tester
+app.post('/api/test/create-session', async (req, res) => {
+  const {
+    category,
+    partnerAName,
+    partnerBName,
+    partnerARole,
+    partnerBRole,
+    partnerAResponses,
+    partnerBResponses,
+  } = req.body;
+
+  const sessionId = nanoid(10);
+
+  try {
+    // Determine unfaithful partner for infidelity category
+    let unfaithfulPartner = null;
+    if (category === 'infidelity') {
+      unfaithfulPartner = partnerARole === 'unfaithful' ? 'A' : 'B';
+    }
+
+    // Create session
+    await db.query(
+      `INSERT INTO sessions (id, category, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed)
+       VALUES ($1, $2, $3, $4, $5, true, true)`,
+      [sessionId, category, unfaithfulPartner, partnerAName, partnerBName]
+    );
+
+    // Insert Partner A's responses
+    for (const r of partnerAResponses) {
+      await db.query(
+        `INSERT INTO responses (session_id, partner, question_id, question_type, answer) VALUES ($1, $2, $3, $4, $5)`,
+        [sessionId, 'A', r.questionId, r.type, String(r.answer)]
+      );
+    }
+
+    // Insert Partner B's responses
+    for (const r of partnerBResponses) {
+      await db.query(
+        `INSERT INTO responses (session_id, partner, question_id, question_type, answer) VALUES ($1, $2, $3, $4, $5)`,
+        [sessionId, 'B', r.questionId, r.type, String(r.answer)]
+      );
+    }
+
+    res.json({
+      sessionId,
+      partnerAResults: `/session/${sessionId}/results?partner=A`,
+      partnerBResults: `/session/${sessionId}/results?partner=B`,
+    });
+  } catch (error) {
+    console.error('Error creating test session:', error);
+    res.status(500).json({ error: 'Failed to create test session' });
+  }
+});
+
 // Generate advice for test couples (no database)
 app.post('/api/test/generate-advice', async (req, res) => {
   const {
