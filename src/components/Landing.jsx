@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Disclaimer from './Disclaimer';
+import { categories } from '../questions';
 
 function Landing() {
   const [loading, setLoading] = useState(false);
@@ -40,15 +41,42 @@ function Landing() {
           Answer a few questions independently, then receive personalized, AI-powered guidance for your journey forward.
         </p>
 
-        <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-          We offer guidance for: <strong>Infidelity Recovery</strong>, <strong>Communication Breakdown</strong>, <strong>Emotional Distance</strong>, <strong>Life Stress</strong>, <strong>Physical Intimacy</strong>, and <strong>Proactive Strengthening</strong>.
-        </p>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '0.75rem',
+          marginBottom: '1.5rem'
+        }}>
+          {categories.map((cat) => (
+            <div
+              key={cat.id}
+              style={{
+                background: 'var(--background)',
+                borderRadius: '12px',
+                padding: '1rem',
+                textAlign: 'center',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <div style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>{cat.icon}</div>
+              <div style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                {cat.name}
+              </div>
+            </div>
+          ))}
+        </div>
 
-        <ol>
-          <li>Create a session and share the private link with your partner</li>
-          <li>Each partner answers a brief questionnaire independently</li>
-          <li>Receive personalized, AI-powered guidance for healing</li>
-        </ol>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', textAlign: 'center' }}>
+          Your answers stay private. Partners never see each other's responses.
+        </p>
 
         {error && <div className="error-message">{error}</div>}
 
