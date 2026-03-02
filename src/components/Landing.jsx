@@ -103,7 +103,7 @@ function Landing() {
                     }, 100);
                   }}
                 >
-                  Returning Couples: Enter Code
+                  Returning Users: Enter Code
                 </button>
               </div>
 
