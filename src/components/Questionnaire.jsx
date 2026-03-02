@@ -10,7 +10,9 @@ function Questionnaire() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const partner = searchParams.get('partner') || 'A';
+  const token = searchParams.get('p');
+  const [partner, setPartner] = useState(null);
+  const [partnerBToken, setPartnerBToken] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -50,11 +52,16 @@ function Questionnaire() {
   const currentQ = allQuestions[currentQuestion];
   const isScale = currentQuestion < scaleQuestions.length;
 
-  const partnerBLink = `${window.location.origin}/session/${sessionId}?partner=B`;
+  const partnerBLink = partnerBToken ? `${window.location.origin}/session/${sessionId}?p=${partnerBToken}` : '';
 
   useEffect(() => {
-    // Fetch session data
-    fetch(`/api/sessions/${sessionId}`)
+    if (!token) {
+      navigate('/');
+      return;
+    }
+
+    // Fetch session data using token
+    fetch(`/api/sessions/${sessionId}/by-token/${token}`)
       .then((res) => {
         if (!res.ok) {
           navigate('/');
@@ -65,6 +72,10 @@ function Questionnaire() {
       .then((data) => {
         if (!data) return;
         setSessionData(data);
+        setPartner(data.partner);
+        if (data.partnerBToken) {
+          setPartnerBToken(data.partnerBToken);
+        }
 
         if (data.category) {
           setCategory(data.category);
@@ -75,7 +86,7 @@ function Questionnaire() {
           setSetupIntakeType(data.intakeType);
         }
 
-        if (partner === 'A') {
+        if (data.partner === 'A') {
           // Partner A flow
           if (data.partnerAName && data.category) {
             setName(data.partnerAName);
@@ -105,7 +116,7 @@ function Questionnaire() {
         }
       })
       .catch(() => navigate('/'));
-  }, [sessionId, partner, navigate]);
+  }, [sessionId, token, navigate]);
 
   const handleSetupSubmit = async () => {
     if (!name.trim() || !setupCategory || !setupIntakeType) return;
@@ -221,9 +232,9 @@ function Questionnaire() {
       }
 
       if (data.bothCompleted) {
-        navigate(`/session/${sessionId}/results?partner=${partner}`);
+        navigate(`/session/${sessionId}/results?p=${token}`);
       } else {
-        navigate(`/session/${sessionId}/waiting?partner=${partner}`);
+        navigate(`/session/${sessionId}/waiting?p=${token}`);
       }
     } catch (err) {
       setError(err.message);

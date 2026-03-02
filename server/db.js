@@ -41,6 +41,8 @@ export async function initDb() {
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_b_name TEXT`);
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS category TEXT`);
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS intake_type TEXT DEFAULT 'long'`);
+    await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_a_token TEXT`);
+    await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_b_token TEXT`);
   } catch (e) {
     // Columns may already exist
   }

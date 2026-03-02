@@ -7,10 +7,15 @@ const router = Router();
 // Create a new session
 router.post('/', async (req, res) => {
   const sessionId = nanoid(10);
+  const partnerAToken = nanoid(8);
+  const partnerBToken = nanoid(8);
 
   try {
-    await db.query('INSERT INTO sessions (id) VALUES ($1)', [sessionId]);
-    res.json({ sessionId });
+    await db.query(
+      'INSERT INTO sessions (id, partner_a_token, partner_b_token) VALUES ($1, $2, $3)',
+      [sessionId, partnerAToken, partnerBToken]
+    );
+    res.json({ sessionId, partnerAToken, partnerBToken });
   } catch (error) {
     console.error('Error creating session:', error);
     res.status(500).json({ error: 'Failed to create session' });
@@ -23,7 +28,7 @@ router.get('/:id', async (req, res) => {
 
   try {
     const result = await db.query(
-      'SELECT id, category, intake_type, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed, created_at FROM sessions WHERE id = $1',
+      'SELECT id, category, intake_type, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed, partner_a_token, partner_b_token, created_at FROM sessions WHERE id = $1',
       [id]
     );
 
@@ -41,10 +46,56 @@ router.get('/:id', async (req, res) => {
       partnerBName: session.partner_b_name,
       partnerACompleted: Boolean(session.partner_a_completed),
       partnerBCompleted: Boolean(session.partner_b_completed),
+      partnerAToken: session.partner_a_token,
+      partnerBToken: session.partner_b_token,
       createdAt: session.created_at
     });
   } catch (error) {
     console.error('Error fetching session:', error);
+    res.status(500).json({ error: 'Failed to fetch session' });
+  }
+});
+
+// Get session by token (for partner-specific access)
+router.get('/:id/by-token/:token', async (req, res) => {
+  const { id, token } = req.params;
+
+  try {
+    const result = await db.query(
+      'SELECT id, category, intake_type, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed, partner_a_token, partner_b_token FROM sessions WHERE id = $1',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const session = result.rows[0];
+
+    // Determine which partner this token belongs to
+    let partner = null;
+    if (token === session.partner_a_token) {
+      partner = 'A';
+    } else if (token === session.partner_b_token) {
+      partner = 'B';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    res.json({
+      id: session.id,
+      partner,
+      category: session.category,
+      intakeType: session.intake_type || 'long',
+      unfaithfulPartner: session.unfaithful_partner,
+      partnerAName: session.partner_a_name,
+      partnerBName: session.partner_b_name,
+      partnerACompleted: Boolean(session.partner_a_completed),
+      partnerBCompleted: Boolean(session.partner_b_completed),
+      partnerBToken: partner === 'A' ? session.partner_b_token : null, // Only give B's token to A
+    });
+  } catch (error) {
+    console.error('Error fetching session by token:', error);
     res.status(500).json({ error: 'Failed to fetch session' });
   }
 });

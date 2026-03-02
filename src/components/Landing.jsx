@@ -22,8 +22,8 @@ function Landing() {
         throw new Error('Failed to create session');
       }
 
-      const { sessionId } = await response.json();
-      navigate(`/session/${sessionId}?partner=A`);
+      const { sessionId, partnerAToken } = await response.json();
+      navigate(`/session/${sessionId}?p=${partnerAToken}`);
     } catch (err) {
       setError('Failed to create session. Please try again.');
       console.error(err);
