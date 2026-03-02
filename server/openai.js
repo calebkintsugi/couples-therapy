@@ -11,7 +11,7 @@ const genAI = process.env.GOOGLE_API_KEY
 
 const categoryDescriptions = {
   infidelity: {
-    name: 'Infidelity Recovery',
+    name: 'Betrayal',
     context: 'healing after betrayal and rebuilding trust',
     roleInfo: true,
   },
@@ -62,7 +62,7 @@ async function callGemini(systemPrompt, userPrompt) {
     throw new Error('Gemini API key not configured');
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
   const fullPrompt = `${systemPrompt}\n\n---\n\n${userPrompt}`;
 

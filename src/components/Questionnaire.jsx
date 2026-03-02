@@ -280,7 +280,7 @@ function Questionnaire() {
         {/* Category */}
         <div style={{ marginBottom: '2rem' }}>
           <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
-            What area would you like to focus on?
+            What area is your relationship struggling with?
           </label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {categories.map((cat) => (

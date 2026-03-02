@@ -1,7 +1,7 @@
 export const categories = [
   {
     id: 'infidelity',
-    name: 'Infidelity Recovery',
+    name: 'Betrayal',
     description: 'Healing after betrayal and rebuilding trust',
     icon: '💔',
   },
