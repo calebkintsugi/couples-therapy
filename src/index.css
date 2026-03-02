@@ -1327,11 +1327,16 @@ textarea {
 }
 
 .next-step-card {
-  background: var(--surface);
+  background: linear-gradient(to bottom, #ffffff, #fdfcfb);
   border-radius: var(--radius-xl);
   padding: var(--space-xl);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(124, 92, 107, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-light);
+}
+
+.next-step-card h2 {
+  color: var(--primary);
+  font-size: 22px;
 }
 
 .next-step-card h2 {

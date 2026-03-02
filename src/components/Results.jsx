@@ -631,7 +631,7 @@ function Results() {
           {/* RIGHT COLUMN — Next Step */}
           <div className="next-step-column">
             <div className="next-step-card">
-              <h2>Continue the Conversation</h2>
+              <h2>Your Next Step Together</h2>
               <p className="next-step-subtitle">A follow-up prompt for you both to answer</p>
 
               {/* Show pending question that needs my answer */}
