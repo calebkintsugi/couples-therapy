@@ -41,38 +41,13 @@ function Landing() {
           Answer a few questions independently, then receive personalized, AI-powered guidance for your journey forward.
         </p>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '0.75rem',
-          marginBottom: '1.5rem'
-        }}>
-          {categories.map((cat) => (
-            <div
-              key={cat.id}
-              style={{
-                background: 'var(--background)',
-                borderRadius: '12px',
-                padding: '1rem',
-                textAlign: 'center',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <div style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>{cat.icon}</div>
-              <div style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-                {cat.name}
-              </div>
-            </div>
+        <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+          We offer guidance for: {categories.map((cat, index) => (
+            <span key={cat.id}>
+              <strong>{cat.name}</strong>{index < categories.length - 1 ? ', ' : '.'}
+            </span>
           ))}
-        </div>
+        </p>
 
 
         {error && <div className="error-message">{error}</div>}
