@@ -1,5 +1,96 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+
+// Parse advice text into sections
+function parseAdviceSections(adviceText) {
+  if (!adviceText) return [];
+
+  const sectionPatterns = [
+    { icon: '📍', title: 'TL;DR', pattern: /📍\s*TLDR/i },
+    { icon: '🌊', title: 'What\'s Happening Under the Surface', pattern: /🌊\s*WHAT'S HAPPENING UNDER THE SURFACE/i },
+    { icon: '🔦', title: 'Possible Blind Spots', pattern: /🔦\s*POSSIBLE BLIND SPOTS/i },
+    { icon: '🗺️', title: 'A Roadmap Forward', pattern: /🗺️\s*A ROADMAP FORWARD/i },
+    { icon: '🎯', title: 'Focus Areas', pattern: /🎯\s*FOCUS AREAS/i },
+    // Short intake sections
+    { icon: '📍', title: 'Quick Assessment', pattern: /📍\s*QUICK ASSESSMENT/i },
+    { icon: '🗺️', title: 'Three Steps Forward', pattern: /🗺️\s*THREE STEPS FORWARD/i },
+    { icon: '💬', title: 'Conversation Prompt', pattern: /💬\s*CONVERSATION PROMPT/i },
+  ];
+
+  const sections = [];
+  let remainingText = adviceText;
+
+  // Find all section positions
+  const sectionPositions = [];
+  sectionPatterns.forEach(({ icon, title, pattern }) => {
+    const match = adviceText.match(pattern);
+    if (match) {
+      sectionPositions.push({
+        icon,
+        title,
+        index: match.index,
+        headerLength: match[0].length,
+      });
+    }
+  });
+
+  // Sort by position
+  sectionPositions.sort((a, b) => a.index - b.index);
+
+  // Extract content for each section
+  sectionPositions.forEach((section, i) => {
+    const startContent = section.index + section.headerLength;
+    const endContent = i < sectionPositions.length - 1
+      ? sectionPositions[i + 1].index
+      : adviceText.length;
+
+    const content = adviceText.slice(startContent, endContent).trim();
+
+    sections.push({
+      icon: section.icon,
+      title: section.title,
+      content,
+    });
+  });
+
+  // If no sections found, return the whole thing as one section
+  if (sections.length === 0) {
+    return [{ icon: '💡', title: 'Your Guidance', content: adviceText }];
+  }
+
+  return sections;
+}
+
+// Card component for each section
+function AdviceCard({ icon, title, content, highlight = false }) {
+  return (
+    <div style={{
+      background: highlight ? 'var(--primary-light)' : 'var(--surface)',
+      borderRadius: '16px',
+      padding: '1.5rem',
+      marginBottom: '1rem',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+      border: highlight ? '1px solid var(--primary)' : '1px solid var(--border)',
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        marginBottom: '1rem',
+      }}>
+        <span style={{ fontSize: '1.5rem' }}>{icon}</span>
+        <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{title}</h3>
+      </div>
+      <div style={{
+        whiteSpace: 'pre-wrap',
+        lineHeight: '1.7',
+        color: 'var(--text-primary)',
+      }}>
+        {content}
+      </div>
+    </div>
+  );
+}
 
 function Results() {
   const { sessionId } = useParams();
@@ -41,6 +132,9 @@ function Results() {
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [creatingQuestion, setCreatingQuestion] = useState(false);
   const [activeFollowupId, setActiveFollowupId] = useState(null);
+
+  // Memoize parsed advice sections
+  const adviceSections = useMemo(() => parseAdviceSections(advice), [advice]);
 
   useEffect(() => {
     if (!token) {
@@ -498,17 +592,39 @@ function Results() {
         </div>
       )}
 
-      <div
-        className="results-content"
-        style={{
-          background: 'var(--background)',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          marginBottom: '2rem',
-          whiteSpace: 'pre-wrap',
-        }}
-      >
-        {advice}
+      {/* Advice Cards */}
+      <div style={{ marginBottom: '2rem' }}>
+        {regenerating ? (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '3rem',
+            textAlign: 'center',
+            background: 'var(--background)',
+            borderRadius: '16px',
+            minHeight: '200px',
+          }}>
+            <div className="waiting-spinner" style={{ marginBottom: '1rem' }}></div>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
+              Regenerating your advice with {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}...
+            </p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+              This may take up to a minute.
+            </p>
+          </div>
+        ) : (
+          adviceSections.map((section, index) => (
+            <AdviceCard
+              key={index}
+              icon={section.icon}
+              title={section.title}
+              content={section.content}
+              highlight={index === 0}
+            />
+          ))
+        )}
       </div>
 
       {/* Follow-up Chat Section */}
