@@ -411,8 +411,35 @@ export const questionsByCategory = {
   },
 };
 
+// Short intake questions (universal for all categories)
+export const shortIntakeQuestions = {
+  scale: [
+    {
+      id: 'overall_happiness',
+      question: 'Overall, how happy are you in your relationship right now?',
+      lowLabel: 'Very Unhappy',
+      highLabel: 'Very Happy',
+    },
+  ],
+  text: [
+    {
+      id: 'main_challenge',
+      question: 'What is the main challenge you\'re facing in your relationship right now?',
+      placeholder: 'Describe what brings you here today...',
+    },
+    {
+      id: 'ideal_outcome',
+      question: 'What would a successful outcome look like for you?',
+      placeholder: 'What do you hope to achieve...',
+    },
+  ],
+};
+
 // Helper to get questions for a category
-export const getQuestionsForCategory = (categoryId) => {
+export const getQuestionsForCategory = (categoryId, intakeType = 'long') => {
+  if (intakeType === 'short') {
+    return shortIntakeQuestions;
+  }
   return questionsByCategory[categoryId] || null;
 };
 
