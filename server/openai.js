@@ -215,9 +215,10 @@ Write 3 numbered insights (1. 2. 3.) that read between the lines. Use the open-e
 
 🔦 POSSIBLE BLIND SPOTS
 
-Write 3 numbered possible blind spots (1. 2. 3.) using the SCALE QUESTIONS to find DATA MISMATCHES between partners. Look for:
+Write 3 numbered possible blind spots (1. 2. 3.) drawing from your expertise on relationships, the open-ended responses, and the numeric scale responses. Look for:
 - Perception gaps (where their view differs from their partner's)
 - The "we" vs "I" language patterns
+- Common relationship patterns they may not recognize in themselves
 - Areas where they may be overestimating their own progress or underestimating their partner's experience
 
 🗺️ A ROADMAP FORWARD
