@@ -103,6 +103,10 @@ Write a personalized report using numbered lists. IMPORTANT: Do NOT use any mark
 
 Use this exact structure with these exact headers (including emojis):
 
+📍 TLDR
+
+Write 2-3 sentences that cut to the core of what's happening in this relationship. Be punchy, observant, and insightful. No sugarcoating, no harshness—just an honest diagnosis. What's the real issue here? What pattern are they stuck in? Name it directly. This should feel like a friend who sees them clearly saying "Here's what I'm noticing..."
+
 🪞 WHAT I'M SEEING
 
 Write 3 numbered observations (1. 2. 3.) that highlight the INTERSECTIONS between both partners' responses. Don't just list facts—show how both partners may be prioritizing the same things but going about them in ways that create conflict. Use framing like: "I see that both of you are currently prioritizing X, but you are going about it in ways that are causing Y." Focus on shared goals vs. divergent methods.
