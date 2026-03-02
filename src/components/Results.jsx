@@ -9,9 +9,18 @@ function Results() {
 
   const [partner, setPartner] = useState(null);
   const [advice, setAdvice] = useState('');
+  const [coupleCode, setCoupleCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState('');
+  const [aiModel, setAiModel] = useState('openai');
+
+  // PIN verification state
+  const [pinVerified, setPinVerified] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [pinRequired, setPinRequired] = useState(true);
+  const [verifyingPin, setVerifyingPin] = useState(false);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState([]);
@@ -23,39 +32,84 @@ function Results() {
       navigate('/');
       return;
     }
+    setLoading(false);
+  }, [token, navigate]);
 
-    const fetchAdvice = async () => {
-      try {
-        const response = await fetch(`/api/sessions/${sessionId}/advice-by-token/${token}`);
-        const data = await response.json();
+  const verifyPin = async () => {
+    if (!pinInput || !/^\d{4,6}$/.test(pinInput)) {
+      setPinError('Please enter your 4-6 digit PIN');
+      return;
+    }
 
-        if (!response.ok) {
-          if (data.partnerACompleted === false || data.partnerBCompleted === false) {
-            navigate(`/session/${sessionId}/waiting?p=${token}`);
-            return;
-          }
-          throw new Error(data.error || 'Failed to load advice');
+    setVerifyingPin(true);
+    setPinError('');
+
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/verify-pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, pin: pinInput }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setPinError('Incorrect PIN. Please try again.');
+        } else {
+          throw new Error(data.error || 'Failed to verify PIN');
         }
-
-        setPartner(data.partner);
-        setAdvice(data.advice);
-      } catch (err) {
-        setError(err.message);
-        console.error(err);
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
 
-    fetchAdvice();
-  }, [sessionId, token, navigate]);
+      if (data.verified) {
+        setPinVerified(true);
+        setPinRequired(data.pinRequired !== false);
+        fetchAdvice();
+      }
+    } catch (err) {
+      setPinError(err.message);
+    } finally {
+      setVerifyingPin(false);
+    }
+  };
+
+  const fetchAdvice = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}/advice-by-token/${token}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.partnerACompleted === false || data.partnerBCompleted === false) {
+          navigate(`/session/${sessionId}/waiting?p=${token}`);
+          return;
+        }
+        throw new Error(data.error || 'Failed to load advice');
+      }
+
+      setPartner(data.partner);
+      setAdvice(data.advice);
+      if (data.coupleCode) {
+        setCoupleCode(data.coupleCode);
+      }
+      if (data.aiModel) {
+        setAiModel(data.aiModel);
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const regenerateAdvice = async () => {
     setRegenerating(true);
     setError('');
     setChatMessages([]); // Clear chat on regenerate
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/advice-by-token/${token}?regenerate=true`);
+      const response = await fetch(`/api/sessions/${sessionId}/advice-by-token/${token}?regenerate=true&aiModel=${aiModel}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -105,6 +159,43 @@ function Results() {
     }
   };
 
+  // PIN verification screen
+  if (!pinVerified) {
+    return (
+      <div className="card">
+        <h2>Enter Your PIN</h2>
+        <p style={{ marginBottom: '1.5rem' }}>
+          Your results are protected. Please enter the PIN you created when completing the questionnaire.
+        </p>
+
+        {pinError && <div className="error-message">{pinError}</div>}
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <input
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            value={pinInput}
+            onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+            placeholder="Enter your PIN"
+            style={{ width: '100%', maxWidth: '200px' }}
+            onKeyDown={(e) => e.key === 'Enter' && verifyPin()}
+            autoFocus
+          />
+        </div>
+
+        <button
+          className="btn btn-primary"
+          onClick={verifyPin}
+          disabled={verifyingPin || !/^\d{4,6}$/.test(pinInput)}
+        >
+          {verifyingPin ? 'Verifying...' : 'View Results'}
+        </button>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="card">
@@ -144,6 +235,35 @@ function Results() {
           therapist for the best support in your healing journey.
         </p>
       </div>
+
+      {coupleCode && (
+        <div style={{
+          background: 'var(--background)',
+          padding: '1rem 1.5rem',
+          borderRadius: '12px',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+        }}>
+          <div>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Your Couple Code: </span>
+            <code style={{
+              fontSize: '1.1rem',
+              fontWeight: '700',
+              letterSpacing: '0.15em',
+              color: 'var(--primary)',
+            }}>
+              {coupleCode}
+            </code>
+          </div>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            Save this to access your history later
+          </span>
+        </div>
+      )}
 
       <div
         className="results-content"
@@ -243,7 +363,46 @@ function Results() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', flexWrap: 'wrap' }}>
+      {/* AI Model Toggle */}
+      <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.9rem' }}>
+          Try a different AI coach:
+        </label>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={() => setAiModel('openai')}
+            style={{
+              flex: 1,
+              padding: '0.5rem 1rem',
+              border: aiModel === 'openai' ? '2px solid var(--primary)' : '2px solid var(--border)',
+              borderRadius: '8px',
+              background: aiModel === 'openai' ? 'var(--primary-light)' : 'var(--surface)',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            ChatGPT
+          </button>
+          <button
+            type="button"
+            onClick={() => setAiModel('gemini')}
+            style={{
+              flex: 1,
+              padding: '0.5rem 1rem',
+              border: aiModel === 'gemini' ? '2px solid var(--primary)' : '2px solid var(--border)',
+              borderRadius: '8px',
+              background: aiModel === 'gemini' ? 'var(--primary-light)' : 'var(--surface)',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            Gemini
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <button
           className="btn btn-primary"
           onClick={regenerateAdvice}

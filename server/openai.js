@@ -79,7 +79,7 @@ async function callAI(systemPrompt, userPrompt, aiModel = 'openai', maxTokens = 
   return callOpenAI(systemPrompt, userPrompt, maxTokens);
 }
 
-export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, category, unfaithfulPartner = null, partnerAName = 'Partner A', partnerBName = 'Partner B', aiModel = 'openai', intakeType = 'long') {
+export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, category, unfaithfulPartner = null, partnerAName = 'Partner A', partnerBName = 'Partner B', aiModel = 'openai', intakeType = 'long', coupleMemory = '', previousSessions = []) {
   const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
 
   // Determine roles for infidelity category
@@ -120,7 +120,23 @@ export async function generateAdvice(partnerAResponses, partnerBResponses, targe
     ? `\n\n${targetName} is the ${targetRole} partner. ${otherName} is the ${otherRole} partner. Keep this dynamic in mind when providing guidance.`
     : '';
 
-  const systemPrompt = `You are a direct, insightful relationship coach specializing in helping couples with ${categoryInfo.context}. You provide honest, specific guidance - not generic platitudes. You analyze the actual data provided and give real, actionable insights.
+  // Build memory context if available
+  let memoryContext = '';
+  if (coupleMemory && coupleMemory.trim()) {
+    memoryContext = `\n\nYOU HAVE HISTORY WITH THIS COUPLE. Here is what you know about them from previous sessions:\n${coupleMemory}\n\nUse this context to provide more personalized, continuous guidance. Reference their progress, patterns, and previous insights where relevant.`;
+  }
+
+  // Build previous sessions context
+  let sessionsContext = '';
+  if (previousSessions && previousSessions.length > 0) {
+    const sessionSummaries = previousSessions.slice(0, 5).map((s, i) => {
+      const date = new Date(s.created_at).toLocaleDateString();
+      return `Session ${i + 1} (${date}): ${s.category || 'General'} - ${s.partner_a_completed && s.partner_b_completed ? 'Completed' : 'In progress'}`;
+    }).join('\n');
+    sessionsContext = `\n\nThis couple has ${previousSessions.length} previous session(s):\n${sessionSummaries}`;
+  }
+
+  const systemPrompt = `You are a direct, insightful relationship coach specializing in helping couples with ${categoryInfo.context}. You provide honest, specific guidance - not generic platitudes. You analyze the actual data provided and give real, actionable insights.${memoryContext}${sessionsContext}
 
 Critical guidelines:
 - You are NOT a licensed therapist - recommend professional help
@@ -128,6 +144,7 @@ Critical guidelines:
 - Analyze the specific numbers and words provided - don't be generic
 - Compare partners' responses to surface real dynamics
 - Ground every insight in what they actually wrote
+${coupleMemory ? '- Reference their history and progress when relevant - you know this couple!' : ''}
 
 Guardrails for balanced honesty:
 - AVOID NEUTRALITY FOR NEUTRALITY'S SAKE: If one partner is putting in more effort, gently acknowledge that. True advice isn't always 50/50.
@@ -242,4 +259,61 @@ Guidelines:
     : userMessage;
 
   return callAI(systemPrompt, userPrompt, aiModel, 800);
+}
+
+// Extract insights from a session to add to couple's memory
+export async function extractMemoryInsights(partnerAResponses, partnerBResponses, generatedAdvice, category, partnerAName, partnerBName, existingMemory = '', sessionDate = new Date()) {
+  const dateStr = sessionDate.toLocaleDateString();
+
+  const formatResponses = (responses, name) => {
+    return responses
+      .filter(r => r.question_type === 'text')
+      .map(r => `- ${r.question_id}: "${r.answer}"`)
+      .join('\n');
+  };
+
+  const systemPrompt = `You are a relationship coach assistant helping to maintain a "memory" about a couple across multiple sessions. Your job is to extract key insights that should be remembered for future sessions.
+
+The memory should capture:
+- Key patterns or dynamics you've observed
+- Important concerns or fears each partner has expressed
+- Progress made or areas of growth
+- Recurring themes or issues
+- Specific details that would help personalize future advice (e.g., "Sarah mentioned her mother's critical voice affects how she receives feedback")
+- Any breakthroughs or important realizations
+
+Keep the memory concise but insightful. Use bullet points. Focus on information that would be valuable to reference in future sessions.`;
+
+  const userPrompt = `Session Date: ${dateStr}
+Category: ${category}
+
+${partnerAName}'s open-ended responses:
+${formatResponses(partnerAResponses, partnerAName)}
+
+${partnerBName}'s open-ended responses:
+${formatResponses(partnerBResponses, partnerBName)}
+
+Advice that was generated:
+${generatedAdvice.substring(0, 1500)}...
+
+${existingMemory ? `\nExisting memory about this couple:\n${existingMemory}\n` : ''}
+
+Based on this session, write 3-5 bullet points of KEY INSIGHTS to remember about this couple. These should be specific, actionable insights that would help provide better advice in future sessions.
+
+${existingMemory ? 'Add to and refine the existing memory - note any changes, progress, or new information. Remove outdated information if things have clearly changed.' : 'This is their first session, so capture the foundational dynamics and concerns.'}
+
+Format: Just bullet points, no headers. Keep total under 500 words.`;
+
+  try {
+    const insights = await callOpenAI(systemPrompt, userPrompt, 600);
+
+    // Combine with existing memory, keeping most recent insights first
+    if (existingMemory) {
+      return `--- Updated ${dateStr} ---\n${insights}\n\n--- Previous Insights ---\n${existingMemory}`;
+    }
+    return `--- Session ${dateStr} ---\n${insights}`;
+  } catch (error) {
+    console.error('Error extracting memory insights:', error);
+    return existingMemory; // Return existing memory if extraction fails
+  }
 }

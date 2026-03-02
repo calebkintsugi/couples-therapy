@@ -13,6 +13,7 @@ function Questionnaire() {
   const token = searchParams.get('p');
   const [partner, setPartner] = useState(null);
   const [partnerBToken, setPartnerBToken] = useState(null);
+  const [coupleCode, setCoupleCode] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -33,6 +34,8 @@ function Questionnaire() {
   const [setupCategory, setSetupCategory] = useState(null);
   const [setupIntakeType, setSetupIntakeType] = useState('long');
   const [setupRole, setSetupRole] = useState(null);
+  const [pin, setPin] = useState('');
+  const [aiModel, setAiModel] = useState('openai');
 
   // Get questions based on category and intake type
   const getQuestions = () => {
@@ -75,6 +78,9 @@ function Questionnaire() {
         setPartner(data.partner);
         if (data.partnerBToken) {
           setPartnerBToken(data.partnerBToken);
+        }
+        if (data.coupleCode) {
+          setCoupleCode(data.coupleCode);
         }
 
         if (data.category) {
@@ -121,6 +127,10 @@ function Questionnaire() {
   const handleSetupSubmit = async () => {
     if (!name.trim() || !setupCategory || !setupIntakeType) return;
     if (setupCategory === 'infidelity' && !setupRole) return;
+    if (!pin || !/^\d{4,6}$/.test(pin)) {
+      setError('Please enter a 4-6 digit PIN');
+      return;
+    }
 
     setError('');
 
@@ -133,12 +143,20 @@ function Questionnaire() {
           category: setupCategory,
           intakeType: setupIntakeType,
           unfaithfulPartner: setupCategory === 'infidelity' ? (setupRole === 'unfaithful' ? 'A' : 'B') : null,
+          aiModel: aiModel,
         }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to save setup');
       }
+
+      // Save PIN
+      await fetch(`/api/sessions/${sessionId}/pin`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, pin }),
+      });
 
       setCategory(setupCategory);
       setIntakeType(setupIntakeType);
@@ -153,6 +171,12 @@ function Questionnaire() {
 
   const handleNameSubmit = async () => {
     if (!name.trim()) return;
+    if (!pin || !/^\d{4,6}$/.test(pin)) {
+      setError('Please enter a 4-6 digit PIN');
+      return;
+    }
+
+    setError('');
 
     try {
       const response = await fetch(`/api/sessions/${sessionId}/name`, {
@@ -164,6 +188,13 @@ function Questionnaire() {
       if (!response.ok) {
         throw new Error('Failed to save name');
       }
+
+      // Save PIN
+      await fetch(`/api/sessions/${sessionId}/pin`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, pin }),
+      });
 
       // Partner B flow
       if (sessionData?.category) {
@@ -266,7 +297,7 @@ function Questionnaire() {
   // Partner A: Combined setup screen
   if (step === 'setup') {
     const canSubmitSetup = name.trim() && setupCategory && setupIntakeType &&
-      (setupCategory !== 'infidelity' || setupRole);
+      (setupCategory !== 'infidelity' || setupRole) && /^\d{4,6}$/.test(pin);
 
     return (
       <div className="card">
@@ -410,6 +441,69 @@ function Questionnaire() {
           </div>
         </div>
 
+        {/* AI Model */}
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
+            Choose your AI coach
+          </label>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              type="button"
+              onClick={() => setAiModel('openai')}
+              style={{
+                flex: 1,
+                padding: '1rem',
+                border: aiModel === 'openai' ? '2px solid var(--primary)' : '2px solid var(--border)',
+                borderRadius: '8px',
+                background: aiModel === 'openai' ? 'var(--primary-light)' : 'var(--surface)',
+                cursor: 'pointer',
+              }}
+            >
+              <strong>ChatGPT</strong>
+              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.25rem' }}>
+                GPT-4o
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAiModel('gemini')}
+              style={{
+                flex: 1,
+                padding: '1rem',
+                border: aiModel === 'gemini' ? '2px solid var(--primary)' : '2px solid var(--border)',
+                borderRadius: '8px',
+                background: aiModel === 'gemini' ? 'var(--primary-light)' : 'var(--surface)',
+                cursor: 'pointer',
+              }}
+            >
+              <strong>Gemini</strong>
+              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.25rem' }}>
+                Gemini 2.5 Flash
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* PIN */}
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+            Create a PIN to protect your results
+          </label>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+            Your advice contains sensitive information. Create a 4-6 digit PIN that only you will know.
+          </p>
+          <input
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+            placeholder="Enter 4-6 digit PIN"
+            style={{ width: '100%', maxWidth: '200px' }}
+          />
+        </div>
+
         <button
           className="btn btn-primary btn-block"
           onClick={handleSetupSubmit}
@@ -423,6 +517,7 @@ function Questionnaire() {
 
   // Partner B: Name input
   if (step === 'name') {
+    const canSubmitName = name.trim() && /^\d{4,6}$/.test(pin);
     return (
       <div className="card">
         <h2>Welcome</h2>
@@ -432,19 +527,42 @@ function Questionnaire() {
 
         {error && <div className="error-message">{error}</div>}
 
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your name or nickname"
-          style={{ marginBottom: '1.5rem' }}
-          onKeyDown={(e) => e.key === 'Enter' && name.trim() && handleNameSubmit()}
-        />
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+            Your name
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name or nickname"
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+            Create a PIN to protect your results
+          </label>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+            Your advice contains sensitive information. Create a 4-6 digit PIN that only you will know.
+          </p>
+          <input
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+            placeholder="Enter 4-6 digit PIN"
+            style={{ width: '100%', maxWidth: '200px' }}
+          />
+        </div>
 
         <button
           className="btn btn-primary btn-block"
           onClick={handleNameSubmit}
-          disabled={!name.trim()}
+          disabled={!canSubmitName}
         >
           Continue
         </button>
@@ -498,6 +616,33 @@ function Questionnaire() {
           Thanks, {name}. You selected <strong>{categoryInfo?.name}</strong> with the <strong>{intakeLabel}</strong>
           {role && <> and identified as the <strong>{role}</strong> partner</>}.
         </p>
+
+        {coupleCode && (
+          <div style={{
+            background: 'var(--background)',
+            padding: '1rem 1.5rem',
+            borderRadius: '12px',
+            marginBottom: '1.5rem',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Your Couple Code: </span>
+                <code style={{
+                  fontSize: '1.1rem',
+                  fontWeight: '700',
+                  letterSpacing: '0.15em',
+                  color: 'var(--primary)',
+                }}>
+                  {coupleCode}
+                </code>
+              </div>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Save this to access your history later
+              </span>
+            </div>
+          </div>
+        )}
+
         <p>
           Share this link with your partner so they can complete their questionnaire:
         </p>

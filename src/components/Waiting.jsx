@@ -5,22 +5,34 @@ function Waiting() {
   const { sessionId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const partner = searchParams.get('partner') || 'A';
+  const token = searchParams.get('p');
 
   const [checking, setChecking] = useState(false);
+  const [partner, setPartner] = useState(null);
+  const [partnerBToken, setPartnerBToken] = useState(null);
 
   useEffect(() => {
+    if (!token) {
+      navigate('/');
+      return;
+    }
+
     const checkStatus = async () => {
       try {
-        const response = await fetch(`/api/sessions/${sessionId}`);
+        const response = await fetch(`/api/sessions/${sessionId}/by-token/${token}`);
         if (!response.ok) {
           navigate('/');
           return;
         }
 
         const data = await response.json();
+        setPartner(data.partner);
+        if (data.partnerBToken) {
+          setPartnerBToken(data.partnerBToken);
+        }
+
         if (data.partnerACompleted && data.partnerBCompleted) {
-          navigate(`/session/${sessionId}/results?partner=${partner}`);
+          navigate(`/session/${sessionId}/results?p=${token}`);
         }
       } catch (err) {
         console.error('Error checking status:', err);
@@ -34,16 +46,16 @@ function Waiting() {
     const interval = setInterval(checkStatus, 5000);
 
     return () => clearInterval(interval);
-  }, [sessionId, partner, navigate]);
+  }, [sessionId, token, navigate]);
 
   const handleManualCheck = async () => {
     setChecking(true);
     try {
-      const response = await fetch(`/api/sessions/${sessionId}`);
+      const response = await fetch(`/api/sessions/${sessionId}/by-token/${token}`);
       if (response.ok) {
         const data = await response.json();
         if (data.partnerACompleted && data.partnerBCompleted) {
-          navigate(`/session/${sessionId}/results?partner=${partner}`);
+          navigate(`/session/${sessionId}/results?p=${token}`);
         }
       }
     } catch (err) {
@@ -53,7 +65,7 @@ function Waiting() {
     }
   };
 
-  const partnerBLink = `${window.location.origin}/session/${sessionId}?partner=B`;
+  const partnerBLink = partnerBToken ? `${window.location.origin}/session/${sessionId}?p=${partnerBToken}` : '';
 
   return (
     <div className="card">
@@ -69,7 +81,7 @@ function Waiting() {
           personalized guidance.
         </p>
 
-        {partner === 'A' && (
+        {partner === 'A' && partnerBLink && (
           <div style={{ marginTop: '2rem' }}>
             <p style={{ fontWeight: '500' }}>Partner B&apos;s link:</p>
             <div className="share-link">{partnerBLink}</div>

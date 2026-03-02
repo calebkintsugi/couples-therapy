@@ -7,6 +7,7 @@ import { nanoid } from 'nanoid';
 import db, { initDb } from './db.js';
 import sessionsRouter from './routes/sessions.js';
 import responsesRouter from './routes/responses.js';
+import couplesRouter from './routes/couples.js';
 import { generateAdvice } from './openai.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,6 +23,7 @@ app.use(express.json());
 // API Routes
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/sessions', responsesRouter);
+app.use('/api/couples', couplesRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -111,6 +113,8 @@ app.post('/api/test/create-session', async (req, res) => {
   } = req.body;
 
   const sessionId = nanoid(10);
+  const partnerAToken = nanoid(8);
+  const partnerBToken = nanoid(8);
 
   try {
     // Determine unfaithful partner for infidelity category
@@ -121,9 +125,9 @@ app.post('/api/test/create-session', async (req, res) => {
 
     // Create session
     await db.query(
-      `INSERT INTO sessions (id, category, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed)
-       VALUES ($1, $2, $3, $4, $5, true, true)`,
-      [sessionId, category, unfaithfulPartner, partnerAName, partnerBName]
+      `INSERT INTO sessions (id, category, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed, partner_a_token, partner_b_token)
+       VALUES ($1, $2, $3, $4, $5, true, true, $6, $7)`,
+      [sessionId, category, unfaithfulPartner, partnerAName, partnerBName, partnerAToken, partnerBToken]
     );
 
     // Insert Partner A's responses
@@ -144,8 +148,10 @@ app.post('/api/test/create-session', async (req, res) => {
 
     res.json({
       sessionId,
-      partnerAResults: `/session/${sessionId}/results?partner=A`,
-      partnerBResults: `/session/${sessionId}/results?partner=B`,
+      partnerAToken,
+      partnerBToken,
+      partnerAResults: `/session/${sessionId}/results?p=${partnerAToken}`,
+      partnerBResults: `/session/${sessionId}/results?p=${partnerBToken}`,
     });
   } catch (error) {
     console.error('Error creating test session:', error);
