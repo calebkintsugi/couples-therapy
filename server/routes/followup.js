@@ -213,6 +213,12 @@ router.post('/:sessionId/answer/:questionId/:token', async (req, res) => {
 
     let aiResponse = null;
     if (updatedFollowup.partner_a_answer && updatedFollowup.partner_b_answer && !updatedFollowup.ai_response) {
+      // Get previous completed followups for context
+      const previousFollowupsResult = await db.query(
+        'SELECT question_text, partner_a_answer, partner_b_answer FROM followup_questions WHERE session_id = $1 AND id != $2 AND partner_a_answer IS NOT NULL AND partner_b_answer IS NOT NULL ORDER BY question_number ASC',
+        [sessionId, questionId]
+      );
+
       // Generate AI response
       try {
         aiResponse = await generateFollowupResponse(
@@ -222,7 +228,8 @@ router.post('/:sessionId/answer/:questionId/:token', async (req, res) => {
           session.category,
           session.partner_a_name,
           session.partner_b_name,
-          session.ai_model || 'openai'
+          session.ai_model || 'openai',
+          previousFollowupsResult.rows
         );
 
         await db.query(

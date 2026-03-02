@@ -266,18 +266,32 @@ Guidelines:
 export async function generateFollowupQuestion(partnerAResponses, partnerBResponses, initialAdvice, category, partnerAName, partnerBName, previousFollowups = [], aiModel = 'openai') {
   const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
 
-  const previousContext = previousFollowups.length > 0
-    ? `\n\nPrevious followup questions asked (do NOT repeat these):\n${previousFollowups.map((f, i) => `${i + 1}. "${f.question_text}"`).join('\n')}`
-    : '';
+  // Build full context of previous followups including answers
+  let previousContext = '';
+  if (previousFollowups.length > 0) {
+    const followupSummaries = previousFollowups.map((f, i) => {
+      let summary = `Q${i + 1}: "${f.question_text}"`;
+      if (f.partner_a_answer && f.partner_b_answer) {
+        summary += `\n   ${partnerAName}: "${f.partner_a_answer}"`;
+        summary += `\n   ${partnerBName}: "${f.partner_b_answer}"`;
+        if (f.ai_response) {
+          summary += `\n   Your insight: "${f.ai_response.substring(0, 200)}..."`;
+        }
+      }
+      return summary;
+    }).join('\n\n');
+    previousContext = `\n\nPREVIOUS FOLLOWUP CONVERSATIONS (build on these, do NOT repeat similar questions):\n${followupSummaries}`;
+  }
 
-  const systemPrompt = `You are a relationship coach who has been working with a couple on ${categoryInfo.context}. Based on their questionnaire responses and the advice you provided, you want to ask ONE followup question that both partners will answer separately.
+  const systemPrompt = `You are a relationship coach who has been working with a couple on ${categoryInfo.context}. Based on their questionnaire responses, the advice you provided, and any previous followup conversations, you want to ask ONE followup question that both partners will answer separately.
 
 The question should:
 - Dig deeper into a specific dynamic you noticed
+- Build on insights from previous conversations if any
 - Help surface something that wasn't fully explored
 - Be open-ended and thought-provoking
 - Be answerable by both partners from their own perspective
-- Not be repetitive of previous questions${previousContext}
+- Not be repetitive of previous questions
 
 Return ONLY the question text, nothing else. No quotes, no preamble, just the question.`;
 
@@ -285,26 +299,36 @@ Return ONLY the question text, nothing else. No quotes, no preamble, just the qu
     return responses.map(r => `${r.question_id}: "${r.answer}"`).join('\n');
   };
 
-  const userPrompt = `${partnerAName}'s responses:\n${formatResponses(partnerAResponses, partnerAName)}\n\n${partnerBName}'s responses:\n${formatResponses(partnerBResponses, partnerBName)}\n\nInitial advice excerpt:\n${initialAdvice?.substring(0, 1000) || 'Not available'}\n\nGenerate ONE followup question for both partners to answer:`;
+  const userPrompt = `${partnerAName}'s original responses:\n${formatResponses(partnerAResponses, partnerAName)}\n\n${partnerBName}'s original responses:\n${formatResponses(partnerBResponses, partnerBName)}\n\nInitial advice excerpt:\n${initialAdvice?.substring(0, 1000) || 'Not available'}${previousContext}\n\nGenerate ONE followup question for both partners to answer:`;
 
   return callAI(systemPrompt, userPrompt, aiModel, 200);
 }
 
 // Generate AI response after both partners answer a followup question
-export async function generateFollowupResponse(question, partnerAAnswer, partnerBAnswer, category, partnerAName, partnerBName, aiModel = 'openai') {
+export async function generateFollowupResponse(question, partnerAAnswer, partnerBAnswer, category, partnerAName, partnerBName, aiModel = 'openai', previousFollowups = []) {
   const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
+
+  // Build context from previous followups
+  let previousContext = '';
+  if (previousFollowups.length > 0) {
+    const summaries = previousFollowups.map((f, i) => {
+      return `Q${i + 1}: "${f.question_text}"\n${partnerAName}: "${f.partner_a_answer}"\n${partnerBName}: "${f.partner_b_answer}"`;
+    }).join('\n\n');
+    previousContext = `\n\nPrevious followup conversations for context:\n${summaries}\n\n`;
+  }
 
   const systemPrompt = `You are a relationship coach working with a couple on ${categoryInfo.context}. You asked them both a followup question, and now you're providing insights based on their answers.
 
 Guidelines:
 - Compare and contrast their responses
 - Highlight areas of alignment and divergence
+- Reference patterns from previous conversations if relevant
 - Provide specific, actionable observations
 - Be warm but honest
 - Keep response concise (150-250 words)
 - Do NOT use markdown formatting - plain text only`;
 
-  const userPrompt = `Question asked: "${question}"
+  const userPrompt = `${previousContext}Current question: "${question}"
 
 ${partnerAName}'s answer:
 "${partnerAAnswer}"
