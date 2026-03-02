@@ -156,22 +156,6 @@ function Landing() {
         </div>
       </section>
 
-      {/* Image Section */}
-      <section className="hero-image-section">
-        <div className="landing-container">
-          <div className="hero-image-wrapper">
-            <img
-              src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=80"
-              alt="Couple reconnecting together"
-              className="hero-image"
-            />
-            <div className="hero-image-caption">
-              Every relationship deserves a chance to grow stronger
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Categories Section */}
       <section className="landing-section">
         <div className="landing-container">
