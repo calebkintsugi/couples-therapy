@@ -92,11 +92,16 @@ function Landing() {
                   onClick={() => createSession()}
                   disabled={loading}
                 >
-                  {loading ? 'Creating Session...' : 'New Couples: Get Started'}
+                  {loading ? 'Creating Session...' : 'New Users: Get Started'}
                 </button>
                 <button
                   className="btn btn-secondary"
-                  onClick={() => setShowReturning(true)}
+                  onClick={() => {
+                    setShowReturning(true);
+                    setTimeout(() => {
+                      document.getElementById('returning-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
                 >
                   Returning Couples: Enter Code
                 </button>
@@ -183,7 +188,7 @@ function Landing() {
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {/* Returning Couple */}
             {showReturning && (
-              <div className="returning-section returning-section-expanded">
+              <div id="returning-section" className="returning-section returning-section-expanded">
                 <div className="returning-header">
                   <h3>Welcome Back</h3>
                   <button
