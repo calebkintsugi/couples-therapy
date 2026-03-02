@@ -808,6 +808,39 @@ textarea {
   margin-top: var(--space-lg);
 }
 
+.returning-section-expanded {
+  background: var(--surface);
+  border: 2px solid var(--primary);
+  box-shadow: 0 4px 20px rgba(124, 92, 107, 0.15);
+}
+
+.returning-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.returning-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--primary);
+}
+
+.returning-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--space-xs);
+  line-height: 1;
+}
+
+.returning-close:hover {
+  color: var(--text-primary);
+}
+
 .returning-toggle {
   background: none;
   border: none;

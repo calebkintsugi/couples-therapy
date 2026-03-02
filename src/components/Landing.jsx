@@ -96,9 +96,9 @@ function Landing() {
                 </button>
                 <button
                   className="btn btn-secondary"
-                  onClick={() => navigate('/how-it-works')}
+                  onClick={() => setShowReturning(true)}
                 >
-                  See how it works
+                  I Have a Code
                 </button>
               </div>
 
@@ -182,17 +182,18 @@ function Landing() {
         <div className="landing-container">
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {/* Returning Couple */}
-            <div className="returning-section">
-              <div style={{ textAlign: 'center' }}>
-                <button
-                  className="returning-toggle"
-                  onClick={() => setShowReturning(!showReturning)}
-                >
-                  {showReturning ? 'Hide' : 'Returning couple? Enter your code'}
-                </button>
-              </div>
-
-              {showReturning && (
+            {showReturning && (
+              <div className="returning-section returning-section-expanded">
+                <div className="returning-header">
+                  <h3>Welcome Back</h3>
+                  <button
+                    type="button"
+                    className="returning-close"
+                    onClick={() => setShowReturning(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
                 <div className="returning-content">
                   <p className="returning-description">
                     Enter your couple code to continue your journey or start a new session linked to your history.
@@ -266,8 +267,8 @@ function Landing() {
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Disclaimer */}
             <Disclaimer variant="landing" />
