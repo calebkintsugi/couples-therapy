@@ -99,8 +99,8 @@ function Results() {
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState('');
-  const [aiModel, setAiModel] = useState('openai');
-  const [originalModel, setOriginalModel] = useState('openai');
+  const [aiModel, setAiModel] = useState('gemini');
+  const [originalModel, setOriginalModel] = useState('gemini');
   const [showModelChangePrompt, setShowModelChangePrompt] = useState(false);
 
   // PIN verification state
@@ -127,6 +127,7 @@ function Results() {
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [creatingQuestion, setCreatingQuestion] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [activeFollowupId, setActiveFollowupId] = useState(null);
 
   // Memoize parsed advice sections
@@ -235,6 +236,16 @@ function Results() {
       console.error(err);
     } finally {
       setRegenerating(false);
+    }
+  };
+
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(coupleCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
     }
   };
 
@@ -475,9 +486,23 @@ function Results() {
         <header className="guidance-header">
           <h1>Relationship Guidance for You{partnerName ? `, ${partnerName}` : ''}</h1>
           {coupleCode && (
-            <div className="couple-code-badge">
-              <span className="couple-code-label">Couple Code:</span>
-              <code className="couple-code-value">{coupleCode}</code>
+            <div className="couple-code-section">
+              <div className="couple-code-card">
+                <span className="couple-code-label">⚠️ Save Your Couple Code</span>
+                <code className="couple-code-value-large">{coupleCode}</code>
+                <p className="couple-code-helper">You'll need this to return to your results.</p>
+                <div className="couple-code-actions">
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={copyCode}>
+                    {codeCopied ? '✓ Copied!' : 'Copy Code'}
+                  </button>
+                  <a
+                    href={`mailto:?subject=Your RepairCoach Couple Code&body=Your RepairCoach Couple Code is: ${coupleCode}%0A%0ASave this code to return to your results at https://repaircoach.ai`}
+                    className="btn btn-ghost btn-sm"
+                  >
+                    Email to Myself
+                  </a>
+                </div>
+              </div>
             </div>
           )}
         </header>
@@ -488,42 +513,31 @@ function Results() {
           <div className="guidance-column">
             <div className="column-header">
               <h2>Your Guidance</h2>
-              <div className="model-toggle">
+              <span className="model-indicator">
+                Powered by {originalModel === 'gemini' ? 'Gemini' : 'ChatGPT'}
+              </span>
+            </div>
+
+            {/* Model switch option */}
+            {!showModelChangePrompt && !regenerating && (
+              <div className="model-switch-hint">
                 <button
                   type="button"
-                  className={`model-btn ${aiModel === 'openai' ? 'active' : ''}`}
+                  className="link-btn"
                   onClick={() => {
-                    if (aiModel !== 'openai') {
-                      setAiModel('openai');
-                      if (originalModel !== 'openai') {
-                        setShowModelChangePrompt(true);
-                      }
-                    }
+                    setAiModel(originalModel === 'gemini' ? 'openai' : 'gemini');
+                    setShowModelChangePrompt(true);
                   }}
                 >
-                  ChatGPT
-                </button>
-                <button
-                  type="button"
-                  className={`model-btn ${aiModel === 'gemini' ? 'active' : ''}`}
-                  onClick={() => {
-                    if (aiModel !== 'gemini') {
-                      setAiModel('gemini');
-                      if (originalModel !== 'gemini') {
-                        setShowModelChangePrompt(true);
-                      }
-                    }
-                  }}
-                >
-                  Gemini
+                  Try {originalModel === 'gemini' ? 'ChatGPT' : 'Gemini'} instead?
                 </button>
               </div>
-            </div>
+            )}
 
             {/* Model change prompt */}
             {showModelChangePrompt && (
               <div className="model-change-prompt">
-                <p>Regenerate your advice using {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}?</p>
+                <p>Regenerate your guidance using {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}?</p>
                 <div className="model-change-actions">
                   <button
                     className="btn btn-primary btn-sm"
@@ -537,7 +551,10 @@ function Results() {
                   </button>
                   <button
                     className="btn btn-ghost btn-sm"
-                    onClick={() => setShowModelChangePrompt(false)}
+                    onClick={() => {
+                      setShowModelChangePrompt(false);
+                      setAiModel(originalModel);
+                    }}
                   >
                     Cancel
                   </button>

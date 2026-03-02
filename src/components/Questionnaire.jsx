@@ -19,6 +19,7 @@ function Questionnaire() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   // Flow state for Partner A: 'setup' -> 'share' -> 'questions'
   // Flow state for Partner B: 'name' -> 'category-display' -> 'role-display' (if infidelity) -> 'questions'
@@ -35,7 +36,7 @@ function Questionnaire() {
   const [setupIntakeType, setSetupIntakeType] = useState('long');
   const [setupRole, setSetupRole] = useState(null);
   const [pin, setPin] = useState('');
-  const [aiModel, setAiModel] = useState('openai');
+  const [aiModel, setAiModel] = useState('gemini');
 
   // Get questions based on category and intake type
   const getQuestions = () => {
@@ -285,6 +286,16 @@ function Questionnaire() {
     }
   };
 
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(coupleCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   // Calculate setup progress
   const getSetupProgress = () => {
     let completed = 0;
@@ -423,31 +434,7 @@ function Questionnaire() {
             </div>
           </section>
 
-          {/* Section 4: AI Model */}
-          <section className="setup-section">
-            <div className="setup-card setup-card-subtle">
-              <label className="setup-label-small">AI Model (Advanced)</label>
-              <p className="setup-helper-small">You can change later.</p>
-              <div className="setup-model-toggle">
-                <button
-                  type="button"
-                  onClick={() => setAiModel('openai')}
-                  className={`setup-model-btn ${aiModel === 'openai' ? 'selected' : ''}`}
-                >
-                  ChatGPT
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAiModel('gemini')}
-                  className={`setup-model-btn ${aiModel === 'gemini' ? 'selected' : ''}`}
-                >
-                  Gemini
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* Section 5: PIN */}
+          {/* Section 4: PIN */}
           <section className="setup-section">
             <div className="setup-card setup-card-pin">
               <div className="setup-pin-header">
@@ -500,6 +487,27 @@ function Questionnaire() {
           </header>
 
           {error && <div className="error-message">{error}</div>}
+
+          {coupleCode && (
+            <section className="setup-section">
+              <div className="setup-card setup-card-code">
+                <p className="setup-code-label">⚠️ Save This Code</p>
+                <code className="setup-code-value">{coupleCode}</code>
+                <p className="setup-code-helper">You'll need this to return to your results.</p>
+                <div className="setup-code-actions">
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={copyCode}>
+                    {codeCopied ? '✓ Copied!' : 'Copy Code'}
+                  </button>
+                  <a
+                    href={`mailto:?subject=Your RepairCoach Couple Code&body=Your RepairCoach Couple Code is: ${coupleCode}%0A%0ASave this code to return to your results at https://repaircoach.ai`}
+                    className="btn btn-ghost btn-sm"
+                  >
+                    Email to Myself
+                  </a>
+                </div>
+              </div>
+            </section>
+          )}
 
           <section className="setup-section">
             <div className="setup-card">
@@ -623,9 +631,20 @@ function Questionnaire() {
           {coupleCode && (
             <section className="setup-section">
               <div className="setup-card setup-card-code">
-                <p className="setup-code-label">Your Couple Code</p>
+                <p className="setup-code-label">⚠️ Save This Code</p>
                 <code className="setup-code-value">{coupleCode}</code>
-                <p className="setup-code-helper">Save this to access your history later</p>
+                <p className="setup-code-helper">You'll need this to return to your results.</p>
+                <div className="setup-code-actions">
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={copyCode}>
+                    {codeCopied ? '✓ Copied!' : 'Copy Code'}
+                  </button>
+                  <a
+                    href={`mailto:?subject=Your RepairCoach Couple Code&body=Your RepairCoach Couple Code is: ${coupleCode}%0A%0ASave this code to return to your results at https://repaircoach.ai`}
+                    className="btn btn-ghost btn-sm"
+                  >
+                    Email to Myself
+                  </a>
+                </div>
               </div>
             </section>
           )}

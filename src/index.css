@@ -1064,6 +1064,72 @@ textarea {
   color: var(--primary);
 }
 
+.couple-code-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: var(--space-sm);
+}
+
+/* Couple Code Section (Results page) */
+.couple-code-section {
+  margin-bottom: var(--space-xl);
+}
+
+.couple-code-card {
+  background: linear-gradient(to bottom, #fffbf5, #fff8f0);
+  border: 2px solid var(--warning);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.couple-code-card .couple-code-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.couple-code-value-large {
+  display: block;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--primary);
+  margin-bottom: var(--space-xs);
+}
+
+.couple-code-card .couple-code-helper {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.couple-code-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Model indicator */
+.model-indicator {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--background);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.model-switch-hint {
+  margin-bottom: var(--space-md);
+}
+
+.model-switch-hint .link-btn {
+  font-size: 13px;
+}
+
 /* Calm disclaimer */
 .guidance-disclaimer {
   margin-bottom: var(--space-xl);
@@ -2080,7 +2146,52 @@ textarea {
 .setup-code-helper {
   font-size: 13px;
   color: var(--text-muted);
-  margin: 0;
+  margin: 0 0 var(--space-md);
+}
+
+.setup-code-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Copy code buttons */
+.btn-copy-code {
+  display: inline-block;
+  margin: var(--space-sm) 0;
+  padding: var(--space-xs) var(--space-md);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-copy-code:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-copy-code-inline {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: transparent;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: var(--space-sm);
+}
+
+.btn-copy-code-inline:hover {
+  background: var(--primary);
+  color: white;
 }
 
 /* Share Link */

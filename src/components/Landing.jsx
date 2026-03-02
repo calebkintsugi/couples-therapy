@@ -206,14 +206,14 @@ function Landing() {
                         setCoupleCode(e.target.value.toUpperCase());
                         setCoupleData(null);
                       }}
-                      placeholder="Enter code (e.g., ABC123)"
-                      maxLength={6}
+                      placeholder="Enter code (e.g., ABCD1234)"
+                      maxLength={8}
                       className="code-input"
                     />
                     <button
                       className="btn btn-secondary"
                       onClick={lookupCouple}
-                      disabled={lookingUp || coupleCode.trim().length < 6}
+                      disabled={lookingUp || coupleCode.trim().length < 8}
                     >
                       {lookingUp ? '...' : 'Look Up'}
                     </button>

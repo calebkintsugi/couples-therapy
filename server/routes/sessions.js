@@ -4,11 +4,11 @@ import db from '../db.js';
 
 const router = Router();
 
-// Generate a readable couple code (6 chars, uppercase alphanumeric)
+// Generate a readable couple code (8 chars, uppercase alphanumeric)
 function generateCoupleCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 8; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
