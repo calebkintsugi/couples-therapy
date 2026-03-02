@@ -5,8 +5,9 @@ function Results() {
   const { sessionId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const partner = searchParams.get('partner') || 'A';
+  const token = searchParams.get('p');
 
+  const [partner, setPartner] = useState(null);
   const [advice, setAdvice] = useState('');
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
@@ -18,19 +19,25 @@ function Results() {
   const [chatLoading, setChatLoading] = useState(false);
 
   useEffect(() => {
+    if (!token) {
+      navigate('/');
+      return;
+    }
+
     const fetchAdvice = async () => {
       try {
-        const response = await fetch(`/api/sessions/${sessionId}/advice/${partner}`);
+        const response = await fetch(`/api/sessions/${sessionId}/advice-by-token/${token}`);
         const data = await response.json();
 
         if (!response.ok) {
           if (data.partnerACompleted === false || data.partnerBCompleted === false) {
-            navigate(`/session/${sessionId}/waiting?partner=${partner}`);
+            navigate(`/session/${sessionId}/waiting?p=${token}`);
             return;
           }
           throw new Error(data.error || 'Failed to load advice');
         }
 
+        setPartner(data.partner);
         setAdvice(data.advice);
       } catch (err) {
         setError(err.message);
@@ -41,14 +48,14 @@ function Results() {
     };
 
     fetchAdvice();
-  }, [sessionId, partner, navigate]);
+  }, [sessionId, token, navigate]);
 
   const regenerateAdvice = async () => {
     setRegenerating(true);
     setError('');
     setChatMessages([]); // Clear chat on regenerate
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/advice/${partner}?regenerate=true`);
+      const response = await fetch(`/api/sessions/${sessionId}/advice-by-token/${token}?regenerate=true`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -74,7 +81,7 @@ function Results() {
     setChatLoading(true);
 
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/chat/${partner}`, {
+      const response = await fetch(`/api/sessions/${sessionId}/chat-by-token/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
