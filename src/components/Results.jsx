@@ -36,8 +36,8 @@ function Results() {
   }, [token, navigate]);
 
   const verifyPin = async () => {
-    if (!pinInput || !/^\d{4,6}$/.test(pinInput)) {
-      setPinError('Please enter your 4-6 digit PIN');
+    if (!pinInput || !/^\d{6}$/.test(pinInput)) {
+      setPinError('Please enter your 6 digit PIN');
       return;
     }
 
@@ -188,7 +188,7 @@ function Results() {
         <button
           className="btn btn-primary"
           onClick={verifyPin}
-          disabled={verifyingPin || !/^\d{4,6}$/.test(pinInput)}
+          disabled={verifyingPin || !/^\d{6}$/.test(pinInput)}
         >
           {verifyingPin ? 'Verifying...' : 'View Results'}
         </button>
@@ -366,7 +366,7 @@ function Results() {
       {/* AI Model Toggle */}
       <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.9rem' }}>
-          Try a different AI coach:
+          Choose your preferred AI model:
         </label>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button

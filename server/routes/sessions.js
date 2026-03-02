@@ -304,8 +304,8 @@ router.patch('/:id/pin', async (req, res) => {
   const { id } = req.params;
   const { token, pin } = req.body;
 
-  if (!pin || !/^\d{4,6}$/.test(pin)) {
-    return res.status(400).json({ error: 'PIN must be 4-6 digits' });
+  if (!pin || !/^\d{6}$/.test(pin)) {
+    return res.status(400).json({ error: 'PIN must be 6 digits' });
   }
 
   try {

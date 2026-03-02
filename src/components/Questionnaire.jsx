@@ -127,8 +127,8 @@ function Questionnaire() {
   const handleSetupSubmit = async () => {
     if (!name.trim() || !setupCategory || !setupIntakeType) return;
     if (setupCategory === 'infidelity' && !setupRole) return;
-    if (!pin || !/^\d{4,6}$/.test(pin)) {
-      setError('Please enter a 4-6 digit PIN');
+    if (!pin || !/^\d{6}$/.test(pin)) {
+      setError('Please enter a 6 digit PIN');
       return;
     }
 
@@ -171,8 +171,8 @@ function Questionnaire() {
 
   const handleNameSubmit = async () => {
     if (!name.trim()) return;
-    if (!pin || !/^\d{4,6}$/.test(pin)) {
-      setError('Please enter a 4-6 digit PIN');
+    if (!pin || !/^\d{6}$/.test(pin)) {
+      setError('Please enter a 6 digit PIN');
       return;
     }
 
@@ -297,7 +297,7 @@ function Questionnaire() {
   // Partner A: Combined setup screen
   if (step === 'setup') {
     const canSubmitSetup = name.trim() && setupCategory && setupIntakeType &&
-      (setupCategory !== 'infidelity' || setupRole) && /^\d{4,6}$/.test(pin);
+      (setupCategory !== 'infidelity' || setupRole) && /^\d{6}$/.test(pin);
 
     return (
       <div className="card">
@@ -444,7 +444,7 @@ function Questionnaire() {
         {/* AI Model */}
         <div style={{ marginBottom: '2rem' }}>
           <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
-            Choose your AI coach
+            Choose your preferred AI model
           </label>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button
@@ -490,7 +490,7 @@ function Questionnaire() {
             Create a PIN to protect your results
           </label>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-            Your advice contains sensitive information. Create a 4-6 digit PIN that only you will know.
+            Your advice contains sensitive information. Create a 6 digit PIN that only you will know.
           </p>
           <input
             type="password"
@@ -499,7 +499,7 @@ function Questionnaire() {
             maxLength={6}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            placeholder="Enter 4-6 digit PIN"
+            placeholder="Enter 6 digit PIN"
             style={{ width: '100%', maxWidth: '200px' }}
           />
         </div>
@@ -517,7 +517,7 @@ function Questionnaire() {
 
   // Partner B: Name input
   if (step === 'name') {
-    const canSubmitName = name.trim() && /^\d{4,6}$/.test(pin);
+    const canSubmitName = name.trim() && /^\d{6}$/.test(pin);
     return (
       <div className="card">
         <h2>Welcome</h2>
@@ -545,7 +545,7 @@ function Questionnaire() {
             Create a PIN to protect your results
           </label>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-            Your advice contains sensitive information. Create a 4-6 digit PIN that only you will know.
+            Your advice contains sensitive information. Create a 6 digit PIN that only you will know.
           </p>
           <input
             type="password"
@@ -554,7 +554,7 @@ function Questionnaire() {
             maxLength={6}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            placeholder="Enter 4-6 digit PIN"
+            placeholder="Enter 6 digit PIN"
             style={{ width: '100%', maxWidth: '200px' }}
           />
         </div>
