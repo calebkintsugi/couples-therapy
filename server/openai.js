@@ -36,7 +36,7 @@ const categoryDescriptions = {
     roleInfo: false,
   },
   strengthening: {
-    name: 'Everything is Great, But Let\'s Do the Work Anyway',
+    name: 'Overall Relationship Management',
     context: 'proactively strengthening an already healthy relationship',
     roleInfo: false,
   },
@@ -62,7 +62,7 @@ async function callGemini(systemPrompt, userPrompt) {
     throw new Error('Gemini API key not configured');
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const fullPrompt = `${systemPrompt}\n\n---\n\n${userPrompt}`;
 

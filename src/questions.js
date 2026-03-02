@@ -31,7 +31,7 @@ export const categories = [
   },
   {
     id: 'strengthening',
-    name: 'Everything is Great, But Let\'s Do the Work Anyway',
+    name: 'Overall Relationship Management',
     description: 'Proactively strengthening a healthy relationship',
     icon: '🌱',
   },
