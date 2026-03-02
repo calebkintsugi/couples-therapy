@@ -1,4 +1,42 @@
-function Disclaimer() {
+import { useState } from 'react';
+
+function Disclaimer({ variant = 'default' }) {
+  const [expanded, setExpanded] = useState(false);
+
+  // Use the calm info callout style for landing page
+  if (variant === 'landing') {
+    return (
+      <div className="info-callout">
+        <div className="info-callout-header" onClick={() => setExpanded(!expanded)}>
+          <div className="info-callout-title">
+            <span className="info-callout-icon">ℹ️</span>
+            <span>Important: This is guidance, not therapy</span>
+          </div>
+          <button className="info-callout-toggle" type="button">
+            {expanded ? 'Show less' : 'Read more'}
+          </button>
+        </div>
+        {expanded && (
+          <div className="info-callout-content">
+            <p>
+              Repair Coach provides AI-powered relationship guidance for educational purposes only.
+              We are not licensed therapists or mental health professionals.
+            </p>
+            <p>
+              Our guidance should not replace professional therapy, especially for serious
+              relationship trauma, mental health concerns, or situations involving abuse.
+            </p>
+            <p>
+              By using this service, you acknowledge that results may vary and that you are
+              responsible for seeking appropriate professional help when needed.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Default style for questionnaire pages
   return (
     <div className="disclaimer">
       <h4>Important Notice</h4>
