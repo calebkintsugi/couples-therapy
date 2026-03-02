@@ -28,6 +28,19 @@ function Results() {
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
 
+  // Followup questions state
+  const [followups, setFollowups] = useState([]);
+  const [canCreateMore, setCanCreateMore] = useState(true);
+  const [suggestedQuestion, setSuggestedQuestion] = useState('');
+  const [customQuestion, setCustomQuestion] = useState('');
+  const [followupAnswer, setFollowupAnswer] = useState('');
+  const [loadingFollowups, setLoadingFollowups] = useState(false);
+  const [generatingQuestion, setGeneratingQuestion] = useState(false);
+  const [submittingAnswer, setSubmittingAnswer] = useState(false);
+  const [creatingQuestion, setCreatingQuestion] = useState(false);
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [activeFollowupId, setActiveFollowupId] = useState(null);
+
   useEffect(() => {
     if (!token) {
       navigate('/');
@@ -165,6 +178,115 @@ function Results() {
       setChatLoading(false);
     }
   };
+
+  // Followup question functions
+  const fetchFollowups = async () => {
+    setLoadingFollowups(true);
+    try {
+      const response = await fetch(`/api/followup/${sessionId}/by-token/${token}`);
+      const data = await response.json();
+      if (response.ok) {
+        setFollowups(data.followups || []);
+        setCanCreateMore(data.canCreateMore);
+      }
+    } catch (err) {
+      console.error('Error fetching followups:', err);
+    } finally {
+      setLoadingFollowups(false);
+    }
+  };
+
+  const generateSuggestedQuestion = async () => {
+    setGeneratingQuestion(true);
+    setSuggestedQuestion('');
+    try {
+      const response = await fetch(`/api/followup/${sessionId}/generate-question/${token}`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSuggestedQuestion(data.question);
+      }
+    } catch (err) {
+      console.error('Error generating question:', err);
+    } finally {
+      setGeneratingQuestion(false);
+    }
+  };
+
+  const acceptSuggestedQuestion = async () => {
+    if (!suggestedQuestion) return;
+    setCreatingQuestion(true);
+    try {
+      const response = await fetch(`/api/followup/${sessionId}/create/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: suggestedQuestion, createdBy: 'AI' }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSuggestedQuestion('');
+        setShowCustomInput(false);
+        await fetchFollowups();
+      }
+    } catch (err) {
+      console.error('Error creating question:', err);
+    } finally {
+      setCreatingQuestion(false);
+    }
+  };
+
+  const submitCustomQuestion = async () => {
+    if (!customQuestion.trim()) return;
+    setCreatingQuestion(true);
+    try {
+      const response = await fetch(`/api/followup/${sessionId}/create/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: customQuestion.trim(), createdBy: partner }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setCustomQuestion('');
+        setSuggestedQuestion('');
+        setShowCustomInput(false);
+        await fetchFollowups();
+      }
+    } catch (err) {
+      console.error('Error creating question:', err);
+    } finally {
+      setCreatingQuestion(false);
+    }
+  };
+
+  const submitFollowupAnswer = async (questionId) => {
+    if (!followupAnswer.trim()) return;
+    setSubmittingAnswer(true);
+    try {
+      const response = await fetch(`/api/followup/${sessionId}/answer/${questionId}/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: followupAnswer.trim() }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setFollowupAnswer('');
+        setActiveFollowupId(null);
+        await fetchFollowups();
+      }
+    } catch (err) {
+      console.error('Error submitting answer:', err);
+    } finally {
+      setSubmittingAnswer(false);
+    }
+  };
+
+  // Load followups after advice loads
+  useEffect(() => {
+    if (pinVerified && advice && token) {
+      fetchFollowups();
+    }
+  }, [pinVerified, advice, token]);
 
   // PIN verification screen
   if (!pinVerified) {
@@ -346,6 +468,222 @@ function Results() {
             Send
           </button>
         </form>
+      </div>
+
+      {/* Followup Questions Section */}
+      <div style={{ marginBottom: '2rem', borderTop: '1px solid var(--border)', paddingTop: '2rem' }}>
+        <h3 style={{ marginBottom: '1rem' }}>Deeper Dive Questions</h3>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+          Explore your relationship further with questions that both you and {partnerName || 'your partner'} answer.
+          The AI will then provide insights based on both responses.
+        </p>
+
+        {/* Previous Followups */}
+        {followups.length > 0 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            {followups.map((followup, index) => {
+              const myAnswer = partner === 'A' ? followup.partner_a_answer : followup.partner_b_answer;
+              const theirAnswer = partner === 'A' ? followup.partner_b_answer : followup.partner_a_answer;
+              const needsMyAnswer = !myAnswer;
+              const needsTheirAnswer = !theirAnswer;
+              const isComplete = myAnswer && theirAnswer && followup.ai_response;
+
+              return (
+                <div
+                  key={followup.id}
+                  style={{
+                    background: 'var(--background)',
+                    borderRadius: '12px',
+                    padding: '1.25rem',
+                    marginBottom: '1rem',
+                    border: needsMyAnswer ? '2px solid var(--primary)' : '1px solid var(--border)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      Question {followup.question_number} • {followup.created_by === 'AI' ? 'AI suggested' : `Suggested by ${followup.created_by === partner ? 'you' : partnerName}`}
+                    </span>
+                    {needsMyAnswer && (
+                      <span style={{ fontSize: '0.75rem', background: 'var(--primary)', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+                        Your turn
+                      </span>
+                    )}
+                    {!needsMyAnswer && needsTheirAnswer && (
+                      <span style={{ fontSize: '0.75rem', background: 'var(--border)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+                        Waiting for {partnerName}
+                      </span>
+                    )}
+                  </div>
+
+                  <p style={{ fontWeight: '600', marginBottom: '1rem' }}>{followup.question_text}</p>
+
+                  {/* Answer input if needed */}
+                  {needsMyAnswer && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <textarea
+                        value={activeFollowupId === followup.id ? followupAnswer : ''}
+                        onChange={(e) => {
+                          setActiveFollowupId(followup.id);
+                          setFollowupAnswer(e.target.value);
+                        }}
+                        onFocus={() => setActiveFollowupId(followup.id)}
+                        placeholder="Share your thoughts..."
+                        rows={3}
+                        style={{ width: '100%', marginBottom: '0.5rem' }}
+                      />
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => submitFollowupAnswer(followup.id)}
+                        disabled={submittingAnswer || !followupAnswer.trim() || activeFollowupId !== followup.id}
+                      >
+                        {submittingAnswer ? 'Submitting...' : 'Submit Answer'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Show answers and AI response if complete */}
+                  {isComplete && (
+                    <div style={{ marginTop: '1rem' }}>
+                      <div style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '8px', marginBottom: '0.75rem' }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>Your answer:</div>
+                        <div style={{ fontSize: '0.9rem' }}>{myAnswer}</div>
+                      </div>
+                      <div style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '8px', marginBottom: '0.75rem' }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>{partnerName}&apos;s answer:</div>
+                        <div style={{ fontSize: '0.9rem' }}>{theirAnswer}</div>
+                      </div>
+                      <div style={{ background: 'var(--primary-light)', padding: '1rem', borderRadius: '8px' }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>AI Insights:</div>
+                        <div style={{ fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>{followup.ai_response}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show my answer if waiting for partner */}
+                  {myAnswer && !theirAnswer && (
+                    <div style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>Your answer:</div>
+                      <div style={{ fontSize: '0.9rem' }}>{myAnswer}</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Create new followup question */}
+        {canCreateMore && (
+          <div style={{ background: 'var(--background)', borderRadius: '12px', padding: '1.25rem' }}>
+            {!suggestedQuestion && !showCustomInput ? (
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={generateSuggestedQuestion}
+                  disabled={generatingQuestion}
+                  style={{ flex: 1, minWidth: '200px' }}
+                >
+                  {generatingQuestion ? 'Generating...' : 'Get AI-Suggested Question'}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowCustomInput(true)}
+                  style={{ flex: 1, minWidth: '200px' }}
+                >
+                  Suggest Your Own Question
+                </button>
+              </div>
+            ) : suggestedQuestion ? (
+              <div>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                  The AI suggests asking both of you:
+                </p>
+                <p style={{ fontWeight: '600', fontStyle: 'italic', marginBottom: '1rem', padding: '1rem', background: 'var(--surface)', borderRadius: '8px' }}>
+                  &ldquo;{suggestedQuestion}&rdquo;
+                </p>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={acceptSuggestedQuestion}
+                    disabled={creatingQuestion}
+                    style={{ flex: 1 }}
+                  >
+                    {creatingQuestion ? 'Creating...' : 'Use This Question'}
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={generateSuggestedQuestion}
+                    disabled={generatingQuestion}
+                    style={{ flex: 1 }}
+                  >
+                    {generatingQuestion ? 'Generating...' : 'Try Another'}
+                  </button>
+                </div>
+                <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                  <button
+                    style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.9rem' }}
+                    onClick={() => {
+                      setSuggestedQuestion('');
+                      setShowCustomInput(true);
+                    }}
+                  >
+                    Or suggest your own question instead
+                  </button>
+                </div>
+              </div>
+            ) : showCustomInput ? (
+              <div>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                  What question would you like both of you to answer?
+                </p>
+                <textarea
+                  value={customQuestion}
+                  onChange={(e) => setCustomQuestion(e.target.value)}
+                  placeholder="Enter a question for both partners to answer..."
+                  rows={2}
+                  style={{ width: '100%', marginBottom: '0.75rem' }}
+                />
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={submitCustomQuestion}
+                    disabled={creatingQuestion || !customQuestion.trim()}
+                    style={{ flex: 1 }}
+                  >
+                    {creatingQuestion ? 'Creating...' : 'Submit Question'}
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowCustomInput(false);
+                      setCustomQuestion('');
+                    }}
+                    style={{ flex: 1 }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                  <button
+                    style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.9rem' }}
+                    onClick={() => {
+                      setShowCustomInput(false);
+                      generateSuggestedQuestion();
+                    }}
+                  >
+                    Or get an AI-suggested question instead
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {!canCreateMore && (
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+            You&apos;ve reached the maximum of 10 followup questions for this session.
+          </p>
+        )}
       </div>
 
       <div className="crisis-resources">

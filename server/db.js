@@ -58,6 +58,22 @@ export async function initDb() {
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_a_pin TEXT`);
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_b_pin TEXT`);
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ai_model TEXT DEFAULT 'openai'`);
+
+    // Create followup_questions table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS followup_questions (
+        id SERIAL PRIMARY KEY,
+        session_id TEXT NOT NULL REFERENCES sessions(id),
+        question_number INTEGER NOT NULL,
+        question_text TEXT NOT NULL,
+        created_by TEXT NOT NULL CHECK (created_by IN ('AI', 'A', 'B')),
+        partner_a_answer TEXT,
+        partner_b_answer TEXT,
+        ai_response TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(session_id, question_number)
+      )
+    `);
   } catch (e) {
     // Columns may already exist
   }

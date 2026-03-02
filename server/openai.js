@@ -262,6 +262,61 @@ Guidelines:
   return callAI(systemPrompt, userPrompt, aiModel, 800);
 }
 
+// Generate a followup question for both partners
+export async function generateFollowupQuestion(partnerAResponses, partnerBResponses, initialAdvice, category, partnerAName, partnerBName, previousFollowups = [], aiModel = 'openai') {
+  const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
+
+  const previousContext = previousFollowups.length > 0
+    ? `\n\nPrevious followup questions asked (do NOT repeat these):\n${previousFollowups.map((f, i) => `${i + 1}. "${f.question_text}"`).join('\n')}`
+    : '';
+
+  const systemPrompt = `You are a relationship coach who has been working with a couple on ${categoryInfo.context}. Based on their questionnaire responses and the advice you provided, you want to ask ONE followup question that both partners will answer separately.
+
+The question should:
+- Dig deeper into a specific dynamic you noticed
+- Help surface something that wasn't fully explored
+- Be open-ended and thought-provoking
+- Be answerable by both partners from their own perspective
+- Not be repetitive of previous questions${previousContext}
+
+Return ONLY the question text, nothing else. No quotes, no preamble, just the question.`;
+
+  const formatResponses = (responses, name) => {
+    return responses.map(r => `${r.question_id}: "${r.answer}"`).join('\n');
+  };
+
+  const userPrompt = `${partnerAName}'s responses:\n${formatResponses(partnerAResponses, partnerAName)}\n\n${partnerBName}'s responses:\n${formatResponses(partnerBResponses, partnerBName)}\n\nInitial advice excerpt:\n${initialAdvice?.substring(0, 1000) || 'Not available'}\n\nGenerate ONE followup question for both partners to answer:`;
+
+  return callAI(systemPrompt, userPrompt, aiModel, 200);
+}
+
+// Generate AI response after both partners answer a followup question
+export async function generateFollowupResponse(question, partnerAAnswer, partnerBAnswer, category, partnerAName, partnerBName, aiModel = 'openai') {
+  const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
+
+  const systemPrompt = `You are a relationship coach working with a couple on ${categoryInfo.context}. You asked them both a followup question, and now you're providing insights based on their answers.
+
+Guidelines:
+- Compare and contrast their responses
+- Highlight areas of alignment and divergence
+- Provide specific, actionable observations
+- Be warm but honest
+- Keep response concise (150-250 words)
+- Do NOT use markdown formatting - plain text only`;
+
+  const userPrompt = `Question asked: "${question}"
+
+${partnerAName}'s answer:
+"${partnerAAnswer}"
+
+${partnerBName}'s answer:
+"${partnerBAnswer}"
+
+Provide your insights based on both responses:`;
+
+  return callAI(systemPrompt, userPrompt, aiModel, 500);
+}
+
 // Extract insights from a session to add to couple's memory
 export async function extractMemoryInsights(partnerAResponses, partnerBResponses, generatedAdvice, category, partnerAName, partnerBName, existingMemory = '', sessionDate = new Date()) {
   const dateStr = sessionDate.toLocaleDateString();
