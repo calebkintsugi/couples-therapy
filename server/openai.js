@@ -155,9 +155,9 @@ Then end with: "Here's one thing that might surprise you about your partner:" fo
 
 Write 3 numbered insights (1. 2. 3.) that read between the lines. Use the open-ended questions to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Be insightful and specific to what they wrote.
 
-🔦 BLIND SPOTS
+🔦 POSSIBLE BLIND SPOTS
 
-Write 3 numbered blind spots (1. 2. 3.) using the SCALE QUESTIONS to find DATA MISMATCHES between partners. Look for:
+Write 3 numbered possible blind spots (1. 2. 3.) using the SCALE QUESTIONS to find DATA MISMATCHES between partners. Look for:
 - Perception gaps (where their view differs from their partner's)
 - The "we" vs "I" language patterns
 - Areas where they may be overestimating their own progress or underestimating their partner's experience
