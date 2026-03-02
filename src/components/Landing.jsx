@@ -88,7 +88,7 @@ function Landing() {
 
               <div className="hero-ctas">
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-large"
                   onClick={() => createSession()}
                   disabled={loading}
                 >
@@ -160,8 +160,8 @@ function Landing() {
       <section className="landing-section">
         <div className="landing-container">
           <div className="section-header">
-            <h2>Choose a focus</h2>
-            <p>Select the area where you'd like guidance</p>
+            <h2>Multiple areas of focus</h2>
+            <p>RepairCoach helps with various types of relationship issues</p>
           </div>
           <div className="categories-grid">
             {categories.map((cat) => (

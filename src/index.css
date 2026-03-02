@@ -224,6 +224,12 @@ p {
   background: var(--primary-light);
 }
 
+.btn-large {
+  height: 56px;
+  padding: 0 var(--space-xl);
+  font-size: 18px;
+}
+
 .btn-block {
   width: 100%;
 }
