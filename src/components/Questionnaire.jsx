@@ -427,7 +427,7 @@ function Questionnaire() {
           <section className="setup-section">
             <div className="setup-card setup-card-subtle">
               <label className="setup-label-small">AI Model (Advanced)</label>
-              <p className="setup-helper-small">Both options provide thoughtful guidance.</p>
+              <p className="setup-helper-small">You can change later.</p>
               <div className="setup-model-toggle">
                 <button
                   type="button"
