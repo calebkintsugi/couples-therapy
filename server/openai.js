@@ -111,19 +111,19 @@ Write 4-5 sentences that cut to the core of what's happening in this relationshi
 
 Write 3 numbered insights (1. 2. 3.) that read between the lines. Use the open-ended questions to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Be insightful and specific to what they wrote.
 
-🗺️ A ROADMAP FORWARD
-
-Write 3 numbered pieces of advice structured as:
-1. IMMEDIATE TRIAGE (what they should do TODAY or this week)
-2. COMMUNICATION SCRIPT (an exact phrase or approach they can use with their partner)
-3. MINDSET SHIFT (a bigger picture change in how they think about the situation)
-
 🔦 BLIND SPOTS
 
 Write 3 numbered blind spots (1. 2. 3.) using the SCALE QUESTIONS to find DATA MISMATCHES between partners. Look for:
 - Perception gaps (where their view differs from their partner's)
 - The "we" vs "I" language patterns
 - Areas where they may be overestimating their own progress or underestimating their partner's experience
+
+🗺️ A ROADMAP FORWARD
+
+Write 3 numbered pieces of advice structured as:
+1. IMMEDIATE TRIAGE (what they should do TODAY or this week)
+2. COMMUNICATION SCRIPT (an exact phrase or approach they can use with their partner)
+3. MINDSET SHIFT (a bigger picture change in how they think about the situation)
 
 🎯 FOCUS AREAS
 
