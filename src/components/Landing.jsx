@@ -88,7 +88,7 @@ function Landing() {
 
               <div className="hero-ctas">
                 <button
-                  className="btn btn-primary btn-large"
+                  className="btn btn-primary"
                   onClick={() => createSession()}
                   disabled={loading}
                 >
