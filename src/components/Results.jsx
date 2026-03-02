@@ -15,6 +15,8 @@ function Results() {
   const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState('');
   const [aiModel, setAiModel] = useState('openai');
+  const [originalModel, setOriginalModel] = useState('openai');
+  const [showModelChangePrompt, setShowModelChangePrompt] = useState(false);
 
   // PIN verification state
   const [pinVerified, setPinVerified] = useState(false);
@@ -111,6 +113,7 @@ function Results() {
       }
       if (data.aiModel) {
         setAiModel(data.aiModel);
+        setOriginalModel(data.aiModel);
       }
       if (data.partnerName) {
         setPartnerName(data.partnerName);
@@ -136,6 +139,7 @@ function Results() {
       }
 
       setAdvice(data.advice);
+      setOriginalModel(aiModel);
     } catch (err) {
       setError(err.message);
       console.error(err);
@@ -385,7 +389,14 @@ function Results() {
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             type="button"
-            onClick={() => setAiModel('openai')}
+            onClick={() => {
+              if (aiModel !== 'openai') {
+                setAiModel('openai');
+                if (originalModel !== 'openai') {
+                  setShowModelChangePrompt(true);
+                }
+              }
+            }}
             style={{
               flex: 1,
               padding: '0.5rem 1rem',
@@ -400,7 +411,14 @@ function Results() {
           </button>
           <button
             type="button"
-            onClick={() => setAiModel('gemini')}
+            onClick={() => {
+              if (aiModel !== 'gemini') {
+                setAiModel('gemini');
+                if (originalModel !== 'gemini') {
+                  setShowModelChangePrompt(true);
+                }
+              }
+            }}
             style={{
               flex: 1,
               padding: '0.5rem 1rem',
@@ -414,6 +432,41 @@ function Results() {
             Gemini
           </button>
         </div>
+
+        {/* Model change prompt */}
+        {showModelChangePrompt && (
+          <div style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            background: 'var(--background)',
+            borderRadius: '8px',
+            border: '1px solid var(--primary)',
+          }}>
+            <p style={{ marginBottom: '0.75rem', fontSize: '0.9rem' }}>
+              Would you like to regenerate your advice using {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'} instead of {originalModel === 'openai' ? 'ChatGPT' : 'Gemini'}?
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setShowModelChangePrompt(false);
+                  regenerateAdvice();
+                }}
+                disabled={regenerating}
+                style={{ flex: 1, fontSize: '0.85rem', padding: '0.5rem' }}
+              >
+                {regenerating ? 'Regenerating...' : 'Yes, regenerate'}
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowModelChangePrompt(false)}
+                style={{ flex: 1, fontSize: '0.85rem', padding: '0.5rem' }}
+              >
+                No, keep current
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {coupleCode && (
@@ -460,7 +513,7 @@ function Results() {
 
       {/* Follow-up Chat Section */}
       <div style={{ marginBottom: '2rem' }}>
-        <h3 style={{ marginBottom: '1rem' }}>Have follow-up questions?</h3>
+        <h3 style={{ marginBottom: '1rem' }}>Private chat with the AI</h3>
 
         {chatMessages.length > 0 && (
           <div
@@ -521,9 +574,9 @@ function Results() {
 
       {/* Followup Questions Section */}
       <div style={{ marginBottom: '2rem', borderTop: '1px solid var(--border)', paddingTop: '2rem' }}>
-        <h3 style={{ marginBottom: '1rem' }}>Deeper Dive Questions</h3>
+        <h3 style={{ marginBottom: '1rem' }}>Deeper Dive Questions for you and {partnerName || 'your partner'} to answer</h3>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-          Explore your relationship further with questions that both you and {partnerName || 'your partner'} answer.
+          Explore your relationship further with questions you both answer separately.
           The AI will then provide insights based on both responses.
         </p>
 
@@ -624,7 +677,7 @@ function Results() {
         {/* Create new followup question */}
         {canCreateMore && (
           <div style={{ background: 'var(--background)', borderRadius: '12px', padding: '1.25rem' }}>
-            {generatingQuestion ? (
+            {generatingQuestion || (!suggestedQuestion && canCreateMore) ? (
               <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary)' }}>
                 <div className="waiting-spinner" style={{ marginBottom: '0.75rem' }}></div>
                 Thinking of a question for you both...
@@ -676,16 +729,7 @@ function Results() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '1rem' }}>
-                <button
-                  className="btn btn-primary"
-                  onClick={generateSuggestedQuestion}
-                >
-                  Get Next Question
-                </button>
-              </div>
-            )}
+            ) : null}
           </div>
         )}
 
