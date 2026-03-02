@@ -208,7 +208,7 @@ function Tester() {
             }}
           >
             <option value="openai">GPT-4o (OpenAI)</option>
-            <option value="gemini">Gemini Pro (Google)</option>
+            <option value="gemini">Gemini 2.5 Flash (Google)</option>
           </select>
         </div>
       </div>
