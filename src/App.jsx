@@ -11,9 +11,10 @@ function App() {
   const isTester = location.pathname === '/tester';
   const isLanding = location.pathname === '/';
   const isHowItWorks = location.pathname === '/how-it-works';
+  const isResults = location.pathname.endsWith('/results');
 
   return (
-    <div className={isTester || isLanding || isHowItWorks ? '' : 'container'}>
+    <div className={isTester || isLanding || isHowItWorks || isResults ? '' : 'container'}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/how-it-works" element={<HowItWorks />} />

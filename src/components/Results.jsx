@@ -18,7 +18,6 @@ function parseAdviceSections(adviceText) {
   ];
 
   const sections = [];
-  let remainingText = adviceText;
 
   // Find all section positions
   const sectionPositions = [];
@@ -61,33 +60,28 @@ function parseAdviceSections(adviceText) {
   return sections;
 }
 
-// Card component for each section
-function AdviceCard({ icon, title, content, highlight = false }) {
+// Collapsible section component
+function AdviceSection({ icon, title, content, defaultExpanded = false }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+
   return (
-    <div style={{
-      background: highlight ? 'var(--primary-light)' : 'var(--surface)',
-      borderRadius: '16px',
-      padding: '1.5rem',
-      marginBottom: '1rem',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-      border: highlight ? '1px solid var(--primary)' : '1px solid var(--border)',
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        marginBottom: '1rem',
-      }}>
-        <span style={{ fontSize: '1.5rem' }}>{icon}</span>
-        <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '600' }}>{title}</h3>
-      </div>
-      <div style={{
-        whiteSpace: 'pre-wrap',
-        lineHeight: '1.7',
-        color: 'var(--text-primary)',
-      }}>
-        {content}
-      </div>
+    <div className="advice-section">
+      <button
+        type="button"
+        className={`advice-section-header ${expanded ? 'expanded' : ''}`}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="advice-section-title">
+          <span className="advice-section-icon">{icon}</span>
+          <h3>{title}</h3>
+        </div>
+        <span className="advice-section-toggle">{expanded ? '−' : '+'}</span>
+      </button>
+      {expanded && (
+        <div className="advice-section-content">
+          {content}
+        </div>
+      )}
     </div>
   );
 }
@@ -120,12 +114,14 @@ function Results() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   // Followup questions state
   const [followups, setFollowups] = useState([]);
   const [canCreateMore, setCanCreateMore] = useState(true);
   const [suggestedQuestion, setSuggestedQuestion] = useState('');
   const [customQuestion, setCustomQuestion] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
   const [followupAnswer, setFollowupAnswer] = useState('');
   const [loadingFollowups, setLoadingFollowups] = useState(false);
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
@@ -223,7 +219,7 @@ function Results() {
   const regenerateAdvice = async () => {
     setRegenerating(true);
     setError('');
-    setChatMessages([]); // Clear chat on regenerate
+    setChatMessages([]);
     try {
       const response = await fetch(`/api/sessions/${sessionId}/advice-by-token/${token}?regenerate=true&aiModel=${aiModel}`);
       const data = await response.json();
@@ -323,6 +319,7 @@ function Results() {
       if (response.ok) {
         setSuggestedQuestion('');
         setCustomQuestion('');
+        setShowCustomInput(false);
         await fetchFollowups();
       }
     } catch (err) {
@@ -344,6 +341,7 @@ function Results() {
       if (response.ok) {
         setCustomQuestion('');
         setSuggestedQuestion('');
+        setShowCustomInput(false);
         await fetchFollowups();
       }
     } catch (err) {
@@ -385,7 +383,6 @@ function Results() {
   // Auto-generate a suggested question when ready for a new one
   useEffect(() => {
     if (canCreateMore && !suggestedQuestion && !generatingQuestion && followups.length >= 0 && pinVerified && advice) {
-      // Check if there's a pending question that needs answering
       const hasPendingQuestion = followups.some(f => {
         const myAnswer = partner === 'A' ? f.partner_a_answer : f.partner_b_answer;
         return !myAnswer;
@@ -396,55 +393,60 @@ function Results() {
     }
   }, [canCreateMore, followups, pinVerified, advice, partner]);
 
+  // Check if there's a pending question I need to answer
+  const pendingQuestion = followups.find(f => {
+    const myAnswer = partner === 'A' ? f.partner_a_answer : f.partner_b_answer;
+    return !myAnswer;
+  });
+
   // PIN verification screen
   if (!pinVerified) {
     return (
-      <div className="card">
-        <h2>Enter Your PIN</h2>
-        <p style={{ marginBottom: '1.5rem' }}>
-          Your results are protected. Please enter the PIN you created when completing the questionnaire.
-        </p>
+      <div className="guidance-page">
+        <div className="guidance-container">
+          <div className="pin-card">
+            <h2>Enter Your PIN</h2>
+            <p>Your results are protected. Please enter the PIN you created when completing the questionnaire.</p>
 
-        {pinError && <div className="error-message">{pinError}</div>}
+            {pinError && <div className="error-message">{pinError}</div>}
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <input
-            type="password"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            value={pinInput}
-            onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
-            placeholder="Enter your PIN"
-            style={{ width: '100%', maxWidth: '200px' }}
-            onKeyDown={(e) => e.key === 'Enter' && verifyPin()}
-            autoFocus
-          />
+            <div className="pin-input-wrapper">
+              <input
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+                placeholder="Enter your PIN"
+                onKeyDown={(e) => e.key === 'Enter' && verifyPin()}
+                autoFocus
+              />
+            </div>
+
+            <button
+              className="btn btn-primary"
+              onClick={verifyPin}
+              disabled={verifyingPin || !/^\d{6}$/.test(pinInput)}
+            >
+              {verifyingPin ? 'Verifying...' : 'View Results'}
+            </button>
+          </div>
         </div>
-
-        <button
-          className="btn btn-primary"
-          onClick={verifyPin}
-          disabled={verifyingPin || !/^\d{6}$/.test(pinInput)}
-        >
-          {verifyingPin ? 'Verifying...' : 'View Results'}
-        </button>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="card">
-        <div className="waiting-container">
-          <div className="waiting-spinner" />
-          <h2>You&apos;re All Set</h2>
-          <p>
-            Both you and {partnerName || 'your partner'} have completed your questionnaires.
-          </p>
-          <p>
-            Please wait while we generate your personalized guidance. This may take up to a minute.
-          </p>
+      <div className="guidance-page">
+        <div className="guidance-container">
+          <div className="loading-card">
+            <div className="waiting-spinner" />
+            <h2>You're All Set</h2>
+            <p>Both you and {partnerName || 'your partner'} have completed your questionnaires.</p>
+            <p className="text-muted">Please wait while we generate your personalized guidance.</p>
+          </div>
         </div>
       </div>
     );
@@ -452,450 +454,381 @@ function Results() {
 
   if (error) {
     return (
-      <div className="card">
-        <h2>Something Went Wrong</h2>
-        <div className="error-message">{error}</div>
-        <button className="btn btn-primary" onClick={() => navigate('/')}>
-          Return Home
-        </button>
+      <div className="guidance-page">
+        <div className="guidance-container">
+          <div className="error-card">
+            <h2>Something Went Wrong</h2>
+            <div className="error-message">{error}</div>
+            <button className="btn btn-primary" onClick={() => navigate('/')}>
+              Return Home
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="card">
-      <h2>Your Personalized Guidance</h2>
+    <div className="guidance-page">
+      <div className="guidance-container">
+        {/* Header */}
+        <header className="guidance-header">
+          <h1>Your Personalized Guidance</h1>
+          {coupleCode && (
+            <div className="couple-code-badge">
+              <span className="couple-code-label">Couple Code:</span>
+              <code className="couple-code-value">{coupleCode}</code>
+            </div>
+          )}
+        </header>
 
-      <div className="disclaimer">
-        <h4>Reminder</h4>
-        <p>
-          This guidance is for educational purposes only and is not a substitute
-          for professional therapy. We strongly encourage working with a licensed
-          therapist for the best support in your healing journey.
-        </p>
-      </div>
-
-      {/* AI Model Toggle */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.9rem' }}>
-          Choose your preferred AI model:
-        </label>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button
-            type="button"
-            onClick={() => {
-              if (aiModel !== 'openai') {
-                setAiModel('openai');
-                if (originalModel !== 'openai') {
-                  setShowModelChangePrompt(true);
-                }
-              }
-            }}
-            style={{
-              flex: 1,
-              padding: '0.5rem 1rem',
-              border: aiModel === 'openai' ? '2px solid var(--primary)' : '2px solid var(--border)',
-              borderRadius: '8px',
-              background: aiModel === 'openai' ? 'var(--primary-light)' : 'var(--surface)',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-            }}
-          >
-            ChatGPT
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (aiModel !== 'gemini') {
-                setAiModel('gemini');
-                if (originalModel !== 'gemini') {
-                  setShowModelChangePrompt(true);
-                }
-              }
-            }}
-            style={{
-              flex: 1,
-              padding: '0.5rem 1rem',
-              border: aiModel === 'gemini' ? '2px solid var(--primary)' : '2px solid var(--border)',
-              borderRadius: '8px',
-              background: aiModel === 'gemini' ? 'var(--primary-light)' : 'var(--surface)',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-            }}
-          >
-            Gemini
-          </button>
+        {/* Calm disclaimer */}
+        <div className="info-callout guidance-disclaimer">
+          <div className="info-callout-title">
+            <span className="info-callout-icon">ℹ️</span>
+            <span>This is guidance, not therapy</span>
+          </div>
+          <p>For educational purposes only. We encourage working with a licensed therapist for the best support.</p>
         </div>
 
-        {/* Model change prompt */}
-        {showModelChangePrompt && (
-          <div style={{
-            marginTop: '1rem',
-            padding: '1rem',
-            background: 'var(--background)',
-            borderRadius: '8px',
-            border: '1px solid var(--primary)',
-          }}>
-            <p style={{ marginBottom: '0.75rem', fontSize: '0.9rem' }}>
-              Would you like to regenerate your advice using {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'} instead of {originalModel === 'openai' ? 'ChatGPT' : 'Gemini'}?
-            </p>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+        {/* Main two-column layout */}
+        <div className="guidance-grid">
+          {/* LEFT COLUMN — Guidance */}
+          <div className="guidance-column">
+            <div className="column-header">
+              <h2>Your Guidance</h2>
+              <div className="model-toggle">
+                <button
+                  type="button"
+                  className={`model-btn ${aiModel === 'openai' ? 'active' : ''}`}
+                  onClick={() => {
+                    if (aiModel !== 'openai') {
+                      setAiModel('openai');
+                      if (originalModel !== 'openai') {
+                        setShowModelChangePrompt(true);
+                      }
+                    }
+                  }}
+                >
+                  ChatGPT
+                </button>
+                <button
+                  type="button"
+                  className={`model-btn ${aiModel === 'gemini' ? 'active' : ''}`}
+                  onClick={() => {
+                    if (aiModel !== 'gemini') {
+                      setAiModel('gemini');
+                      if (originalModel !== 'gemini') {
+                        setShowModelChangePrompt(true);
+                      }
+                    }
+                  }}
+                >
+                  Gemini
+                </button>
+              </div>
+            </div>
+
+            {/* Model change prompt */}
+            {showModelChangePrompt && (
+              <div className="model-change-prompt">
+                <p>Regenerate your advice using {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}?</p>
+                <div className="model-change-actions">
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => {
+                      setShowModelChangePrompt(false);
+                      regenerateAdvice();
+                    }}
+                    disabled={regenerating}
+                  >
+                    {regenerating ? 'Regenerating...' : 'Yes, regenerate'}
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setShowModelChangePrompt(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Advice sections */}
+            <div className="advice-sections">
+              {regenerating ? (
+                <div className="regenerating-state">
+                  <div className="waiting-spinner"></div>
+                  <p>Regenerating with {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}...</p>
+                </div>
+              ) : (
+                adviceSections.map((section, index) => (
+                  <AdviceSection
+                    key={index}
+                    icon={section.icon}
+                    title={section.title}
+                    content={section.content}
+                    defaultExpanded={index === 0}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Private chat toggle */}
+            <div className="chat-section">
               <button
-                className="btn btn-primary"
-                onClick={() => {
-                  setShowModelChangePrompt(false);
-                  regenerateAdvice();
-                }}
-                disabled={regenerating}
-                style={{ flex: 1, fontSize: '0.85rem', padding: '0.5rem' }}
+                type="button"
+                className="chat-toggle"
+                onClick={() => setShowChat(!showChat)}
               >
-                {regenerating ? 'Regenerating...' : 'Yes, regenerate'}
+                <span>💬</span>
+                <span>Private chat with the AI</span>
+                <span className="chat-toggle-arrow">{showChat ? '▲' : '▼'}</span>
               </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowModelChangePrompt(false)}
-                style={{ flex: 1, fontSize: '0.85rem', padding: '0.5rem' }}
-              >
-                No, keep current
-              </button>
+
+              {showChat && (
+                <div className="chat-container">
+                  {chatMessages.length > 0 && (
+                    <div className="chat-messages">
+                      {chatMessages.map((msg, index) => (
+                        <div key={index} className={`chat-message ${msg.role}`}>
+                          <div className="chat-message-label">
+                            {msg.role === 'user' ? 'You' : 'Coach'}
+                          </div>
+                          <div className="chat-message-content">{msg.content}</div>
+                        </div>
+                      ))}
+                      {chatLoading && (
+                        <div className="chat-message assistant">
+                          <div className="chat-message-label">Coach</div>
+                          <div className="chat-message-content thinking">Thinking...</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <form onSubmit={sendChatMessage} className="chat-form">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Ask a follow-up question..."
+                      disabled={chatLoading}
+                    />
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={!chatInput.trim() || chatLoading}
+                    >
+                      Send
+                    </button>
+                  </form>
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </div>
 
-      {coupleCode && (
-        <div style={{
-          background: 'var(--background)',
-          padding: '1rem 1.5rem',
-          borderRadius: '12px',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-        }}>
-          <div>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Your Couple Code: </span>
-            <code style={{
-              fontSize: '1.1rem',
-              fontWeight: '700',
-              letterSpacing: '0.15em',
-              color: 'var(--primary)',
-            }}>
-              {coupleCode}
-            </code>
-          </div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            Save this to access your history later
-          </span>
-        </div>
-      )}
+          {/* RIGHT COLUMN — Next Step */}
+          <div className="next-step-column">
+            <div className="next-step-card">
+              <h2>Your Next Conversation</h2>
+              <p className="next-step-subtitle">Answer this separately, then discuss together.</p>
 
-      {/* Advice Cards */}
-      <div style={{ marginBottom: '2rem' }}>
-        {regenerating ? (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '3rem',
-            textAlign: 'center',
-            background: 'var(--background)',
-            borderRadius: '16px',
-            minHeight: '200px',
-          }}>
-            <div className="waiting-spinner" style={{ marginBottom: '1rem' }}></div>
-            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-              Regenerating your advice with {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}...
-            </p>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-              This may take up to a minute.
-            </p>
-          </div>
-        ) : (
-          adviceSections.map((section, index) => (
-            <AdviceCard
-              key={index}
-              icon={section.icon}
-              title={section.title}
-              content={section.content}
-              highlight={index === 0}
-            />
-          ))
-        )}
-      </div>
-
-      {/* Follow-up Chat Section */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h3 style={{ marginBottom: '1rem' }}>Private chat with the AI</h3>
-
-        {chatMessages.length > 0 && (
-          <div
-            style={{
-              background: 'var(--background)',
-              borderRadius: '12px',
-              padding: '1rem',
-              marginBottom: '1rem',
-              maxHeight: '400px',
-              overflowY: 'auto',
-            }}
-          >
-            {chatMessages.map((msg, index) => (
-              <div
-                key={index}
-                style={{
-                  marginBottom: '1rem',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  background: msg.role === 'user' ? 'var(--primary)' : 'var(--surface)',
-                  color: msg.role === 'user' ? 'white' : 'var(--text-primary)',
-                  marginLeft: msg.role === 'user' ? '2rem' : '0',
-                  marginRight: msg.role === 'assistant' ? '2rem' : '0',
-                }}
-              >
-                <div style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>
-                  {msg.role === 'user' ? 'You' : 'Coach'}
+              {/* Show pending question that needs my answer */}
+              {pendingQuestion ? (
+                <div className="next-step-content">
+                  <div className="suggested-prompt pending">
+                    <span className="prompt-badge">Question {pendingQuestion.question_number}</span>
+                    <p className="prompt-text">"{pendingQuestion.question_text}"</p>
+                  </div>
+                  <div className="pending-answer-form">
+                    <textarea
+                      value={activeFollowupId === pendingQuestion.id ? followupAnswer : ''}
+                      onChange={(e) => {
+                        setActiveFollowupId(pendingQuestion.id);
+                        setFollowupAnswer(e.target.value);
+                      }}
+                      onFocus={() => setActiveFollowupId(pendingQuestion.id)}
+                      placeholder="Share your thoughts..."
+                      rows={4}
+                    />
+                    <button
+                      className="btn btn-primary btn-block"
+                      onClick={() => submitFollowupAnswer(pendingQuestion.id)}
+                      disabled={submittingAnswer || !followupAnswer.trim() || activeFollowupId !== pendingQuestion.id}
+                    >
+                      {submittingAnswer ? 'Submitting...' : 'Submit Your Answer'}
+                    </button>
+                  </div>
                 </div>
-                <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>
-              </div>
-            ))}
-            {chatLoading && (
-              <div style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>
-                Thinking...
+              ) : generatingQuestion ? (
+                <div className="next-step-content">
+                  <div className="generating-state">
+                    <div className="waiting-spinner small"></div>
+                    <p>Finding a meaningful question for you both...</p>
+                  </div>
+                </div>
+              ) : suggestedQuestion && canCreateMore ? (
+                <div className="next-step-content">
+                  <div className="suggested-prompt">
+                    <p className="prompt-text">"{suggestedQuestion}"</p>
+                  </div>
+
+                  <button
+                    className="btn btn-primary btn-block"
+                    onClick={acceptSuggestedQuestion}
+                    disabled={creatingQuestion}
+                  >
+                    {creatingQuestion ? 'Creating...' : 'Use this prompt for both of you'}
+                  </button>
+
+                  {!showCustomInput ? (
+                    <div className="next-step-alt-actions">
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setShowCustomInput(true)}
+                      >
+                        Write your own prompt
+                      </button>
+                      <button
+                        type="button"
+                        className="link-btn"
+                        onClick={generateSuggestedQuestion}
+                        disabled={generatingQuestion}
+                      >
+                        Suggest another
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="custom-prompt-form">
+                      <label>Your custom prompt for both of you:</label>
+                      <textarea
+                        value={customQuestion}
+                        onChange={(e) => setCustomQuestion(e.target.value)}
+                        placeholder="Enter a question for both partners to answer..."
+                        rows={3}
+                      />
+                      <div className="custom-prompt-actions">
+                        <button
+                          className="btn btn-primary"
+                          onClick={submitCustomQuestion}
+                          disabled={creatingQuestion || !customQuestion.trim()}
+                        >
+                          {creatingQuestion ? 'Creating...' : 'Use our prompt'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          onClick={() => {
+                            setShowCustomInput(false);
+                            setCustomQuestion('');
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : !canCreateMore ? (
+                <div className="next-step-content">
+                  <p className="max-reached">You've completed all 10 follow-up questions for this session.</p>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Previous followups */}
+            {followups.length > 0 && (
+              <div className="previous-followups">
+                <h3>Previous Questions</h3>
+                {followups.map((followup) => {
+                  const myAnswer = partner === 'A' ? followup.partner_a_answer : followup.partner_b_answer;
+                  const theirAnswer = partner === 'A' ? followup.partner_b_answer : followup.partner_a_answer;
+                  const isComplete = myAnswer && theirAnswer && followup.ai_response;
+                  const waitingForPartner = myAnswer && !theirAnswer;
+
+                  // Skip the pending question - it's shown above
+                  if (!myAnswer) return null;
+
+                  return (
+                    <div key={followup.id} className="followup-item">
+                      <div className="followup-header">
+                        <span className="followup-number">Q{followup.question_number}</span>
+                        {waitingForPartner && (
+                          <span className="followup-status waiting">Waiting for {partnerName}</span>
+                        )}
+                        {isComplete && (
+                          <span className="followup-status complete">Complete</span>
+                        )}
+                      </div>
+                      <p className="followup-question">{followup.question_text}</p>
+
+                      {isComplete && (
+                        <details className="followup-details">
+                          <summary>View responses & insights</summary>
+                          <div className="followup-responses">
+                            <div className="response-block yours">
+                              <strong>Your answer:</strong>
+                              <p>{myAnswer}</p>
+                            </div>
+                            <div className="response-block theirs">
+                              <strong>{partnerName}'s answer:</strong>
+                              <p>{theirAnswer}</p>
+                            </div>
+                            <div className="response-block ai">
+                              <strong>AI Insights:</strong>
+                              <p>{followup.ai_response}</p>
+                            </div>
+                          </div>
+                        </details>
+                      )}
+
+                      {waitingForPartner && (
+                        <div className="response-block yours solo">
+                          <strong>Your answer:</strong>
+                          <p>{myAnswer}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
-        )}
+        </div>
 
-        <form onSubmit={sendChatMessage} style={{ display: 'flex', gap: '0.5rem' }}>
-          <input
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Ask a follow-up question..."
-            disabled={chatLoading}
-            style={{ flex: 1 }}
-          />
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={!chatInput.trim() || chatLoading}
-          >
-            Send
-          </button>
-        </form>
-      </div>
-
-      {/* Followup Questions Section */}
-      <div style={{ marginBottom: '2rem', borderTop: '1px solid var(--border)', paddingTop: '2rem' }}>
-        <h3 style={{ marginBottom: '1rem' }}>Deeper Dive Questions for you and {partnerName || 'your partner'} to answer</h3>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-          Explore your relationship further with questions you both answer separately.
-          The AI will then provide insights based on both responses.
-        </p>
-
-        {/* Previous Followups */}
-        {followups.length > 0 && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            {followups.map((followup, index) => {
-              const myAnswer = partner === 'A' ? followup.partner_a_answer : followup.partner_b_answer;
-              const theirAnswer = partner === 'A' ? followup.partner_b_answer : followup.partner_a_answer;
-              const needsMyAnswer = !myAnswer;
-              const needsTheirAnswer = !theirAnswer;
-              const isComplete = myAnswer && theirAnswer && followup.ai_response;
-
-              return (
-                <div
-                  key={followup.id}
-                  style={{
-                    background: 'var(--background)',
-                    borderRadius: '12px',
-                    padding: '1.25rem',
-                    marginBottom: '1rem',
-                    border: needsMyAnswer ? '2px solid var(--primary)' : '1px solid var(--border)',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      Question {followup.question_number} • {followup.created_by === 'AI' ? 'AI suggested' : `Suggested by ${followup.created_by === partner ? 'you' : partnerName}`}
-                    </span>
-                    {needsMyAnswer && (
-                      <span style={{ fontSize: '0.75rem', background: 'var(--primary)', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
-                        Your turn
-                      </span>
-                    )}
-                    {!needsMyAnswer && needsTheirAnswer && (
-                      <span style={{ fontSize: '0.75rem', background: 'var(--border)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
-                        Waiting for {partnerName}
-                      </span>
-                    )}
-                  </div>
-
-                  <p style={{ fontWeight: '600', marginBottom: '1rem' }}>{followup.question_text}</p>
-
-                  {/* Answer input if needed */}
-                  {needsMyAnswer && (
-                    <div style={{ marginBottom: '1rem' }}>
-                      <textarea
-                        value={activeFollowupId === followup.id ? followupAnswer : ''}
-                        onChange={(e) => {
-                          setActiveFollowupId(followup.id);
-                          setFollowupAnswer(e.target.value);
-                        }}
-                        onFocus={() => setActiveFollowupId(followup.id)}
-                        placeholder="Share your thoughts..."
-                        rows={3}
-                        style={{ width: '100%', marginBottom: '0.5rem' }}
-                      />
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => submitFollowupAnswer(followup.id)}
-                        disabled={submittingAnswer || !followupAnswer.trim() || activeFollowupId !== followup.id}
-                      >
-                        {submittingAnswer ? 'Submitting...' : 'Submit Answer'}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Show answers and AI response if complete */}
-                  {isComplete && (
-                    <div style={{ marginTop: '1rem' }}>
-                      <div style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '8px', marginBottom: '0.75rem' }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>Your answer:</div>
-                        <div style={{ fontSize: '0.9rem' }}>{myAnswer}</div>
-                      </div>
-                      <div style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '8px', marginBottom: '0.75rem' }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>{partnerName}&apos;s answer:</div>
-                        <div style={{ fontSize: '0.9rem' }}>{theirAnswer}</div>
-                      </div>
-                      <div style={{ background: 'var(--primary-light)', padding: '1rem', borderRadius: '8px' }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>AI Insights:</div>
-                        <div style={{ fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>{followup.ai_response}</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Show my answer if waiting for partner */}
-                  {myAnswer && !theirAnswer && (
-                    <div style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
-                      <div style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem' }}>Your answer:</div>
-                      <div style={{ fontSize: '0.9rem' }}>{myAnswer}</div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        {/* Footer actions */}
+        <footer className="guidance-footer">
+          <div className="footer-actions">
+            <button
+              className="btn btn-secondary"
+              onClick={regenerateAdvice}
+              disabled={regenerating}
+            >
+              {regenerating ? 'Regenerating...' : 'Regenerate Advice'}
+            </button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => navigate('/')}
+            >
+              Start a New Session
+            </button>
           </div>
-        )}
 
-        {/* Create new followup question */}
-        {canCreateMore && (
-          <div style={{ background: 'var(--background)', borderRadius: '12px', padding: '1.25rem' }}>
-            {generatingQuestion || (!suggestedQuestion && canCreateMore) ? (
-              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary)' }}>
-                <div className="waiting-spinner" style={{ marginBottom: '0.75rem' }}></div>
-                Thinking of a question for you both...
-              </div>
-            ) : suggestedQuestion ? (
-              <div>
-                <p style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>
-                  I would like to ask both of you:
-                </p>
-                <p style={{ fontWeight: '600', fontSize: '1.05rem', marginBottom: '1.25rem', padding: '1rem', background: 'var(--surface)', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
-                  &ldquo;{suggestedQuestion}&rdquo;
-                </p>
-                <button
-                  className="btn btn-primary"
-                  onClick={acceptSuggestedQuestion}
-                  disabled={creatingQuestion}
-                  style={{ width: '100%', marginBottom: '1rem' }}
-                >
-                  {creatingQuestion ? 'Creating...' : 'Use This as the Next Question'}
-                </button>
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                    Or write your own question:
-                  </p>
-                  <textarea
-                    value={customQuestion}
-                    onChange={(e) => setCustomQuestion(e.target.value)}
-                    placeholder="Enter a different question for both partners to answer..."
-                    rows={2}
-                    style={{ width: '100%', marginBottom: '0.75rem' }}
-                  />
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={submitCustomQuestion}
-                      disabled={creatingQuestion || !customQuestion.trim()}
-                      style={{ flex: 1 }}
-                    >
-                      {creatingQuestion ? 'Creating...' : 'Use My Question Instead'}
-                    </button>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={generateSuggestedQuestion}
-                      disabled={generatingQuestion}
-                      style={{ flex: 1 }}
-                    >
-                      Suggest Another
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : null}
+          <div className="crisis-resources-compact">
+            <p>
+              <strong>Need support?</strong>{' '}
+              <a href="https://www.psychologytoday.com/us/therapists" target="_blank" rel="noopener noreferrer">
+                Find a Therapist
+              </a>
+              {' '} • {' '}
+              <span>Crisis Line: <strong>988</strong></span>
+              {' '} • {' '}
+              <span>Text HOME to <strong>741741</strong></span>
+            </p>
           </div>
-        )}
-
-        {!canCreateMore && (
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-            You&apos;ve reached the maximum of 10 followup questions for this session.
-          </p>
-        )}
-      </div>
-
-      <div className="crisis-resources">
-        <h4>Professional Resources</h4>
-        <p>
-          Consider seeking support from a licensed therapist or counselor who
-          specializes in relationship trauma and infidelity recovery.
-        </p>
-        <p>
-          <strong>Psychology Today Therapist Finder:</strong>{' '}
-          <a
-            href="https://www.psychologytoday.com/us/therapists"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Find a Therapist
-          </a>
-        </p>
-        <p>
-          <strong>National Suicide Prevention Lifeline:</strong> 988
-        </p>
-        <p>
-          <strong>Crisis Text Line:</strong> Text HOME to 741741
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '2rem' }}>
-        <button
-          className="btn btn-primary"
-          onClick={regenerateAdvice}
-          disabled={regenerating}
-          style={{ flex: 1 }}
-        >
-          {regenerating ? 'Regenerating...' : 'Regenerate Advice'}
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={() => navigate('/')}
-          style={{ flex: 1 }}
-        >
-          Start a New Session
-        </button>
+        </footer>
       </div>
     </div>
   );
