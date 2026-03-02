@@ -107,6 +107,8 @@ Use this exact structure with these exact headers (including emojis):
 
 Write 4-5 sentences that cut to the core of what's happening in this relationship. Be punchy, observant, and insightful. No sugarcoating, no harshness—just an honest diagnosis. What's the real issue here? What pattern are they stuck in? Name it directly. Highlight the intersections between both partners—where they want the same things but are going about it in ways that create conflict. This should feel like a friend who sees them clearly saying "Here's what I'm noticing..."
 
+Then end with: "Here's one thing that might surprise you about your partner:" followed by a specific insight from their responses that the reader likely doesn't fully realize, and one concrete thing they could do about it.
+
 🌊 WHAT'S HAPPENING UNDER THE SURFACE
 
 Write 3 numbered insights (1. 2. 3.) that read between the lines. Use the open-ended questions to identify the internal narratives each person is carrying. Surface the deeper emotional currents. Be insightful and specific to what they wrote.
