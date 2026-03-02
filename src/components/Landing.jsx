@@ -36,8 +36,12 @@ function Landing() {
       <div className="landing-card">
         <h1>Repair Coach</h1>
         <p className="tagline">
-          A supportive space for couples navigating the path to healing after infidelity.
-          Answer a few questions independently, then receive personalized guidance for your journey forward.
+          A supportive space for couples to strengthen their relationship.
+          Answer a few questions independently, then receive personalized, AI-powered guidance for your journey forward.
+        </p>
+
+        <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+          We offer guidance for: <strong>Infidelity Recovery</strong>, <strong>Communication Breakdown</strong>, <strong>Emotional Distance</strong>, <strong>Life Stress</strong>, <strong>Physical Intimacy</strong>, and <strong>Proactive Strengthening</strong>.
         </p>
 
         <ol>
@@ -53,7 +57,7 @@ function Landing() {
           onClick={createSession}
           disabled={loading}
         >
-          {loading ? 'Creating Session...' : 'Begin Your Healing Journey'}
+          {loading ? 'Creating Session...' : 'Get Started'}
         </button>
 
         <Disclaimer />
