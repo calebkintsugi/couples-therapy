@@ -7,6 +7,7 @@ import { nanoid } from 'nanoid';
 import db, { initDb } from './db.js';
 import sessionsRouter from './routes/sessions.js';
 import responsesRouter from './routes/responses.js';
+import { generateAdvice } from './openai.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -94,6 +95,52 @@ app.post('/api/test/create-sample', async (req, res) => {
   } catch (error) {
     console.error('Error creating test session:', error);
     res.status(500).json({ error: 'Failed to create test session' });
+  }
+});
+
+// Generate advice for test couples (no database)
+app.post('/api/test/generate-advice', async (req, res) => {
+  const {
+    category,
+    targetPartner,
+    partnerAName,
+    partnerBName,
+    partnerARole,
+    partnerBRole,
+    partnerAResponses,
+    partnerBResponses
+  } = req.body;
+
+  try {
+    // Format responses for the AI
+    const formatForAI = (responses) => {
+      return responses.map(r => ({
+        question_id: r.questionId,
+        question_type: r.type,
+        answer: r.answer
+      }));
+    };
+
+    // Determine unfaithful partner for infidelity category
+    let unfaithfulPartner = null;
+    if (category === 'infidelity') {
+      unfaithfulPartner = partnerARole === 'unfaithful' ? 'A' : 'B';
+    }
+
+    const advice = await generateAdvice(
+      formatForAI(partnerAResponses),
+      formatForAI(partnerBResponses),
+      targetPartner,
+      category,
+      unfaithfulPartner,
+      partnerAName,
+      partnerBName
+    );
+
+    res.json({ advice });
+  } catch (error) {
+    console.error('Error generating test advice:', error);
+    res.status(500).json({ error: 'Failed to generate advice' });
   }
 });
 
