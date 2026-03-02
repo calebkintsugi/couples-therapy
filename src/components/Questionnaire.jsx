@@ -285,11 +285,27 @@ function Questionnaire() {
     }
   };
 
+  // Calculate setup progress
+  const getSetupProgress = () => {
+    let completed = 0;
+    if (name.trim()) completed++;
+    if (setupCategory) completed++;
+    if (setupCategory !== 'infidelity' || setupRole) completed++;
+    if (setupIntakeType) completed++;
+    if (/^\d{6}$/.test(pin)) completed++;
+    return completed;
+  };
+
   // Loading state
   if (step === 'loading') {
     return (
-      <div className="card">
-        <div className="loading">Loading...</div>
+      <div className="setup-page">
+        <div className="setup-container">
+          <div className="setup-loading">
+            <div className="waiting-spinner" />
+            <p>Loading...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -299,218 +315,173 @@ function Questionnaire() {
     const canSubmitSetup = name.trim() && setupCategory && setupIntakeType &&
       (setupCategory !== 'infidelity' || setupRole) && /^\d{6}$/.test(pin);
 
+    const setupProgress = getSetupProgress();
+    const totalSteps = setupCategory === 'infidelity' ? 5 : 4;
+
     return (
-      <div className="card">
-        <h2>Let&apos;s Get Started</h2>
+      <div className="setup-page">
+        <div className="setup-container">
+          {/* Header */}
+          <header className="setup-header">
+            <p className="setup-step-indicator">Step 1 of 2</p>
+            <h1>Let's Get Started</h1>
+            <p className="setup-subtitle">Answer separately. Receive shared guidance.</p>
+            <p className="setup-time">This takes about 5–10 minutes.</p>
+          </header>
 
-        {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message">{error}</div>}
 
-        {/* Name */}
-        <div style={{ marginBottom: '2rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-            What should we call you?
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name or nickname"
-            style={{ width: '100%' }}
-          />
-        </div>
+          {/* Section 1: Name */}
+          <section className="setup-section">
+            <div className="setup-card">
+              <label className="setup-label">What should we call you?</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name or nickname"
+                className="setup-input"
+              />
+            </div>
+          </section>
 
-        {/* Category */}
-        <div style={{ marginBottom: '2rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
-            What area is your relationship struggling with?
-          </label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => {
-                  setSetupCategory(cat.id);
-                  if (cat.id !== 'infidelity') {
-                    setSetupRole(null);
-                  }
-                }}
-                style={{
-                  padding: '0.75rem 1rem',
-                  border: setupCategory === cat.id ? '2px solid var(--primary)' : '2px solid var(--border)',
-                  borderRadius: '8px',
-                  background: setupCategory === cat.id ? 'var(--primary-light)' : 'var(--surface)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                }}
-              >
-                <span style={{ fontSize: '1.25rem' }}>{cat.icon}</span>
-                <div>
-                  <strong>{cat.name}</strong>
-                  <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '0.125rem' }}>
-                    {cat.description}
+          {/* Section 2: Category */}
+          <section className="setup-section setup-section-focus">
+            <label className="setup-label">What feels most urgent right now?</label>
+            <p className="setup-helper">Choose the area that feels most important to focus on first.</p>
+            <div className="setup-category-grid">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    setSetupCategory(cat.id);
+                    if (cat.id !== 'infidelity') {
+                      setSetupRole(null);
+                    }
+                  }}
+                  className={`setup-category-card ${setupCategory === cat.id ? 'selected' : ''}`}
+                >
+                  <span className="setup-category-icon">{cat.icon}</span>
+                  <div className="setup-category-text">
+                    <strong>{cat.name}</strong>
+                    <span>{cat.description}</span>
                   </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+                </button>
+              ))}
+            </div>
+          </section>
 
-        {/* Role (only for infidelity) */}
-        {setupCategory === 'infidelity' && (
-          <div style={{ marginBottom: '2rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
-              Which role applies to you?
-            </label>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+          {/* Section 2b: Role (only for infidelity) */}
+          {setupCategory === 'infidelity' && (
+            <section className="setup-section">
+              <div className="setup-card">
+                <label className="setup-label">Which role applies to you?</label>
+                <p className="setup-helper">This helps us personalize your guidance.</p>
+                <div className="setup-role-grid">
+                  <button
+                    type="button"
+                    onClick={() => setSetupRole('betrayed')}
+                    className={`setup-role-card ${setupRole === 'betrayed' ? 'selected' : ''}`}
+                  >
+                    I am the <strong>betrayed</strong> partner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSetupRole('unfaithful')}
+                    className={`setup-role-card ${setupRole === 'unfaithful' ? 'selected' : ''}`}
+                  >
+                    I am the <strong>unfaithful</strong> partner
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Section 3: Intake Type */}
+          <section className="setup-section">
+            <label className="setup-label">How much depth would you like?</label>
+            <p className="setup-helper">Most couples choose the full assessment for deeper insight.</p>
+            <div className="setup-depth-grid">
               <button
                 type="button"
-                onClick={() => setSetupRole('betrayed')}
-                style={{
-                  flex: 1,
-                  padding: '1rem',
-                  border: setupRole === 'betrayed' ? '2px solid var(--primary)' : '2px solid var(--border)',
-                  borderRadius: '8px',
-                  background: setupRole === 'betrayed' ? 'var(--primary-light)' : 'var(--surface)',
-                  cursor: 'pointer',
-                }}
+                onClick={() => setSetupIntakeType('short')}
+                className={`setup-depth-card ${setupIntakeType === 'short' ? 'selected' : ''}`}
               >
-                I am the <strong>betrayed</strong> partner
+                <strong>Quick Check-In</strong>
+                <span>3 questions · ~2 minutes</span>
               </button>
               <button
                 type="button"
-                onClick={() => setSetupRole('unfaithful')}
-                style={{
-                  flex: 1,
-                  padding: '1rem',
-                  border: setupRole === 'unfaithful' ? '2px solid var(--primary)' : '2px solid var(--border)',
-                  borderRadius: '8px',
-                  background: setupRole === 'unfaithful' ? 'var(--primary-light)' : 'var(--surface)',
-                  cursor: 'pointer',
-                }}
+                onClick={() => setSetupIntakeType('long')}
+                className={`setup-depth-card ${setupIntakeType === 'long' ? 'selected' : ''}`}
               >
-                I am the <strong>unfaithful</strong> partner
+                <span className="setup-badge">Recommended</span>
+                <strong>Full Assessment</strong>
+                <span>10 questions · ~5–10 minutes</span>
               </button>
             </div>
-          </div>
-        )}
+          </section>
 
-        {/* Intake Type */}
-        <div style={{ marginBottom: '2rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
-            How much time do you have?
-          </label>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button
-              type="button"
-              onClick={() => setSetupIntakeType('short')}
-              style={{
-                flex: 1,
-                padding: '1rem',
-                border: setupIntakeType === 'short' ? '2px solid var(--primary)' : '2px solid var(--border)',
-                borderRadius: '8px',
-                background: setupIntakeType === 'short' ? 'var(--primary-light)' : 'var(--surface)',
-                cursor: 'pointer',
-              }}
-            >
-              <strong>Quick Check-In</strong>
-              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.25rem' }}>
-                3 questions (~2 min)
+          {/* Section 4: AI Model */}
+          <section className="setup-section">
+            <div className="setup-card setup-card-subtle">
+              <label className="setup-label-small">AI Model (Advanced)</label>
+              <p className="setup-helper-small">Both options provide thoughtful guidance.</p>
+              <div className="setup-model-toggle">
+                <button
+                  type="button"
+                  onClick={() => setAiModel('openai')}
+                  className={`setup-model-btn ${aiModel === 'openai' ? 'selected' : ''}`}
+                >
+                  ChatGPT
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAiModel('gemini')}
+                  className={`setup-model-btn ${aiModel === 'gemini' ? 'selected' : ''}`}
+                >
+                  Gemini
+                </button>
               </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSetupIntakeType('long')}
-              style={{
-                flex: 1,
-                padding: '1rem',
-                border: setupIntakeType === 'long' ? '2px solid var(--primary)' : '2px solid var(--border)',
-                borderRadius: '8px',
-                background: setupIntakeType === 'long' ? 'var(--primary-light)' : 'var(--surface)',
-                cursor: 'pointer',
-              }}
-            >
-              <strong>Full Assessment</strong>
-              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.25rem' }}>
-                10 questions (~5-10 min)
+            </div>
+          </section>
+
+          {/* Section 5: PIN */}
+          <section className="setup-section">
+            <div className="setup-card setup-card-pin">
+              <div className="setup-pin-header">
+                <span className="setup-pin-icon">🔒</span>
+                <label className="setup-label">Protect Your Results</label>
               </div>
+              <p className="setup-helper">
+                Your guidance may include sensitive reflections. Set a 6-digit PIN that only you will know.
+              </p>
+              <input
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                placeholder="Enter 6-digit PIN"
+                className="setup-pin-input"
+              />
+            </div>
+          </section>
+
+          {/* CTA */}
+          <section className="setup-cta">
+            <button
+              className={`btn btn-primary btn-large btn-block ${!canSubmitSetup ? 'btn-disabled' : ''}`}
+              onClick={handleSetupSubmit}
+              disabled={!canSubmitSetup}
+            >
+              Start My Session
             </button>
-          </div>
+            <p className="setup-cta-helper">You can change these choices later.</p>
+          </section>
         </div>
-
-        {/* AI Model */}
-        <div style={{ marginBottom: '2rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: '600' }}>
-            Choose your preferred AI model
-          </label>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button
-              type="button"
-              onClick={() => setAiModel('openai')}
-              style={{
-                flex: 1,
-                padding: '1rem',
-                border: aiModel === 'openai' ? '2px solid var(--primary)' : '2px solid var(--border)',
-                borderRadius: '8px',
-                background: aiModel === 'openai' ? 'var(--primary-light)' : 'var(--surface)',
-                cursor: 'pointer',
-              }}
-            >
-              <strong>ChatGPT</strong>
-              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.25rem' }}>
-                GPT-4o
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setAiModel('gemini')}
-              style={{
-                flex: 1,
-                padding: '1rem',
-                border: aiModel === 'gemini' ? '2px solid var(--primary)' : '2px solid var(--border)',
-                borderRadius: '8px',
-                background: aiModel === 'gemini' ? 'var(--primary-light)' : 'var(--surface)',
-                cursor: 'pointer',
-              }}
-            >
-              <strong>Gemini</strong>
-              <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.25rem' }}>
-                Gemini 2.5 Flash
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* PIN */}
-        <div style={{ marginBottom: '2rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-            Create a PIN to protect your results
-          </label>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-            Your advice contains sensitive information. Create a 6 digit PIN that only you will know.
-          </p>
-          <input
-            type="password"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            placeholder="Enter 6 digit PIN"
-            style={{ width: '100%', maxWidth: '200px' }}
-          />
-        </div>
-
-        <button
-          className="btn btn-primary btn-block"
-          onClick={handleSetupSubmit}
-          disabled={!canSubmitSetup}
-        >
-          Continue
-        </button>
       </div>
     );
   }
@@ -519,53 +490,62 @@ function Questionnaire() {
   if (step === 'name') {
     const canSubmitName = name.trim() && /^\d{6}$/.test(pin);
     return (
-      <div className="card">
-        <h2>Welcome</h2>
-        <p style={{ marginBottom: '1.5rem' }}>
-          {partnerName} has invited you to complete this questionnaire. How would you like to be called?
-        </p>
+      <div className="setup-page">
+        <div className="setup-container">
+          <header className="setup-header">
+            <h1>Welcome</h1>
+            <p className="setup-subtitle">
+              {partnerName} has invited you to complete this questionnaire together.
+            </p>
+          </header>
 
-        {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message">{error}</div>}
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-            Your name
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name or nickname"
-            style={{ width: '100%' }}
-          />
+          <section className="setup-section">
+            <div className="setup-card">
+              <label className="setup-label">What should we call you?</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name or nickname"
+                className="setup-input"
+              />
+            </div>
+          </section>
+
+          <section className="setup-section">
+            <div className="setup-card setup-card-pin">
+              <div className="setup-pin-header">
+                <span className="setup-pin-icon">🔒</span>
+                <label className="setup-label">Protect Your Results</label>
+              </div>
+              <p className="setup-helper">
+                Your guidance may include sensitive reflections. Set a 6-digit PIN that only you will know.
+              </p>
+              <input
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                placeholder="Enter 6-digit PIN"
+                className="setup-pin-input"
+              />
+            </div>
+          </section>
+
+          <section className="setup-cta">
+            <button
+              className={`btn btn-primary btn-large btn-block ${!canSubmitName ? 'btn-disabled' : ''}`}
+              onClick={handleNameSubmit}
+              disabled={!canSubmitName}
+            >
+              Continue
+            </button>
+          </section>
         </div>
-
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-            Create a PIN to protect your results
-          </label>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-            Your advice contains sensitive information. Create a 6 digit PIN that only you will know.
-          </p>
-          <input
-            type="password"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            placeholder="Enter 6 digit PIN"
-            style={{ width: '100%', maxWidth: '200px' }}
-          />
-        </div>
-
-        <button
-          className="btn btn-primary btn-block"
-          onClick={handleNameSubmit}
-          disabled={!canSubmitName}
-        >
-          Continue
-        </button>
       </div>
     );
   }
@@ -575,32 +555,30 @@ function Questionnaire() {
     const categoryInfo = getCategoryById(category);
     const intakeLabel = intakeType === 'short' ? 'Quick Check-In (3 questions)' : 'Full Assessment (10 questions)';
     return (
-      <div className="card">
-        <h2>Hi {name}</h2>
-        <p style={{ marginBottom: '1rem' }}>
-          {partnerName} has selected:
-        </p>
-        <div style={{
-          background: 'var(--background)',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          marginBottom: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem'
-        }}>
-          <span style={{ fontSize: '2rem' }}>{categoryInfo?.icon}</span>
-          <div>
-            <strong style={{ fontSize: '1.25rem' }}>{categoryInfo?.name}</strong>
-            <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8 }}>{categoryInfo?.description}</p>
-          </div>
+      <div className="setup-page">
+        <div className="setup-container">
+          <header className="setup-header">
+            <h1>Hi, {name}</h1>
+            <p className="setup-subtitle">{partnerName} has selected a focus area for your session.</p>
+          </header>
+
+          <section className="setup-section">
+            <div className="setup-card setup-card-display">
+              <span className="setup-display-icon">{categoryInfo?.icon}</span>
+              <div className="setup-display-text">
+                <strong>{categoryInfo?.name}</strong>
+                <span>{categoryInfo?.description}</span>
+              </div>
+            </div>
+            <p className="setup-format-label">Format: {intakeLabel}</p>
+          </section>
+
+          <section className="setup-cta">
+            <button className="btn btn-primary btn-large btn-block" onClick={() => setStep('questions')}>
+              Continue to Questionnaire
+            </button>
+          </section>
         </div>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-          Format: {intakeLabel}
-        </p>
-        <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
-          Continue to Questionnaire
-        </button>
       </div>
     );
   }
@@ -610,50 +588,64 @@ function Questionnaire() {
     const categoryInfo = getCategoryById(category);
     const intakeLabel = intakeType === 'short' ? 'Quick Check-In' : 'Full Assessment';
     return (
-      <div className="card">
-        <h2>Share With Your Partner</h2>
-        <p>
-          Thanks, {name}. You selected <strong>{categoryInfo?.name}</strong> with the <strong>{intakeLabel}</strong>
-          {role && <> and identified as the <strong>{role}</strong> partner</>}.
-        </p>
+      <div className="setup-page">
+        <div className="setup-container">
+          <header className="setup-header">
+            <p className="setup-step-indicator">Step 2 of 2</p>
+            <h1>Share With Your Partner</h1>
+            <p className="setup-subtitle">
+              Great choices, {name}. Now invite your partner to join.
+            </p>
+          </header>
 
-        {coupleCode && (
-          <div style={{
-            background: 'var(--background)',
-            padding: '1rem 1.5rem',
-            borderRadius: '12px',
-            marginBottom: '1.5rem',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <div>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Your Couple Code: </span>
-                <code style={{
-                  fontSize: '1.1rem',
-                  fontWeight: '700',
-                  letterSpacing: '0.15em',
-                  color: 'var(--primary)',
-                }}>
-                  {coupleCode}
-                </code>
+          <section className="setup-section">
+            <div className="setup-card setup-card-summary">
+              <p className="setup-summary-label">Your session setup:</p>
+              <div className="setup-summary-items">
+                <div className="setup-summary-item">
+                  <span>{categoryInfo?.icon}</span>
+                  <span>{categoryInfo?.name}</span>
+                </div>
+                <div className="setup-summary-item">
+                  <span>📋</span>
+                  <span>{intakeLabel}</span>
+                </div>
+                {role && (
+                  <div className="setup-summary-item">
+                    <span>👤</span>
+                    <span>{role} partner</span>
+                  </div>
+                )}
               </div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Save this to access your history later
-              </span>
             </div>
-          </div>
-        )}
+          </section>
 
-        <p>
-          Share this link with your partner so they can complete their questionnaire:
-        </p>
-        <div className="share-link">{partnerBLink}</div>
-        <button className="btn btn-secondary copy-btn" onClick={copyLink}>
-          {copied ? 'Copied!' : 'Copy Link'}
-        </button>
-        <div style={{ marginTop: '2rem' }}>
-          <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
-            Continue to Questionnaire
-          </button>
+          {coupleCode && (
+            <section className="setup-section">
+              <div className="setup-card setup-card-code">
+                <p className="setup-code-label">Your Couple Code</p>
+                <code className="setup-code-value">{coupleCode}</code>
+                <p className="setup-code-helper">Save this to access your history later</p>
+              </div>
+            </section>
+          )}
+
+          <section className="setup-section">
+            <div className="setup-card">
+              <label className="setup-label">Share this link with your partner</label>
+              <p className="setup-helper">They'll complete their own questionnaire privately.</p>
+              <div className="setup-share-link">{partnerBLink}</div>
+              <button className="btn btn-secondary" onClick={copyLink}>
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
+          </section>
+
+          <section className="setup-cta">
+            <button className="btn btn-primary btn-large btn-block" onClick={() => setStep('questions')}>
+              Continue to My Questionnaire
+            </button>
+          </section>
         </div>
       </div>
     );
@@ -664,20 +656,29 @@ function Questionnaire() {
     const categoryInfo = getCategoryById(category);
     const intakeLabel = intakeType === 'short' ? 'Quick Check-In (3 questions)' : 'Full Assessment (10 questions)';
     return (
-      <div className="card">
-        <h2>Hi {name}</h2>
-        <p>
-          {partnerName} has selected <strong>{categoryInfo?.name}</strong> as the focus area.
-        </p>
-        <p>
-          Based on their response, you are participating as the <strong>{role}</strong> partner.
-        </p>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-          Format: {intakeLabel}
-        </p>
-        <button className="btn btn-primary btn-block" onClick={() => setStep('questions')}>
-          Continue to Questionnaire
-        </button>
+      <div className="setup-page">
+        <div className="setup-container">
+          <header className="setup-header">
+            <h1>Hi, {name}</h1>
+            <p className="setup-subtitle">
+              {partnerName} has selected <strong>{categoryInfo?.name}</strong> as the focus area.
+            </p>
+          </header>
+
+          <section className="setup-section">
+            <div className="setup-card setup-card-role-display">
+              <p>Based on {partnerName}'s response, you are participating as:</p>
+              <p className="setup-role-label">The <strong>{role}</strong> partner</p>
+            </div>
+            <p className="setup-format-label">Format: {intakeLabel}</p>
+          </section>
+
+          <section className="setup-cta">
+            <button className="btn btn-primary btn-large btn-block" onClick={() => setStep('questions')}>
+              Continue to Questionnaire
+            </button>
+          </section>
+        </div>
       </div>
     );
   }
@@ -685,8 +686,13 @@ function Questionnaire() {
   // Questions
   if (!currentQ) {
     return (
-      <div className="card">
-        <div className="loading">Loading questions...</div>
+      <div className="setup-page">
+        <div className="setup-container">
+          <div className="setup-loading">
+            <div className="waiting-spinner" />
+            <p>Loading questions...</p>
+          </div>
+        </div>
       </div>
     );
   }

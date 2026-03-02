@@ -10,6 +10,7 @@ function Waiting() {
   const [checking, setChecking] = useState(false);
   const [partner, setPartner] = useState(null);
   const [partnerBToken, setPartnerBToken] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -65,37 +66,51 @@ function Waiting() {
     }
   };
 
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(partnerBLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   const partnerBLink = partnerBToken ? `${window.location.origin}/session/${sessionId}?p=${partnerBToken}` : '';
 
   return (
-    <div className="card">
-      <div className="waiting-container">
-        <div className="waiting-spinner" />
-        <h2>Waiting for Your Partner</h2>
-        <p>
-          Thank you for completing your questionnaire. We&apos;re waiting for your
-          partner to finish theirs.
-        </p>
-        <p>
-          Once both of you have completed the questionnaire, you&apos;ll each receive
-          personalized guidance.
-        </p>
+    <div className="setup-page">
+      <div className="setup-container">
+        <div className="waiting-card">
+          <div className="waiting-spinner" />
+          <h2>Waiting for Your Partner</h2>
+          <p>
+            Thank you for completing your questionnaire. We're waiting for your
+            partner to finish theirs.
+          </p>
+          <p className="text-muted">
+            Once both of you have completed the questionnaire, you'll each receive
+            personalized guidance.
+          </p>
 
-        {partner === 'A' && partnerBLink && (
-          <div style={{ marginTop: '2rem' }}>
-            <p style={{ fontWeight: '500' }}>Partner B&apos;s link:</p>
-            <div className="share-link">{partnerBLink}</div>
-          </div>
-        )}
+          {partner === 'A' && partnerBLink && (
+            <div className="waiting-share">
+              <p className="waiting-share-label">Partner's link:</p>
+              <div className="setup-share-link">{partnerBLink}</div>
+              <button className="btn btn-secondary" onClick={copyLink}>
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
+          )}
 
-        <button
-          className="btn btn-secondary"
-          onClick={handleManualCheck}
-          disabled={checking}
-          style={{ marginTop: '2rem' }}
-        >
-          {checking ? 'Checking...' : 'Check Status'}
-        </button>
+          <button
+            className="btn btn-ghost"
+            onClick={handleManualCheck}
+            disabled={checking}
+          >
+            {checking ? 'Checking...' : 'Check Status'}
+          </button>
+        </div>
       </div>
     </div>
   );
