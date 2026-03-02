@@ -364,13 +364,16 @@ router.post('/:id/verify-pin', async (req, res) => {
       return res.status(403).json({ error: 'Invalid token' });
     }
 
+    // Get the other partner's name
+    const otherPartnerName = partner === 'A' ? session.partner_b_name : session.partner_a_name;
+
     if (!storedPin) {
       // No PIN set yet - allow access (PIN will be set during questionnaire)
-      return res.json({ verified: true, pinRequired: false });
+      return res.json({ verified: true, pinRequired: false, partnerName: otherPartnerName });
     }
 
     if (pin === storedPin) {
-      return res.json({ verified: true });
+      return res.json({ verified: true, partnerName: otherPartnerName });
     } else {
       return res.status(401).json({ verified: false, error: 'Incorrect PIN' });
     }

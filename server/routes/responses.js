@@ -364,7 +364,8 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
       category: session.category,
       unfaithfulPartner: session.unfaithful_partner,
       coupleCode: session.couple_code,
-      aiModel: session.ai_model || 'openai'
+      aiModel: session.ai_model || 'openai',
+      partnerName: partner === 'A' ? session.partner_b_name : session.partner_a_name
     });
   } catch (error) {
     console.error('Error fetching advice:', error);

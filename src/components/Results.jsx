@@ -8,6 +8,7 @@ function Results() {
   const token = searchParams.get('p');
 
   const [partner, setPartner] = useState(null);
+  const [partnerName, setPartnerName] = useState('');
   const [advice, setAdvice] = useState('');
   const [coupleCode, setCoupleCode] = useState('');
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,9 @@ function Results() {
       if (data.verified) {
         setPinVerified(true);
         setPinRequired(data.pinRequired !== false);
+        if (data.partnerName) {
+          setPartnerName(data.partnerName);
+        }
         fetchAdvice();
       }
     } catch (err) {
@@ -95,6 +99,9 @@ function Results() {
       }
       if (data.aiModel) {
         setAiModel(data.aiModel);
+      }
+      if (data.partnerName) {
+        setPartnerName(data.partnerName);
       }
     } catch (err) {
       setError(err.message);
@@ -201,10 +208,12 @@ function Results() {
       <div className="card">
         <div className="waiting-container">
           <div className="waiting-spinner" />
-          <h2>Generating Your Guidance</h2>
+          <h2>You&apos;re All Set</h2>
           <p>
-            Please wait while we prepare personalized advice based on both
-            partners&apos; responses...
+            Both you and {partnerName || 'your partner'} have completed your questionnaires.
+          </p>
+          <p>
+            Please wait while we generate your personalized guidance. This may take up to a minute.
           </p>
         </div>
       </div>
