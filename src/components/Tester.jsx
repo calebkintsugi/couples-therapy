@@ -27,14 +27,15 @@ function Tester() {
   const [advice, setAdvice] = useState({});
   const [loading, setLoading] = useState({});
   const [error, setError] = useState({});
+  const [aiModel, setAiModel] = useState('openai'); // 'openai' or 'gemini'
 
   const couple = testCouples[activeCategory];
   const categoryInfo = testerCategories.find(c => c.id === activeCategory);
   const questionsKey = categoryInfo?.questionsKey || activeCategory;
   const questions = questionsByCategory[questionsKey];
 
-  const generateAdvice = async (category, partner) => {
-    const key = `${category}_${partner}`;
+  const generateAdvice = async (category, partner, model = aiModel) => {
+    const key = `${category}_${partner}_${model}`;
     if (advice[key]) return; // Already generated
 
     setLoading(prev => ({ ...prev, [key]: true }));
@@ -74,11 +75,13 @@ function Tester() {
           partnerBRole: coupleData.partnerB.role,
           partnerAResponses: formatResponses(coupleData.partnerA),
           partnerBResponses: formatResponses(coupleData.partnerB),
+          aiModel: model,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate advice');
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to generate advice');
       }
 
       const data = await response.json();
@@ -90,10 +93,10 @@ function Tester() {
     }
   };
 
-  // Generate advice for partner A when category changes
+  // Generate advice for partner A when category or model changes
   useEffect(() => {
-    generateAdvice(activeCategory, 'A');
-  }, [activeCategory]);
+    generateAdvice(activeCategory, 'A', aiModel);
+  }, [activeCategory, aiModel]);
 
   const renderResponses = (partnerData, partnerLabel) => {
     return (
@@ -178,15 +181,37 @@ function Tester() {
     );
   };
 
-  const adviceKeyA = `${activeCategory}_A`;
-  const adviceKeyB = `${activeCategory}_B`;
+  const adviceKeyA = `${activeCategory}_A_${aiModel}`;
+  const adviceKeyB = `${activeCategory}_B_${aiModel}`;
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ marginBottom: '0.5rem' }}>Tester</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-        Preview AI responses for sample couples in each category
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+        <div>
+          <h1 style={{ marginBottom: '0.5rem' }}>Tester</h1>
+          <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
+            Preview AI responses for sample couples in each category
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>AI Model:</label>
+          <select
+            value={aiModel}
+            onChange={(e) => setAiModel(e.target.value)}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              border: '2px solid var(--border)',
+              background: 'var(--surface)',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="openai">GPT-4o (OpenAI)</option>
+            <option value="gemini">Gemini 1.5 Pro (Google)</option>
+          </select>
+        </div>
+      </div>
 
       {/* Category Tabs */}
       <div style={{
@@ -249,7 +274,7 @@ function Tester() {
         <button
           onClick={() => {
             setActiveTab('advice');
-            generateAdvice(activeCategory, 'A');
+            generateAdvice(activeCategory, 'A', aiModel);
           }}
           style={{
             padding: '0.5rem 1rem',
@@ -267,7 +292,7 @@ function Tester() {
         <button
           onClick={() => {
             setActiveTab('adviceB');
-            generateAdvice(activeCategory, 'B');
+            generateAdvice(activeCategory, 'B', aiModel);
           }}
           style={{
             padding: '0.5rem 1rem',
@@ -342,7 +367,7 @@ function Tester() {
             {!loading[adviceKeyA] && !error[adviceKeyA] && !advice[adviceKeyA] && (
               <button
                 className="btn btn-primary"
-                onClick={() => generateAdvice(activeCategory, 'A')}
+                onClick={() => generateAdvice(activeCategory, 'A', aiModel)}
               >
                 Generate Advice
               </button>
@@ -370,7 +395,7 @@ function Tester() {
             {!loading[adviceKeyB] && !error[adviceKeyB] && !advice[adviceKeyB] && (
               <button
                 className="btn btn-primary"
-                onClick={() => generateAdvice(activeCategory, 'B')}
+                onClick={() => generateAdvice(activeCategory, 'B', aiModel)}
               >
                 Generate Advice
               </button>

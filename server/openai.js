@@ -1,8 +1,13 @@
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const genAI = process.env.GOOGLE_API_KEY
+  ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
+  : null;
 
 const categoryDescriptions = {
   infidelity: {
@@ -37,7 +42,44 @@ const categoryDescriptions = {
   },
 };
 
-export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, category, unfaithfulPartner = null, partnerAName = 'Partner A', partnerBName = 'Partner B') {
+// Call OpenAI
+async function callOpenAI(systemPrompt, userPrompt, maxTokens = 2500) {
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ],
+    temperature: 0.7,
+    max_tokens: maxTokens,
+  });
+  return response.choices[0].message.content;
+}
+
+// Call Gemini
+async function callGemini(systemPrompt, userPrompt) {
+  if (!genAI) {
+    throw new Error('Gemini API key not configured');
+  }
+
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+
+  const fullPrompt = `${systemPrompt}\n\n---\n\n${userPrompt}`;
+
+  const result = await model.generateContent(fullPrompt);
+  const response = await result.response;
+  return response.text();
+}
+
+// Unified AI call
+async function callAI(systemPrompt, userPrompt, aiModel = 'openai', maxTokens = 2500) {
+  if (aiModel === 'gemini') {
+    return callGemini(systemPrompt, userPrompt);
+  }
+  return callOpenAI(systemPrompt, userPrompt, maxTokens);
+}
+
+export async function generateAdvice(partnerAResponses, partnerBResponses, targetPartner, category, unfaithfulPartner = null, partnerAName = 'Partner A', partnerBName = 'Partner B', aiModel = 'openai') {
   const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
 
   // Determine roles for infidelity category
@@ -135,20 +177,10 @@ Be warm but direct throughout. Write in a conversational, empathetic tone while 
 
 CRITICAL: Output plain text only. No markdown, no asterisks (*), no hashtags (#), no bold formatting. Section headers should just be plain text in ALL CAPS on their own line.`;
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
-    ],
-    temperature: 0.7,
-    max_tokens: 2500,
-  });
-
-  return response.choices[0].message.content;
+  return callAI(systemPrompt, userPrompt, aiModel, 2500);
 }
 
-export async function chatFollowUp(initialAdvice, conversationHistory, userMessage, category, targetRole = null) {
+export async function chatFollowUp(initialAdvice, conversationHistory, userMessage, category, targetRole = null, aiModel = 'openai') {
   const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
   const roleContext = targetRole ? ` (${targetRole} partner)` : '';
 
@@ -164,18 +196,9 @@ Guidelines:
 - Give specific, actionable guidance
 - Keep responses concise but thorough (2-4 paragraphs typically)`;
 
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    ...conversationHistory,
-    { role: 'user', content: userMessage }
-  ];
+  const userPrompt = conversationHistory.length > 0
+    ? `Previous conversation:\n${conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n')}\n\nUser: ${userMessage}`
+    : userMessage;
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages,
-    temperature: 0.7,
-    max_tokens: 800,
-  });
-
-  return response.choices[0].message.content;
+  return callAI(systemPrompt, userPrompt, aiModel, 800);
 }

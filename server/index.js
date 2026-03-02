@@ -108,7 +108,8 @@ app.post('/api/test/generate-advice', async (req, res) => {
     partnerARole,
     partnerBRole,
     partnerAResponses,
-    partnerBResponses
+    partnerBResponses,
+    aiModel = 'openai'
   } = req.body;
 
   try {
@@ -134,13 +135,14 @@ app.post('/api/test/generate-advice', async (req, res) => {
       category,
       unfaithfulPartner,
       partnerAName,
-      partnerBName
+      partnerBName,
+      aiModel
     );
 
-    res.json({ advice });
+    res.json({ advice, model: aiModel });
   } catch (error) {
     console.error('Error generating test advice:', error);
-    res.status(500).json({ error: 'Failed to generate advice' });
+    res.status(500).json({ error: 'Failed to generate advice: ' + error.message });
   }
 });
 
