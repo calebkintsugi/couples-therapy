@@ -6,7 +6,7 @@ function parseAdviceSections(adviceText) {
   if (!adviceText) return [];
 
   const sectionPatterns = [
-    { icon: '📍', title: 'TL;DR', pattern: /📍\s*TLDR/i },
+    { icon: '📍', title: 'Key Takeaways', pattern: /📍\s*TLDR/i },
     { icon: '🌊', title: 'What\'s Happening Under the Surface', pattern: /🌊\s*WHAT'S HAPPENING UNDER THE SURFACE/i },
     { icon: '🔦', title: 'Possible Blind Spots', pattern: /🔦\s*POSSIBLE BLIND SPOTS/i },
     { icon: '🗺️', title: 'A Roadmap Forward', pattern: /🗺️\s*A ROADMAP FORWARD/i },
@@ -473,7 +473,7 @@ function Results() {
       <div className="guidance-container">
         {/* Header */}
         <header className="guidance-header">
-          <h1>Your Personalized Guidance</h1>
+          <h1>Relationship Guidance for You{partnerName ? `, ${partnerName}` : ''}</h1>
           {coupleCode && (
             <div className="couple-code-badge">
               <span className="couple-code-label">Couple Code:</span>
@@ -481,15 +481,6 @@ function Results() {
             </div>
           )}
         </header>
-
-        {/* Calm disclaimer */}
-        <div className="info-callout guidance-disclaimer">
-          <div className="info-callout-title">
-            <span className="info-callout-icon">ℹ️</span>
-            <span>This is guidance, not therapy</span>
-          </div>
-          <p>For educational purposes only. We encourage working with a licensed therapist for the best support.</p>
-        </div>
 
         {/* Main two-column layout */}
         <div className="guidance-grid">
@@ -800,6 +791,15 @@ function Results() {
 
         {/* Footer actions */}
         <footer className="guidance-footer">
+          {/* Calm disclaimer */}
+          <div className="info-callout guidance-disclaimer">
+            <div className="info-callout-title">
+              <span className="info-callout-icon">ℹ️</span>
+              <span>This is guidance, not therapy</span>
+            </div>
+            <p>For educational purposes only. We encourage working with a licensed therapist for the best support.</p>
+          </div>
+
           <div className="footer-actions">
             <button
               className="btn btn-secondary"
