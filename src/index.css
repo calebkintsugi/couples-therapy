@@ -360,6 +360,170 @@ textarea {
   margin-bottom: var(--space-lg);
 }
 
+/* ========================================
+   HOW IT WORKS PAGE
+   ======================================== */
+
+.how-it-works-page {
+  padding: var(--space-2xl) 0;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.how-it-works-header {
+  text-align: center;
+  margin-bottom: var(--space-3xl);
+}
+
+.how-it-works-header .btn-ghost {
+  margin-bottom: var(--space-lg);
+}
+
+.how-it-works-header h1 {
+  margin-bottom: var(--space-sm);
+}
+
+.steps-section {
+  margin-bottom: var(--space-3xl);
+}
+
+.step-large {
+  display: flex;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-2xl);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.step-large:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.step-large-number {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.step-large-content h2 {
+  font-size: 24px;
+  margin-bottom: var(--space-sm);
+}
+
+.step-large-content > p {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.step-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.step-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.step-detail-icon {
+  font-size: 18px;
+}
+
+.features-section {
+  margin-bottom: var(--space-3xl);
+}
+
+.features-section > h2 {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
+}
+
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+
+.feature-icon {
+  font-size: 28px;
+  margin-bottom: var(--space-sm);
+}
+
+.feature-card h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.feature-card p {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.how-it-works-cta {
+  text-align: center;
+  padding: var(--space-2xl);
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.how-it-works-cta h2 {
+  margin-bottom: var(--space-xs);
+}
+
+.how-it-works-cta p {
+  color: var(--text-muted);
+  margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 600px) {
+  .step-large {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .step-large-number {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .step-large-content h2 {
+    font-size: 20px;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .how-it-works-steps {
   display: flex;
   flex-direction: column;
@@ -399,6 +563,53 @@ textarea {
   color: var(--text-muted);
   margin: 0;
   line-height: 1.5;
+}
+
+/* ========================================
+   HERO IMAGE SECTION
+   ======================================== */
+
+.hero-image-section {
+  padding: 0 0 var(--space-xl);
+}
+
+.hero-image-wrapper {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.hero-image {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-image-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-xl) var(--space-lg);
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+  color: white;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px;
+  font-style: italic;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .hero-image {
+    height: 200px;
+  }
+
+  .hero-image-caption {
+    font-size: 16px;
+    padding: var(--space-lg) var(--space-md);
+  }
 }
 
 /* ========================================

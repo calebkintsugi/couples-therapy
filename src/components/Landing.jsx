@@ -61,11 +61,6 @@ function Landing() {
     }
   };
 
-  const scrollToHowItWorks = (e) => {
-    e.preventDefault();
-    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <div className="landing-page">
       {/* Hero Section */}
@@ -75,7 +70,7 @@ function Landing() {
             {/* Left Column - Content */}
             <div className="hero-content">
               <h1>Repair Coach</h1>
-              <p className="hero-subheadline">AI Coaching for the couple</p>
+              <p className="hero-subheadline">AI Coaching for Couples</p>
 
               <p className="hero-description">
                 A supportive space for couples to strengthen their relationship.
@@ -99,13 +94,12 @@ function Landing() {
                 >
                   {loading ? 'Creating Session...' : 'Get Started'}
                 </button>
-                <a
-                  href="#how-it-works"
+                <button
                   className="btn btn-secondary"
-                  onClick={scrollToHowItWorks}
+                  onClick={() => navigate('/how-it-works')}
                 >
                   See how it works
-                </a>
+                </button>
               </div>
 
               <div className="trust-cues">
@@ -149,7 +143,30 @@ function Landing() {
                     <p>AI analyzes both perspectives and provides tailored advice for each of you.</p>
                   </div>
                 </div>
+                <div className="step">
+                  <div className="step-number">4</div>
+                  <div className="step-content">
+                    <h4>Continue the conversation</h4>
+                    <p>Ask follow-up questions and go deeper with AI-suggested prompts.</p>
+                  </div>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Image Section */}
+      <section className="hero-image-section">
+        <div className="landing-container">
+          <div className="hero-image-wrapper">
+            <img
+              src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=80"
+              alt="Couple reconnecting together"
+              className="hero-image"
+            />
+            <div className="hero-image-caption">
+              Every relationship deserves a chance to grow stronger
             </div>
           </div>
         </div>
