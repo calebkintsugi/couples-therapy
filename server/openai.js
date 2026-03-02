@@ -174,13 +174,7 @@ Use this exact structure with these exact headers (including emojis):
 
 📍 QUICK ASSESSMENT
 
-Write 2-3 short paragraphs:
-
-First, start positive—what's working or hopeful between these two?
-
-Then, share what ${targetName} can learn about ${otherName} from their responses. What did their partner reveal? Where do they align or differ?
-
-End with: "Something that might surprise you about ${otherName}:" followed by a specific insight, and "One thing to try:" with a concrete action.
+Write 2-3 short, flowing paragraphs. Start positive, help ${targetName} see ${otherName} more clearly through their responses, surface something that might surprise them about their partner, and offer one concrete action. Write naturally—no headers or bullet points.
 
 🗺️ THREE STEPS FORWARD
 
@@ -215,19 +209,14 @@ Use this exact structure with these exact headers (including emojis):
 
 📍 KEY TAKEAWAYS
 
-Write exactly 3 paragraphs:
+Write 3 flowing paragraphs (no headers or bullet points). Guide your writing with these intentions, but write naturally:
 
-PARAGRAPH 1 - THE POSITIVE FOUNDATION:
-Start with a warm, positive angle. What's genuinely working between these two people? Name specific strengths you see in their responses—shared commitment, aligned values, effort being made, or hopeful signs. Even in struggling relationships, find the authentic positives to anchor hope.
+- Start from a place of warmth. What's working or hopeful here?
+- Help ${targetName} understand ${otherName} better—what did their partner reveal? What might ${targetName} not have known? Where do they connect or diverge?
+- Surface something that might surprise ${targetName} about ${otherName}—an unspoken need, a fear, a hope.
+- End with one concrete action that could help them move forward together.
 
-PARAGRAPH 2 - WHAT YOU CAN LEARN ABOUT YOUR PARTNER:
-This is the heart of the section. Focus entirely on what ${targetName} can learn about ${otherName} from their responses. What did ${otherName} reveal that ${targetName} might not have known? Where are they aligned? Where do they see things differently? What does ${otherName} need that they may not have expressed directly? Make this specific and grounded in what ${otherName} actually wrote.
-
-PARAGRAPH 3 - ONE SURPRISE AND ONE ACTION:
-End with two concrete things:
-"Something that might surprise you about ${otherName}:" Share one specific insight from ${otherName}'s responses that reveals something ${targetName} might not have expected—a fear, a hope, an unspoken need, or a way they see the relationship.
-
-"One action that could help:" Give one specific, doable action for ${targetName} (and ideally something they can do together) based on the dynamic you've observed.
+Write conversationally, as if you're a wise friend who has read both of their hearts and is helping ${targetName} see their partner more clearly.
 
 🌊 WHAT'S HAPPENING UNDER THE SURFACE
 
