@@ -174,9 +174,13 @@ Use this exact structure with these exact headers (including emojis):
 
 📍 QUICK ASSESSMENT
 
-Write 3-4 sentences that cut to the core of what's happening. Be punchy, observant, and insightful. What's the real dynamic here based on what they shared? If there's something positive to note, include it.
+Write 2-3 short paragraphs:
 
-End with: "Here's one thing that might surprise you about your partner:" followed by a specific insight from their response.
+First, start positive—what's working or hopeful between these two?
+
+Then, share what ${targetName} can learn about ${otherName} from their responses. What did their partner reveal? Where do they align or differ?
+
+End with: "Something that might surprise you about ${otherName}:" followed by a specific insight, and "One thing to try:" with a concrete action.
 
 🗺️ THREE STEPS FORWARD
 
@@ -209,18 +213,21 @@ Write a personalized report using numbered lists. IMPORTANT: Do NOT use any mark
 
 Use this exact structure with these exact headers (including emojis):
 
-📍 TLDR
+📍 KEY TAKEAWAYS
 
-IMPORTANT: Start by reading the numeric scores. If most scores are 4s and 5s, this is a healthy relationship seeking growth—lead with genuine validation and celebration of what's working. Don't hunt for problems where there aren't major ones.
+Write exactly 3 paragraphs:
 
-Write 4-5 sentences that capture what's happening in this relationship:
-- FIRST, name what's genuinely strong. If scores are high and aligned, say so clearly: "You two are doing really well" or "This is a solid foundation." Be specific about what's working.
-- THEN, if there are areas for growth, frame them as opportunities to go from good to great—not as problems to fix.
-- If scores ARE low or misaligned, then be honest about the real issues. But don't manufacture concern when the data shows health.
+PARAGRAPH 1 - THE POSITIVE FOUNDATION:
+Start with a warm, positive angle. What's genuinely working between these two people? Name specific strengths you see in their responses—shared commitment, aligned values, effort being made, or hopeful signs. Even in struggling relationships, find the authentic positives to anchor hope.
 
-This should feel like a friend who sees them clearly—celebrating wins before suggesting improvements.
+PARAGRAPH 2 - WHAT YOU CAN LEARN ABOUT YOUR PARTNER:
+This is the heart of the section. Focus entirely on what ${targetName} can learn about ${otherName} from their responses. What did ${otherName} reveal that ${targetName} might not have known? Where are they aligned? Where do they see things differently? What does ${otherName} need that they may not have expressed directly? Make this specific and grounded in what ${otherName} actually wrote.
 
-End with: "Here's one thing that might surprise you about your partner:" followed by a specific positive insight from their responses, and one way to build on it.
+PARAGRAPH 3 - ONE SURPRISE AND ONE ACTION:
+End with two concrete things:
+"Something that might surprise you about ${otherName}:" Share one specific insight from ${otherName}'s responses that reveals something ${targetName} might not have expected—a fear, a hope, an unspoken need, or a way they see the relationship.
+
+"One action that could help:" Give one specific, doable action for ${targetName} (and ideally something they can do together) based on the dynamic you've observed.
 
 🌊 WHAT'S HAPPENING UNDER THE SURFACE
 

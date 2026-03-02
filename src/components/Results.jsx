@@ -6,7 +6,7 @@ function parseAdviceSections(adviceText) {
   if (!adviceText) return [];
 
   const sectionPatterns = [
-    { icon: '📍', title: 'Key Takeaways', pattern: /📍\s*TLDR/i },
+    { icon: '📍', title: 'Key Takeaways', pattern: /📍\s*(KEY TAKEAWAYS|TLDR)/i },
     { icon: '🌊', title: 'What\'s Happening Under the Surface', pattern: /🌊\s*WHAT'S HAPPENING UNDER THE SURFACE/i },
     { icon: '🔦', title: 'Possible Blind Spots', pattern: /🔦\s*POSSIBLE BLIND SPOTS/i },
     { icon: '🗺️', title: 'A Roadmap Forward', pattern: /🗺️\s*A ROADMAP FORWARD/i },
