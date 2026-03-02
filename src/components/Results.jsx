@@ -38,7 +38,6 @@ function Results() {
   const [generatingQuestion, setGeneratingQuestion] = useState(false);
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [creatingQuestion, setCreatingQuestion] = useState(false);
-  const [showCustomInput, setShowCustomInput] = useState(false);
   const [activeFollowupId, setActiveFollowupId] = useState(null);
 
   useEffect(() => {
@@ -223,10 +222,9 @@ function Results() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: suggestedQuestion, createdBy: 'AI' }),
       });
-      const data = await response.json();
       if (response.ok) {
         setSuggestedQuestion('');
-        setShowCustomInput(false);
+        setCustomQuestion('');
         await fetchFollowups();
       }
     } catch (err) {
@@ -245,11 +243,9 @@ function Results() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: customQuestion.trim(), createdBy: partner }),
       });
-      const data = await response.json();
       if (response.ok) {
         setCustomQuestion('');
         setSuggestedQuestion('');
-        setShowCustomInput(false);
         await fetchFollowups();
       }
     } catch (err) {
@@ -287,6 +283,20 @@ function Results() {
       fetchFollowups();
     }
   }, [pinVerified, advice, token]);
+
+  // Auto-generate a suggested question when ready for a new one
+  useEffect(() => {
+    if (canCreateMore && !suggestedQuestion && !generatingQuestion && followups.length >= 0 && pinVerified && advice) {
+      // Check if there's a pending question that needs answering
+      const hasPendingQuestion = followups.some(f => {
+        const myAnswer = partner === 'A' ? f.partner_a_answer : f.partner_b_answer;
+        return !myAnswer;
+      });
+      if (!hasPendingQuestion) {
+        generateSuggestedQuestion();
+      }
+    }
+  }, [canCreateMore, followups, pinVerified, advice, partner]);
 
   // PIN verification screen
   if (!pinVerified) {
@@ -365,6 +375,45 @@ function Results() {
           for professional therapy. We strongly encourage working with a licensed
           therapist for the best support in your healing journey.
         </p>
+      </div>
+
+      {/* AI Model Toggle */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.9rem' }}>
+          Choose your preferred AI model:
+        </label>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={() => setAiModel('openai')}
+            style={{
+              flex: 1,
+              padding: '0.5rem 1rem',
+              border: aiModel === 'openai' ? '2px solid var(--primary)' : '2px solid var(--border)',
+              borderRadius: '8px',
+              background: aiModel === 'openai' ? 'var(--primary-light)' : 'var(--surface)',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            ChatGPT
+          </button>
+          <button
+            type="button"
+            onClick={() => setAiModel('gemini')}
+            style={{
+              flex: 1,
+              padding: '0.5rem 1rem',
+              border: aiModel === 'gemini' ? '2px solid var(--primary)' : '2px solid var(--border)',
+              borderRadius: '8px',
+              background: aiModel === 'gemini' ? 'var(--primary-light)' : 'var(--surface)',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            Gemini
+          </button>
+        </div>
       </div>
 
       {coupleCode && (
@@ -575,107 +624,68 @@ function Results() {
         {/* Create new followup question */}
         {canCreateMore && (
           <div style={{ background: 'var(--background)', borderRadius: '12px', padding: '1.25rem' }}>
-            {!suggestedQuestion && !showCustomInput ? (
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <button
-                  className="btn btn-primary"
-                  onClick={generateSuggestedQuestion}
-                  disabled={generatingQuestion}
-                  style={{ flex: 1, minWidth: '200px' }}
-                >
-                  {generatingQuestion ? 'Generating...' : 'Get AI-Suggested Question'}
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowCustomInput(true)}
-                  style={{ flex: 1, minWidth: '200px' }}
-                >
-                  Suggest Your Own Question
-                </button>
+            {generatingQuestion ? (
+              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-secondary)' }}>
+                <div className="waiting-spinner" style={{ marginBottom: '0.75rem' }}></div>
+                Thinking of a question for you both...
               </div>
             ) : suggestedQuestion ? (
               <div>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                  The AI suggests asking both of you:
+                <p style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>
+                  I would like to ask both of you:
                 </p>
-                <p style={{ fontWeight: '600', fontStyle: 'italic', marginBottom: '1rem', padding: '1rem', background: 'var(--surface)', borderRadius: '8px' }}>
+                <p style={{ fontWeight: '600', fontSize: '1.05rem', marginBottom: '1.25rem', padding: '1rem', background: 'var(--surface)', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
                   &ldquo;{suggestedQuestion}&rdquo;
                 </p>
-                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                  <button
-                    className="btn btn-primary"
-                    onClick={acceptSuggestedQuestion}
-                    disabled={creatingQuestion}
-                    style={{ flex: 1 }}
-                  >
-                    {creatingQuestion ? 'Creating...' : 'Use This Question'}
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={generateSuggestedQuestion}
-                    disabled={generatingQuestion}
-                    style={{ flex: 1 }}
-                  >
-                    {generatingQuestion ? 'Generating...' : 'Try Another'}
-                  </button>
-                </div>
-                <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                  <button
-                    style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.9rem' }}
-                    onClick={() => {
-                      setSuggestedQuestion('');
-                      setShowCustomInput(true);
-                    }}
-                  >
-                    Or suggest your own question instead
-                  </button>
-                </div>
-              </div>
-            ) : showCustomInput ? (
-              <div>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                  What question would you like both of you to answer?
-                </p>
-                <textarea
-                  value={customQuestion}
-                  onChange={(e) => setCustomQuestion(e.target.value)}
-                  placeholder="Enter a question for both partners to answer..."
-                  rows={2}
-                  style={{ width: '100%', marginBottom: '0.75rem' }}
-                />
-                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                  <button
-                    className="btn btn-primary"
-                    onClick={submitCustomQuestion}
-                    disabled={creatingQuestion || !customQuestion.trim()}
-                    style={{ flex: 1 }}
-                  >
-                    {creatingQuestion ? 'Creating...' : 'Submit Question'}
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowCustomInput(false);
-                      setCustomQuestion('');
-                    }}
-                    style={{ flex: 1 }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-                <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                  <button
-                    style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.9rem' }}
-                    onClick={() => {
-                      setShowCustomInput(false);
-                      generateSuggestedQuestion();
-                    }}
-                  >
-                    Or get an AI-suggested question instead
-                  </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={acceptSuggestedQuestion}
+                  disabled={creatingQuestion}
+                  style={{ width: '100%', marginBottom: '1rem' }}
+                >
+                  {creatingQuestion ? 'Creating...' : 'Use This as the Next Question'}
+                </button>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                    Or write your own question:
+                  </p>
+                  <textarea
+                    value={customQuestion}
+                    onChange={(e) => setCustomQuestion(e.target.value)}
+                    placeholder="Enter a different question for both partners to answer..."
+                    rows={2}
+                    style={{ width: '100%', marginBottom: '0.75rem' }}
+                  />
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={submitCustomQuestion}
+                      disabled={creatingQuestion || !customQuestion.trim()}
+                      style={{ flex: 1 }}
+                    >
+                      {creatingQuestion ? 'Creating...' : 'Use My Question Instead'}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={generateSuggestedQuestion}
+                      disabled={generatingQuestion}
+                      style={{ flex: 1 }}
+                    >
+                      Suggest Another
+                    </button>
+                  </div>
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div style={{ textAlign: 'center', padding: '1rem' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={generateSuggestedQuestion}
+                >
+                  Get Next Question
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -710,46 +720,7 @@ function Results() {
         </p>
       </div>
 
-      {/* AI Model Toggle */}
-      <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', fontSize: '0.9rem' }}>
-          Choose your preferred AI model:
-        </label>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button
-            type="button"
-            onClick={() => setAiModel('openai')}
-            style={{
-              flex: 1,
-              padding: '0.5rem 1rem',
-              border: aiModel === 'openai' ? '2px solid var(--primary)' : '2px solid var(--border)',
-              borderRadius: '8px',
-              background: aiModel === 'openai' ? 'var(--primary-light)' : 'var(--surface)',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-            }}
-          >
-            ChatGPT
-          </button>
-          <button
-            type="button"
-            onClick={() => setAiModel('gemini')}
-            style={{
-              flex: 1,
-              padding: '0.5rem 1rem',
-              border: aiModel === 'gemini' ? '2px solid var(--primary)' : '2px solid var(--border)',
-              borderRadius: '8px',
-              background: aiModel === 'gemini' ? 'var(--primary-light)' : 'var(--surface)',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-            }}
-          >
-            Gemini
-          </button>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '2rem' }}>
         <button
           className="btn btn-primary"
           onClick={regenerateAdvice}

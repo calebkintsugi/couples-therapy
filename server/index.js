@@ -125,11 +125,12 @@ app.post('/api/test/create-session', async (req, res) => {
       unfaithfulPartner = partnerARole === 'unfaithful' ? 'A' : 'B';
     }
 
-    // Create session
+    // Create session with default test PINs
+    const testPin = '123456';
     await db.query(
-      `INSERT INTO sessions (id, category, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed, partner_a_token, partner_b_token)
-       VALUES ($1, $2, $3, $4, $5, true, true, $6, $7)`,
-      [sessionId, category, unfaithfulPartner, partnerAName, partnerBName, partnerAToken, partnerBToken]
+      `INSERT INTO sessions (id, category, unfaithful_partner, partner_a_name, partner_b_name, partner_a_completed, partner_b_completed, partner_a_token, partner_b_token, partner_a_pin, partner_b_pin)
+       VALUES ($1, $2, $3, $4, $5, true, true, $6, $7, $8, $9)`,
+      [sessionId, category, unfaithfulPartner, partnerAName, partnerBName, partnerAToken, partnerBToken, testPin, testPin]
     );
 
     // Insert Partner A's responses

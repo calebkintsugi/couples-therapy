@@ -318,6 +318,8 @@ function Tester() {
               <div style={{ fontSize: '0.85rem' }}>
                 <div style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
                   Session: <code style={{ background: 'var(--background)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>{testSessions[activeCategory].sessionId}</code>
+                  {' · '}
+                  PIN: <code style={{ background: 'var(--background)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>123456</code>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                   <a
