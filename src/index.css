@@ -904,6 +904,13 @@ textarea {
   margin-bottom: var(--space-xs);
 }
 
+.text-question-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: var(--space-sm);
+  margin-bottom: 0;
+}
+
 .scale-container {
   margin: var(--space-lg) 0;
 }

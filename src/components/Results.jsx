@@ -93,6 +93,7 @@ function Results() {
   const token = searchParams.get('p');
 
   const [partner, setPartner] = useState(null);
+  const [yourName, setYourName] = useState('');
   const [partnerName, setPartnerName] = useState('');
   const [advice, setAdvice] = useState('');
   const [coupleCode, setCoupleCode] = useState('');
@@ -205,6 +206,9 @@ function Results() {
       if (data.aiModel) {
         setAiModel(data.aiModel);
         setOriginalModel(data.aiModel);
+      }
+      if (data.yourName) {
+        setYourName(data.yourName);
       }
       if (data.partnerName) {
         setPartnerName(data.partnerName);
@@ -484,7 +488,7 @@ function Results() {
       <div className="guidance-container">
         {/* Header */}
         <header className="guidance-header">
-          <h1>Relationship Guidance for You{partnerName ? `, ${partnerName}` : ''}</h1>
+          <h1>Relationship Guidance for You{yourName ? `, ${yourName}` : ''}</h1>
           {coupleCode && (
             <div className="couple-code-section">
               <div className="couple-code-card">

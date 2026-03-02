@@ -365,6 +365,7 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
       unfaithfulPartner: session.unfaithful_partner,
       coupleCode: session.couple_code,
       aiModel: session.ai_model || 'openai',
+      yourName: partner === 'A' ? session.partner_a_name : session.partner_b_name,
       partnerName: partner === 'A' ? session.partner_b_name : session.partner_a_name
     });
   } catch (error) {

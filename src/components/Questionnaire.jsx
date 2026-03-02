@@ -412,7 +412,7 @@ function Questionnaire() {
           {/* Section 3: Intake Type */}
           <section className="setup-section">
             <label className="setup-label">How much depth would you like?</label>
-            <p className="setup-helper">Most couples choose the full assessment for deeper insight.</p>
+            <p className="setup-helper">Most couples choose the full assessment for deeper insight. The more you share in your responses, the more personalized your guidance will be.</p>
             <div className="setup-depth-grid">
               <button
                 type="button"
