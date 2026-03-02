@@ -1,17 +1,37 @@
 import { useState, useEffect } from 'react';
 import { testCouples } from '../testData';
-import { categories, questionsByCategory } from '../questions';
+import { categories as baseCategories, questionsByCategory } from '../questions';
+
+// Extended categories for tester - includes both infidelity scenarios
+const testerCategories = [
+  {
+    id: 'infidelity_her',
+    name: 'Infidelity (She Cheated)',
+    description: 'Rachel (unfaithful) & Daniel (betrayed)',
+    icon: '💔',
+    questionsKey: 'infidelity', // Use same questions
+  },
+  {
+    id: 'infidelity',
+    name: 'Infidelity (He Cheated)',
+    description: 'Sarah (betrayed) & Michael (unfaithful)',
+    icon: '💔',
+    questionsKey: 'infidelity',
+  },
+  ...baseCategories.filter(c => c.id !== 'infidelity'),
+];
 
 function Tester() {
-  const [activeCategory, setActiveCategory] = useState('infidelity');
+  const [activeCategory, setActiveCategory] = useState('infidelity_her');
   const [activeTab, setActiveTab] = useState('advice'); // 'advice', 'partnerA', 'partnerB'
   const [advice, setAdvice] = useState({});
   const [loading, setLoading] = useState({});
   const [error, setError] = useState({});
 
   const couple = testCouples[activeCategory];
-  const categoryInfo = categories.find(c => c.id === activeCategory);
-  const questions = questionsByCategory[activeCategory];
+  const categoryInfo = testerCategories.find(c => c.id === activeCategory);
+  const questionsKey = categoryInfo?.questionsKey || activeCategory;
+  const questions = questionsByCategory[questionsKey];
 
   const generateAdvice = async (category, partner) => {
     const key = `${category}_${partner}`;
@@ -38,11 +58,15 @@ function Tester() {
         return [...scaleResponses, ...textResponses];
       };
 
+      // Get the actual category key for questions/AI (e.g., infidelity_her -> infidelity)
+      const catInfo = testerCategories.find(c => c.id === category);
+      const actualCategory = catInfo?.questionsKey || category;
+
       const response = await fetch('/api/test/generate-advice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          category,
+          category: actualCategory,
           targetPartner: partner,
           partnerAName: coupleData.partnerA.name,
           partnerBName: coupleData.partnerB.name,
@@ -171,7 +195,7 @@ function Tester() {
         marginBottom: '2rem',
         flexWrap: 'wrap'
       }}>
-        {categories.map(cat => (
+        {testerCategories.map(cat => (
           <button
             key={cat.id}
             onClick={() => {

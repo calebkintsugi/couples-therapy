@@ -1,6 +1,45 @@
 // Sample couples for each category with realistic responses
 
 export const testCouples = {
+  infidelity_her: {
+    partnerA: {
+      name: 'Rachel',
+      role: 'unfaithful',
+      scale: [
+        { id: 'trust', answer: '3' },
+        { id: 'commitment', answer: '5' },
+        { id: 'transparency', answer: '4' },
+        { id: 'emotional_safety', answer: '2' },
+        { id: 'empathy', answer: '2' },
+      ],
+      text: [
+        { id: 'tangible_action', answer: 'I need him to stop punishing me with silence. When he shuts down for days, I feel like I\'m already gone in his mind.' },
+        { id: 'biggest_wall', answer: 'His anger scares me. I know I deserve some of it, but when he yells, I shut down completely. We can\'t talk when he\'s like that.' },
+        { id: 'unspoken', answer: 'The affair happened because I felt invisible for years. I\'m not excusing it, but I need him to understand I was drowning before it happened.' },
+        { id: 'vulnerability', answer: 'I need to know he actually wants to be here, not just staying for the kids or out of pride. I need to feel chosen, not tolerated.' },
+        { id: 'understand_me', answer: 'I wish he understood that my guilt is crushing me. I don\'t need him to remind me what I did—I live with it every second of every day.' },
+      ],
+    },
+    partnerB: {
+      name: 'Daniel',
+      role: 'betrayed',
+      scale: [
+        { id: 'trust', answer: '1' },
+        { id: 'commitment', answer: '3' },
+        { id: 'transparency', answer: '3' },
+        { id: 'emotional_safety', answer: '2' },
+        { id: 'empathy', answer: '2' },
+      ],
+      text: [
+        { id: 'tangible_action', answer: 'I need complete access to her phone and accounts. Not forever—but right now I need to verify. I can\'t just take her word for things anymore.' },
+        { id: 'biggest_wall', answer: 'The images in my head. I can\'t stop picturing them together. It hits me randomly—driving, at work, trying to sleep. I don\'t know how to make it stop.' },
+        { id: 'unspoken', answer: 'Part of me wants her to hurt as much as I do. I know that\'s not healthy, but I\'m so angry. She got to feel desired while I got humiliated.' },
+        { id: 'vulnerability', answer: 'I need her to stop defending herself and just sit in my pain with me. Every time she explains "why," it feels like she\'s minimizing what she did.' },
+        { id: 'understand_me', answer: 'I wish she understood that my anger is the only thing holding me together right now. If I stop being angry, I\'ll fall apart completely.' },
+      ],
+    },
+  },
+
   infidelity: {
     partnerA: {
       name: 'Sarah',
