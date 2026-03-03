@@ -95,11 +95,14 @@ router.get('/:journalId/by-token/:token', async (req, res) => {
     const aiActivated = journal.partner_a_word_count >= WORD_THRESHOLD ||
                         journal.partner_b_word_count >= WORD_THRESHOLD;
 
+    const partnerToken = partner === 'A' ? journal.partner_b_token : journal.partner_a_token;
+
     res.json({
       partner,
       yourName: partner === 'A' ? journal.partner_a_name : journal.partner_b_name,
       partnerName: partner === 'A' ? journal.partner_b_name : journal.partner_a_name,
       code: journal.code,
+      partnerInviteUrl: `/journal/${journalId}?p=${partnerToken}`,
       yourWordCount: partner === 'A' ? journal.partner_a_word_count : journal.partner_b_word_count,
       partnerWordCount: partner === 'A' ? journal.partner_b_word_count : journal.partner_a_word_count,
       aiActivated,

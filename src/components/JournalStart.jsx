@@ -112,12 +112,20 @@ function JournalStart() {
 
               <div className="journal-link-item">
                 <span>Partner's link:</span>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => copyLink(createdJournal.partnerBUrl)}
-                >
-                  Copy Partner Link
-                </button>
+                <div className="journal-link-buttons">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => copyLink(createdJournal.partnerBUrl)}
+                  >
+                    Copy Link
+                  </button>
+                  <a
+                    href={`mailto:?subject=Join our RepairCoach Journal&body=I've started a relationship journal for us on RepairCoach. Click this link to join:%0A%0A${window.location.origin}${createdJournal.partnerBUrl}%0A%0AOr enter this code at repaircoach.ai: ${createdJournal.code}`}
+                    className="btn btn-ghost"
+                  >
+                    Email Link to Partner
+                  </a>
+                </div>
               </div>
             </div>
           </div>

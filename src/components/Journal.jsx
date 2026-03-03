@@ -467,6 +467,14 @@ function Journal() {
             >
               Email Code to Myself
             </a>
+            {journalData.partnerInviteUrl && (
+              <a
+                href={`mailto:?subject=Join our RepairCoach Journal&body=I've started a relationship journal for us on RepairCoach. Click this link to join:%0A%0A${window.location.origin}${journalData.partnerInviteUrl}%0A%0AOr enter this code at repaircoach.ai: ${journalData.code}`}
+                className="btn btn-ghost btn-sm"
+              >
+                Email Link to Partner
+              </a>
+            )}
           </div>
         </div>
       </div>
