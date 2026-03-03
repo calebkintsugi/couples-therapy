@@ -259,6 +259,136 @@ CRITICAL: Output plain text only. No markdown, no asterisks (*), no hashtags (#)
   return callAI(systemPrompt, userPrompt, aiModel, 2500);
 }
 
+// Generate couple-level advice (shared by both partners)
+export async function generateCoupleAdvice(partnerAResponses, partnerBResponses, category, unfaithfulPartner = null, partnerAName = 'Partner A', partnerBName = 'Partner B', aiModel = 'openai', intakeType = 'long', coupleMemory = '', previousSessions = []) {
+  const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
+
+  // Determine roles for infidelity category
+  let partnerARole = '';
+  let partnerBRole = '';
+
+  if (category === 'infidelity' && unfaithfulPartner) {
+    partnerARole = unfaithfulPartner === 'A' ? 'unfaithful' : 'betrayed';
+    partnerBRole = unfaithfulPartner === 'B' ? 'unfaithful' : 'betrayed';
+  }
+
+  const formatResponses = (responses, name, role = '') => {
+    const scaleAnswers = responses
+      .filter(r => r.question_type === 'scale')
+      .map(r => `- ${r.question_id}: ${r.answer}/5`)
+      .join('\n');
+
+    const textAnswers = responses
+      .filter(r => r.question_type === 'text')
+      .map(r => `- ${r.question_id}: "${r.answer}"`)
+      .join('\n');
+
+    const roleLabel = role ? ` (${role} partner)` : '';
+    return `${name}${roleLabel}'s Responses:\n\nScale Questions (1-5):\n${scaleAnswers}\n\nOpen-Ended Questions:\n${textAnswers}`;
+  };
+
+  const partnerAFormatted = formatResponses(partnerAResponses, partnerAName, partnerARole);
+  const partnerBFormatted = formatResponses(partnerBResponses, partnerBName, partnerBRole);
+
+  // Build memory context if available
+  let memoryContext = '';
+  if (coupleMemory && coupleMemory.trim()) {
+    memoryContext = `\n\nYOU HAVE HISTORY WITH THIS COUPLE. Here is what you know about them from previous sessions:\n${coupleMemory}\n\nUse this context to provide more personalized, continuous guidance.`;
+  }
+
+  const systemPrompt = `You are a direct, insightful relationship coach specializing in helping couples with ${categoryInfo.context}. You are writing guidance that BOTH partners will read together. Address them as "you two" or "both of you" - this is shared advice for the couple as a unit.${memoryContext}
+
+Critical guidelines:
+- You are NOT a licensed therapist - recommend professional help for serious issues
+- This advice is for BOTH partners to read together - write to them as a couple
+- Be warm and direct
+- Focus on what they can do TOGETHER
+- Highlight where they're aligned and where they can bridge gaps
+- Give concrete exercises, conversations, and actions for them as a pair
+
+IMPORTANT - Reading the room:
+- HIGH SCORES (mostly 4s and 5s): Celebrate their health! Frame suggestions as growth opportunities.
+- MIXED SCORES: Acknowledge strengths, then address gaps together.
+- LOW SCORES: Be honest but hopeful. They're here together, which matters.`;
+
+  let userPrompt;
+
+  if (intakeType === 'short') {
+    userPrompt = `Analyze these questionnaire responses from a couple focused on: ${categoryInfo.name}.
+
+${partnerAFormatted}
+
+${partnerBFormatted}
+
+Write shared guidance for BOTH ${partnerAName} and ${partnerBName} to read together. Address them as "you two" or "both of you."
+
+IMPORTANT: Do NOT use any markdown formatting - no asterisks, no hashtags, no bold. Just plain text with section titles in ALL CAPS on their own line.
+
+Use this structure:
+
+💑 WHERE YOU TWO STAND
+
+Write 2-3 paragraphs about what you see in their relationship. What's working? Where are they aligned? Where do they see things differently? Be specific to their responses.
+
+🤝 WHAT TO DO TOGETHER
+
+Write 3 numbered action items (1. 2. 3.) that they can do AS A COUPLE:
+1. A conversation to have this week (with a specific prompt to start it)
+2. A shared activity or ritual to try
+3. A longer-term practice to build together
+
+Keep total response to approximately 300-400 words. Write warmly, addressing them as a couple.`;
+
+    return callAI(systemPrompt, userPrompt, aiModel, 1200);
+  }
+
+  // Full prompt for long intake
+  userPrompt = `Analyze these questionnaire responses from a couple focused on: ${categoryInfo.name}.
+
+${partnerAFormatted}
+
+${partnerBFormatted}
+
+Write shared guidance for BOTH ${partnerAName} and ${partnerBName} to read together. Address them as "you two" or "both of you."
+
+IMPORTANT: Do NOT use any markdown formatting - no asterisks, no hashtags, no bold. Just plain text with section titles in ALL CAPS on their own line.
+
+Use this exact structure:
+
+💑 WHERE YOU TWO STAND
+
+Write 3 flowing paragraphs about what you see in this relationship:
+- Start with what's genuinely strong between them. What are they doing right? Where do their responses show alignment, shared commitment, or mutual care?
+- Then explore where they see things differently. Not as problems, but as different perspectives worth understanding.
+- End with what seems most important for them to focus on together right now.
+
+Write as if you're a wise friend who has seen both of their hearts and is helping them see each other more clearly.
+
+🔍 WHAT YOU MIGHT NOT REALIZE ABOUT EACH OTHER
+
+Write 2 insights:
+- One thing ${partnerAName} revealed that ${partnerBName} might not fully know or appreciate
+- One thing ${partnerBName} revealed that ${partnerAName} might not fully know or appreciate
+
+These should be specific to their responses - things that could spark good conversation between them.
+
+🤝 YOUR ROADMAP TOGETHER
+
+Write 4 numbered action items for them AS A COUPLE:
+1. A conversation to have this week - give them a specific question or prompt to start with
+2. A small daily or weekly ritual to strengthen connection
+3. Something to stop doing or let go of together
+4. A bigger goal to work toward as partners
+
+🌱 ONE THING TO PROTECT
+
+End with one paragraph about something precious in their relationship that they should nurture and protect - something you noticed in their responses that makes their bond special.
+
+Write approximately 600-800 words total. Be warm and address them as a couple throughout.`;
+
+  return callAI(systemPrompt, userPrompt, aiModel, 2500);
+}
+
 export async function chatFollowUp(initialAdvice, conversationHistory, userMessage, category, targetRole = null, aiModel = 'openai') {
   const categoryInfo = categoryDescriptions[category] || categoryDescriptions.communication;
   const roleContext = targetRole ? ` (${targetRole} partner)` : '';

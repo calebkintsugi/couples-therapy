@@ -15,6 +15,11 @@ function parseAdviceSections(adviceText) {
     { icon: '📍', title: 'Quick Assessment', pattern: /📍\s*QUICK ASSESSMENT/i },
     { icon: '🗺️', title: 'Three Steps Forward', pattern: /🗺️\s*THREE STEPS FORWARD/i },
     { icon: '💬', title: 'Conversation Prompt', pattern: /💬\s*CONVERSATION PROMPT/i },
+    // Couple advice sections
+    { icon: '💑', title: 'Where You Two Stand', pattern: /💑\s*WHERE YOU TWO STAND/i },
+    { icon: '🔍', title: 'What You Might Not Realize About Each Other', pattern: /🔍\s*WHAT YOU MIGHT NOT REALIZE ABOUT EACH OTHER/i },
+    { icon: '🤝', title: 'Your Roadmap Together', pattern: /🤝\s*(YOUR ROADMAP TOGETHER|WHAT TO DO TOGETHER)/i },
+    { icon: '🌱', title: 'One Thing to Protect', pattern: /🌱\s*ONE THING TO PROTECT/i },
   ];
 
   const sections = [];
@@ -96,6 +101,8 @@ function Results() {
   const [yourName, setYourName] = useState('');
   const [partnerName, setPartnerName] = useState('');
   const [advice, setAdvice] = useState('');
+  const [coupleAdvice, setCoupleAdvice] = useState('');
+  const [activeTab, setActiveTab] = useState('individual'); // 'individual' or 'couple'
   const [coupleCode, setCoupleCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
@@ -149,6 +156,7 @@ function Results() {
 
   // Memoize parsed advice sections
   const adviceSections = useMemo(() => parseAdviceSections(advice), [advice]);
+  const coupleSections = useMemo(() => parseAdviceSections(coupleAdvice), [coupleAdvice]);
 
   useEffect(() => {
     if (!token) {
@@ -216,6 +224,9 @@ function Results() {
 
       setPartner(data.partner);
       setAdvice(data.advice);
+      if (data.coupleAdvice) {
+        setCoupleAdvice(data.coupleAdvice);
+      }
       if (data.coupleCode) {
         setCoupleCode(data.coupleCode);
       }
@@ -624,8 +635,26 @@ function Results() {
         <div className="guidance-grid">
           {/* LEFT COLUMN — Guidance */}
           <div className="guidance-column">
+            {/* Tabs */}
+            <div className="guidance-tabs">
+              <button
+                type="button"
+                className={`guidance-tab ${activeTab === 'individual' ? 'active' : ''}`}
+                onClick={() => setActiveTab('individual')}
+              >
+                Your Guidance
+              </button>
+              <button
+                type="button"
+                className={`guidance-tab ${activeTab === 'couple' ? 'active' : ''}`}
+                onClick={() => setActiveTab('couple')}
+              >
+                Couple Guidance
+              </button>
+            </div>
+
             <div className="column-header">
-              <h2>Your Guidance</h2>
+              <h2>{activeTab === 'individual' ? 'Your Guidance' : 'Guidance for Both of You'}</h2>
               <span className="model-indicator">
                 Powered by {originalModel === 'gemini' ? 'Gemini' : 'ChatGPT'}
               </span>
@@ -682,7 +711,7 @@ function Results() {
                   <div className="waiting-spinner"></div>
                   <p>Regenerating with {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}...</p>
                 </div>
-              ) : (
+              ) : activeTab === 'individual' ? (
                 adviceSections.map((section, index) => (
                   <AdviceSection
                     key={index}
@@ -692,6 +721,20 @@ function Results() {
                     defaultExpanded={index === 0}
                   />
                 ))
+              ) : coupleSections.length > 0 ? (
+                coupleSections.map((section, index) => (
+                  <AdviceSection
+                    key={index}
+                    icon={section.icon}
+                    title={section.title}
+                    content={section.content}
+                    defaultExpanded={index === 0}
+                  />
+                ))
+              ) : (
+                <div className="no-couple-advice">
+                  <p>Couple guidance is being generated...</p>
+                </div>
               )}
             </div>
 

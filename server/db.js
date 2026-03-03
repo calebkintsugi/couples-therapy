@@ -58,6 +58,7 @@ export async function initDb() {
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_a_pin TEXT`);
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS partner_b_pin TEXT`);
     await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ai_model TEXT DEFAULT 'openai'`);
+    await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS couple_advice TEXT`);
 
     // Create followup_questions table
     await pool.query(`

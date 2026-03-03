@@ -2629,6 +2629,53 @@ textarea {
    Word Count & Edit Responses Section
    ======================================== */
 
+/* ========================================
+   Guidance Tabs
+   ======================================== */
+
+.guidance-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-lg);
+  background: var(--surface);
+  padding: var(--space-xs);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.guidance-tab {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.guidance-tab:hover {
+  background: var(--border-light);
+  color: var(--text-primary);
+}
+
+.guidance-tab.active {
+  background: var(--primary);
+  color: white;
+}
+
+.no-couple-advice {
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--text-muted);
+}
+
+/* ========================================
+   Word Count & Edit Responses Section
+   ======================================== */
+
 .word-count-section {
   background: var(--surface);
   border: 1px solid var(--border);

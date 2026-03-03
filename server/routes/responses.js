@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
-import { generateAdvice, chatFollowUp, extractMemoryInsights } from '../openai.js';
+import { generateAdvice, generateCoupleAdvice, chatFollowUp, extractMemoryInsights } from '../openai.js';
 
 const router = Router();
 
@@ -93,14 +93,15 @@ router.post('/:sessionId/responses', async (req, res) => {
           previousSessions = prevSessionsResult.rows;
         }
 
-        const [adviceA, adviceB] = await Promise.all([
+        const [adviceA, adviceB, coupleAdvice] = await Promise.all([
           generateAdvice(partnerAResult.rows, partnerBResult.rows, 'A', category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions),
-          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B', category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions)
+          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B', category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions),
+          generateCoupleAdvice(partnerAResult.rows, partnerBResult.rows, category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions)
         ]);
 
         await db.query(
-          'UPDATE sessions SET partner_a_advice = $1, partner_b_advice = $2 WHERE id = $3',
-          [adviceA, adviceB, sessionId]
+          'UPDATE sessions SET partner_a_advice = $1, partner_b_advice = $2, couple_advice = $3 WHERE id = $4',
+          [adviceA, adviceB, coupleAdvice, sessionId]
         );
 
         // Extract insights and update couple memory (do this async, don't wait)
@@ -379,6 +380,7 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
 
     res.json({
       advice,
+      coupleAdvice: session.couple_advice,
       partner,
       category: session.category,
       unfaithfulPartner: session.unfaithful_partner,
