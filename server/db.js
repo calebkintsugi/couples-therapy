@@ -137,9 +137,17 @@ export async function initDb() {
         prompt TEXT,
         ai_response TEXT,
         word_count INTEGER DEFAULT 0,
+        started_at TIMESTAMP,
+        ended_at TIMESTAMP,
+        summary TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Add columns if they don't exist
+    await pool.query(`ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS started_at TIMESTAMP`);
+    await pool.query(`ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS ended_at TIMESTAMP`);
+    await pool.query(`ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS summary TEXT`);
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS journal_questions (
