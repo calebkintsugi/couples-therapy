@@ -120,7 +120,7 @@ function JournalStart() {
                     Copy Link
                   </button>
                   <a
-                    href={`mailto:?subject=Join our RepairCoach Journal&body=I've started a relationship journal for us on RepairCoach. Click this link to join:%0A%0A${window.location.origin}${createdJournal.partnerBUrl}%0A%0AOr enter this code at repaircoach.ai: ${createdJournal.code}`}
+                    href={`mailto:?subject=Join our RepairCoach Journal&body=I've started a relationship journal for us on RepairCoach. The app lets us have our own private journals, while a coach provides feedback based on what both of us say.%0A%0AClick this link to join:%0A${window.location.origin}${createdJournal.partnerBUrl}%0A%0AOr enter this code at repaircoach.ai: ${createdJournal.code}`}
                     className="btn btn-ghost"
                   >
                     Email Link to Partner
