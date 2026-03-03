@@ -190,7 +190,7 @@ function Landing() {
             <div className="journal-promo-content">
               <h3>Side-by-Side Journaling</h3>
               <p>
-                Keep private journals about your relationship. Once both partners have written 500+ words,
+                Keep private journals about your relationship. Once either partner has written 200+ words,
                 the AI gains insight into both perspectives and starts providing personalized coaching.
               </p>
               <button

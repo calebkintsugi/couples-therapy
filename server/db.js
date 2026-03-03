@@ -140,6 +140,18 @@ export async function initDb() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS journal_questions (
+        id SERIAL PRIMARY KEY,
+        journal_id TEXT NOT NULL REFERENCES journals(id),
+        from_partner TEXT NOT NULL CHECK (from_partner IN ('A', 'B')),
+        to_partner TEXT NOT NULL CHECK (to_partner IN ('A', 'B')),
+        question_text TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
   } catch (e) {
     // Tables may already exist
   }

@@ -358,8 +358,8 @@ function Questionnaire() {
 
           {/* Section 2: Category */}
           <section className="setup-section setup-section-focus">
-            <label className="setup-label">What feels most urgent right now?</label>
-            <p className="setup-helper">Choose the area that feels most important to focus on first.</p>
+            <label className="setup-label">What issue in the relationship would you like to work on?</label>
+            <p className="setup-helper">Choose the area you'd like to focus on.</p>
             <div className="setup-category-grid">
               {categories.map((cat) => (
                 <button

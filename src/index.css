@@ -3071,6 +3071,10 @@ textarea {
   border-radius: var(--radius);
 }
 
+.journal-code-actions {
+  margin-top: var(--space-md);
+}
+
 @media (max-width: 640px) {
   .journal-word-counts {
     flex-direction: column;
@@ -3274,4 +3278,198 @@ textarea {
     flex-direction: column;
     text-align: center;
   }
+}
+
+/* Journal Partner Questions */
+.journal-partner-questions {
+  background: linear-gradient(to bottom, #f0f7ff, #e8f2ff);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.journal-partner-questions h2 {
+  font-size: 18px;
+  color: var(--primary);
+  margin-bottom: var(--space-md);
+}
+
+.journal-question-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.journal-question-card:last-child {
+  margin-bottom: 0;
+}
+
+.journal-question-text {
+  font-size: 16px;
+  font-style: italic;
+  margin-bottom: var(--space-xs);
+}
+
+.journal-question-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Journal AI Chat */
+.journal-chat-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-xl);
+  overflow: hidden;
+}
+
+.journal-chat-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: background 0.2s ease;
+}
+
+.journal-chat-toggle:hover {
+  background: var(--bg);
+}
+
+.journal-chat-arrow {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
+.journal-chat-container {
+  padding: var(--space-lg);
+  border-top: 1px solid var(--border);
+}
+
+.journal-chat-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+  line-height: 1.5;
+}
+
+.journal-chat-messages {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: var(--space-md);
+}
+
+.journal-chat-message {
+  margin-bottom: var(--space-md);
+}
+
+.journal-chat-message.user {
+  text-align: right;
+}
+
+.journal-chat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.journal-chat-content {
+  display: inline-block;
+  max-width: 85%;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius);
+  line-height: 1.5;
+}
+
+.journal-chat-message.user .journal-chat-content {
+  background: var(--primary);
+  color: white;
+}
+
+.journal-chat-message.assistant .journal-chat-content {
+  background: var(--bg);
+  text-align: left;
+}
+
+.journal-chat-content.thinking {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.journal-chat-form {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.journal-chat-form input {
+  flex: 1;
+}
+
+/* Journal Ask Partner */
+.journal-ask-partner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.journal-ask-partner h3 {
+  font-size: 18px;
+  margin-bottom: var(--space-xs);
+}
+
+.journal-ask-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.journal-ask-form textarea {
+  width: 100%;
+  margin-bottom: var(--space-md);
+  resize: vertical;
+}
+
+.journal-sent-questions {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border);
+}
+
+.journal-sent-questions h4 {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.journal-sent-item {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.journal-sent-item:last-child {
+  border-bottom: none;
+}
+
+.journal-sent-item p {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.journal-sent-item span {
+  font-size: 12px;
+  color: var(--text-muted);
 }

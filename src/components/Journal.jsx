@@ -16,6 +16,18 @@ function Journal() {
   const [prompts, setPrompts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
+  // AI Chat state
+  const [showChat, setShowChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // Partner questions state
+  const [partnerQuestions, setPartnerQuestions] = useState([]);
+  const [sentQuestions, setSentQuestions] = useState([]);
+  const [newQuestion, setNewQuestion] = useState('');
+  const [sendingQuestion, setSendingQuestion] = useState(false);
+
   useEffect(() => {
     if (!token) {
       navigate('/');
@@ -23,6 +35,7 @@ function Journal() {
     }
     fetchJournal();
     fetchPrompts();
+    fetchPartnerQuestions();
   }, [token, journalId]);
 
   const fetchJournal = async () => {
@@ -51,6 +64,75 @@ function Journal() {
       setPrompts(data.prompts || []);
     } catch (err) {
       console.error('Error fetching prompts:', err);
+    }
+  };
+
+  const fetchPartnerQuestions = async () => {
+    try {
+      const response = await fetch(`/api/journals/${journalId}/questions/${token}`);
+      const data = await response.json();
+      if (response.ok) {
+        setPartnerQuestions(data.received || []);
+        setSentQuestions(data.sent || []);
+      }
+    } catch (err) {
+      console.error('Error fetching questions:', err);
+    }
+  };
+
+  const sendChatMessage = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim() || chatLoading) return;
+
+    const userMessage = chatInput.trim();
+    setChatInput('');
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setChatLoading(true);
+
+    try {
+      const response = await fetch(`/api/journals/${journalId}/chat/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          conversationHistory: chatMessages,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+    } catch (err) {
+      setChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+      console.error(err);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const sendPartnerQuestion = async () => {
+    if (!newQuestion.trim() || sendingQuestion) return;
+
+    setSendingQuestion(true);
+    try {
+      const response = await fetch(`/api/journals/${journalId}/questions/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: newQuestion.trim() }),
+      });
+
+      if (response.ok) {
+        setNewQuestion('');
+        await fetchPartnerQuestions();
+      }
+    } catch (err) {
+      console.error('Error sending question:', err);
+    } finally {
+      setSendingQuestion(false);
     }
   };
 
@@ -93,7 +175,7 @@ function Journal() {
 
   const wordCount = newEntry.trim().split(/\s+/).filter(w => w).length;
   const progressPercent = journalData
-    ? Math.min(100, ((journalData.yourWordCount + journalData.partnerWordCount) / (journalData.wordThreshold * 2)) * 100)
+    ? Math.min(100, (Math.max(journalData.yourWordCount, journalData.partnerWordCount) / journalData.wordThreshold) * 100)
     : 0;
 
   if (loading) {
@@ -170,11 +252,26 @@ function Journal() {
 
             {!journalData.aiActivated && (
               <p className="journal-progress-hint">
-                Once both of you have written {journalData.wordThreshold} words, the AI coach will start providing personalized insights based on both of your reflections.
+                Once either of you has written {journalData.wordThreshold} words, the AI coach will start providing personalized insights based on your reflections.
               </p>
             )}
           </div>
         </header>
+
+        {/* Questions from Partner */}
+        {partnerQuestions.length > 0 && (
+          <div className="journal-partner-questions">
+            <h2>Questions from {journalData.partnerName}</h2>
+            {partnerQuestions.map((q) => (
+              <div key={q.id} className="journal-question-card">
+                <p className="journal-question-text">"{q.question_text}"</p>
+                <span className="journal-question-date">
+                  {new Date(q.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* New Entry Section */}
         <div className="journal-entry-section">
@@ -265,11 +362,112 @@ function Journal() {
           </div>
         )}
 
+        {/* AI Chat Section */}
+        {journalData.aiActivated && (
+          <div className="journal-chat-section">
+            <button
+              type="button"
+              className="journal-chat-toggle"
+              onClick={() => setShowChat(!showChat)}
+            >
+              <span>💬</span>
+              <span>Ask the AI Coach a Question</span>
+              <span className="journal-chat-arrow">{showChat ? '▲' : '▼'}</span>
+            </button>
+
+            {showChat && (
+              <div className="journal-chat-container">
+                <p className="journal-chat-hint">
+                  The AI has read both your journal and {journalData.partnerName}'s journal.
+                  Ask questions about your relationship, patterns you're noticing, or advice on specific situations.
+                </p>
+
+                {chatMessages.length > 0 && (
+                  <div className="journal-chat-messages">
+                    {chatMessages.map((msg, index) => (
+                      <div key={index} className={`journal-chat-message ${msg.role}`}>
+                        <div className="journal-chat-label">
+                          {msg.role === 'user' ? 'You' : 'Coach'}
+                        </div>
+                        <div className="journal-chat-content">{msg.content}</div>
+                      </div>
+                    ))}
+                    {chatLoading && (
+                      <div className="journal-chat-message assistant">
+                        <div className="journal-chat-label">Coach</div>
+                        <div className="journal-chat-content thinking">Thinking...</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <form onSubmit={sendChatMessage} className="journal-chat-form">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask the AI coach anything..."
+                    disabled={chatLoading}
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={!chatInput.trim() || chatLoading}
+                  >
+                    Send
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Ask Partner a Question */}
+        <div className="journal-ask-partner">
+          <h3>Ask {journalData.partnerName} a Question</h3>
+          <p className="journal-ask-hint">Send a question directly to your partner</p>
+          <div className="journal-ask-form">
+            <textarea
+              value={newQuestion}
+              onChange={(e) => setNewQuestion(e.target.value)}
+              placeholder="What would you like to ask your partner?"
+              rows={3}
+            />
+            <button
+              className="btn btn-primary"
+              onClick={sendPartnerQuestion}
+              disabled={sendingQuestion || !newQuestion.trim()}
+            >
+              {sendingQuestion ? 'Sending...' : 'Send Question'}
+            </button>
+          </div>
+
+          {sentQuestions.length > 0 && (
+            <div className="journal-sent-questions">
+              <h4>Questions You've Sent</h4>
+              {sentQuestions.map((q) => (
+                <div key={q.id} className="journal-sent-item">
+                  <p>"{q.question_text}"</p>
+                  <span>{new Date(q.created_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Share code */}
         <div className="journal-share-section">
-          <h3>Invite Your Partner</h3>
-          <p>Share this code with your partner so they can join your journal:</p>
+          <h3>Your Journal Code</h3>
+          <p>Save this code to return to your journal, or share it with your partner:</p>
           <code className="journal-code">{journalData.code}</code>
+          <div className="journal-code-actions">
+            <a
+              href={`mailto:?subject=Your RepairCoach Journal Code&body=Your RepairCoach Journal Code is: ${journalData.code}%0A%0ASave this code to return to your journal at https://repaircoach.ai`}
+              className="btn btn-ghost btn-sm"
+            >
+              Email Code to Myself
+            </a>
+          </div>
         </div>
       </div>
     </div>

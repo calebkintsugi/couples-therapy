@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { nanoid } from 'nanoid';
 import db from '../db.js';
-import { generateJournalResponse } from '../openai.js';
+import { generateJournalResponse, chatWithJournalAI } from '../openai.js';
 
 const router = Router();
 
-const WORD_THRESHOLD = 500; // Words needed from each partner before AI advice activates
+const WORD_THRESHOLD = 200; // Words needed from either partner before AI advice activates
 
 // Create a new journal
 router.post('/', async (req, res) => {
@@ -92,7 +92,7 @@ router.get('/:journalId/by-token/:token', async (req, res) => {
     );
 
     // Calculate if AI is activated
-    const aiActivated = journal.partner_a_word_count >= WORD_THRESHOLD &&
+    const aiActivated = journal.partner_a_word_count >= WORD_THRESHOLD ||
                         journal.partner_b_word_count >= WORD_THRESHOLD;
 
     res.json({
@@ -160,7 +160,7 @@ router.post('/:journalId/entry/:token', async (req, res) => {
     const updatedJournal = await db.query('SELECT * FROM journals WHERE id = $1', [journalId]);
     const updated = updatedJournal.rows[0];
 
-    const aiActivated = updated.partner_a_word_count >= WORD_THRESHOLD &&
+    const aiActivated = updated.partner_a_word_count >= WORD_THRESHOLD ||
                         updated.partner_b_word_count >= WORD_THRESHOLD;
 
     // Generate AI response if activated
@@ -224,6 +224,149 @@ router.get('/prompts', (req, res) => {
     "How have you been showing up as a partner lately? How would you like to show up?",
   ];
   res.json({ prompts });
+});
+
+// Chat with AI about the journal
+router.post('/:journalId/chat/:token', async (req, res) => {
+  const { journalId, token } = req.params;
+  const { message, conversationHistory } = req.body;
+
+  if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+
+  try {
+    const journalResult = await db.query('SELECT * FROM journals WHERE id = $1', [journalId]);
+
+    if (journalResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Journal not found' });
+    }
+
+    const journal = journalResult.rows[0];
+
+    // Determine partner
+    let partner = null;
+    if (token === journal.partner_a_token) {
+      partner = 'A';
+    } else if (token === journal.partner_b_token) {
+      partner = 'B';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    // Get all entries from both partners
+    const entriesA = await db.query(
+      'SELECT content, created_at FROM journal_entries WHERE journal_id = $1 AND partner = $2 ORDER BY created_at ASC',
+      [journalId, 'A']
+    );
+    const entriesB = await db.query(
+      'SELECT content, created_at FROM journal_entries WHERE journal_id = $1 AND partner = $2 ORDER BY created_at ASC',
+      [journalId, 'B']
+    );
+
+    const response = await chatWithJournalAI(
+      entriesA.rows,
+      entriesB.rows,
+      message,
+      conversationHistory || [],
+      partner,
+      journal.partner_a_name,
+      journal.partner_b_name
+    );
+
+    res.json({ response });
+  } catch (error) {
+    console.error('Error in journal chat:', error);
+    res.status(500).json({ error: 'Failed to process message' });
+  }
+});
+
+// Get questions sent to this partner
+router.get('/:journalId/questions/:token', async (req, res) => {
+  const { journalId, token } = req.params;
+
+  try {
+    const journalResult = await db.query('SELECT * FROM journals WHERE id = $1', [journalId]);
+
+    if (journalResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Journal not found' });
+    }
+
+    const journal = journalResult.rows[0];
+
+    let partner = null;
+    if (token === journal.partner_a_token) {
+      partner = 'A';
+    } else if (token === journal.partner_b_token) {
+      partner = 'B';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    // Get questions sent TO this partner
+    const received = await db.query(
+      `SELECT * FROM journal_questions WHERE journal_id = $1 AND to_partner = $2 ORDER BY created_at DESC`,
+      [journalId, partner]
+    );
+
+    // Get questions sent BY this partner
+    const sent = await db.query(
+      `SELECT * FROM journal_questions WHERE journal_id = $1 AND from_partner = $2 ORDER BY created_at DESC`,
+      [journalId, partner]
+    );
+
+    res.json({
+      received: received.rows,
+      sent: sent.rows,
+      partnerName: partner === 'A' ? journal.partner_b_name : journal.partner_a_name,
+    });
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    res.status(500).json({ error: 'Failed to fetch questions' });
+  }
+});
+
+// Send a question to partner
+router.post('/:journalId/questions/:token', async (req, res) => {
+  const { journalId, token } = req.params;
+  const { question } = req.body;
+
+  if (!question || typeof question !== 'string' || question.trim().length === 0) {
+    return res.status(400).json({ error: 'Question is required' });
+  }
+
+  try {
+    const journalResult = await db.query('SELECT * FROM journals WHERE id = $1', [journalId]);
+
+    if (journalResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Journal not found' });
+    }
+
+    const journal = journalResult.rows[0];
+
+    let fromPartner = null;
+    let toPartner = null;
+    if (token === journal.partner_a_token) {
+      fromPartner = 'A';
+      toPartner = 'B';
+    } else if (token === journal.partner_b_token) {
+      fromPartner = 'B';
+      toPartner = 'A';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    const result = await db.query(
+      `INSERT INTO journal_questions (journal_id, from_partner, to_partner, question_text)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [journalId, fromPartner, toPartner, question.trim()]
+    );
+
+    res.json({ question: result.rows[0] });
+  } catch (error) {
+    console.error('Error sending question:', error);
+    res.status(500).json({ error: 'Failed to send question' });
+  }
 });
 
 function generateCode() {

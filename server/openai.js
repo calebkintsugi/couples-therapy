@@ -536,6 +536,48 @@ Respond to ${yourName} with insight and care, drawing on what you know from both
   return callAI(systemPrompt, userPrompt, aiModel, 800);
 }
 
+// Chat with AI about journal content
+export async function chatWithJournalAI(partnerAEntries, partnerBEntries, message, conversationHistory, currentPartner, partnerAName, partnerBName, aiModel = 'gemini') {
+  const formatEntries = (entries, name) => {
+    if (!entries || entries.length === 0) return `${name} has no entries yet.`;
+    return entries.map((e) => {
+      const date = new Date(e.created_at).toLocaleDateString();
+      return `[${date}] ${e.content}`;
+    }).join('\n\n');
+  };
+
+  const yourName = currentPartner === 'A' ? partnerAName : partnerBName;
+  const theirName = currentPartner === 'A' ? partnerBName : partnerAName;
+
+  const systemPrompt = `You are a warm, insightful relationship coach. You have access to both partners' private journal entries about their relationship. You are chatting with ${yourName}.
+
+JOURNAL CONTEXT:
+${partnerAName}'s entries:
+${formatEntries(partnerAEntries, partnerAName)}
+
+${partnerBName}'s entries:
+${formatEntries(partnerBEntries, partnerBName)}
+
+Your role:
+- Answer ${yourName}'s questions thoughtfully
+- Draw insights from BOTH journals when relevant
+- Don't quote ${theirName}'s entries directly, but you can synthesize what you've observed
+- Be warm, direct, and genuinely helpful
+- Keep responses conversational (2-3 paragraphs unless more detail is needed)
+
+Remember: ${yourName} cannot see ${theirName}'s journal entries. You can share patterns and insights you've noticed, but be thoughtful about how you frame things.`;
+
+  const historyText = conversationHistory.length > 0
+    ? conversationHistory.map(m => `${m.role === 'user' ? yourName : 'Coach'}: ${m.content}`).join('\n')
+    : '';
+
+  const userPrompt = historyText
+    ? `${historyText}\n${yourName}: ${message}`
+    : message;
+
+  return callAI(systemPrompt, userPrompt, aiModel, 800);
+}
+
 // Extract insights from a session to add to couple's memory
 export async function extractMemoryInsights(partnerAResponses, partnerBResponses, generatedAdvice, category, partnerAName, partnerBName, existingMemory = '', sessionDate = new Date()) {
   const dateStr = sessionDate.toLocaleDateString();

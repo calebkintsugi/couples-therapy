@@ -89,6 +89,14 @@ function JournalStart() {
 
             <div className="journal-created-code">
               <code>{createdJournal.code}</code>
+              <div className="journal-code-actions">
+                <a
+                  href={`mailto:?subject=Your RepairCoach Journal Code&body=Your RepairCoach Journal Code is: ${createdJournal.code}%0A%0ASave this code to return to your journal at https://repaircoach.ai`}
+                  className="btn btn-ghost btn-sm"
+                >
+                  Email Code to Myself
+                </a>
+              </div>
             </div>
 
             <div className="journal-links">
@@ -125,8 +133,8 @@ function JournalStart() {
           <div className="journal-start-card">
             <h1>Side-by-Side Journaling</h1>
             <p className="journal-start-subtitle">
-              A private space for couples to reflect on their relationship. Once both partners
-              have written 500+ words, the AI starts providing insights based on both perspectives.
+              A private space for couples to reflect on their relationship. Once either partner
+              has written 200+ words, the AI starts providing insights based on both perspectives.
             </p>
 
             <div className="journal-start-options">
