@@ -536,6 +536,13 @@ Respond to ${yourName} with insight and care, drawing on what you know from both
   return callAI(systemPrompt, userPrompt, aiModel, 800);
 }
 
+// Generate one-sentence summary for a journal entry
+export async function generateJournalSummary(content, aiModel = 'gemini') {
+  const systemPrompt = `You are a helpful assistant. Summarize the following journal entry in ONE sentence (max 15 words). Focus on the main emotion or topic. Be concise and warm. Return ONLY the summary sentence, nothing else.`;
+
+  return callAI(systemPrompt, content, aiModel, 100);
+}
+
 // Chat with AI about journal content
 export async function chatWithJournalAI(partnerAEntries, partnerBEntries, message, conversationHistory, currentPartner, partnerAName, partnerBName, aiModel = 'gemini') {
   const formatEntries = (entries, name) => {
