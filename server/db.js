@@ -157,6 +157,21 @@ export async function initDb() {
         to_partner TEXT NOT NULL CHECK (to_partner IN ('A', 'B')),
         question_text TEXT NOT NULL,
         is_read BOOLEAN DEFAULT FALSE,
+        is_dismissed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Add is_dismissed column if it doesn't exist
+    await pool.query(`ALTER TABLE journal_questions ADD COLUMN IF NOT EXISTS is_dismissed BOOLEAN DEFAULT FALSE`);
+
+    // Question responses/conversation table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS journal_question_messages (
+        id SERIAL PRIMARY KEY,
+        question_id INTEGER NOT NULL REFERENCES journal_questions(id),
+        from_partner TEXT NOT NULL CHECK (from_partner IN ('A', 'B')),
+        content TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

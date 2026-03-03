@@ -28,8 +28,12 @@ function Journal() {
   // Partner questions state
   const [partnerQuestions, setPartnerQuestions] = useState([]);
   const [sentQuestions, setSentQuestions] = useState([]);
+  const [questionAlerts, setQuestionAlerts] = useState([]);
   const [newQuestion, setNewQuestion] = useState('');
   const [sendingQuestion, setSendingQuestion] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -77,6 +81,7 @@ function Journal() {
       if (response.ok) {
         setPartnerQuestions(data.received || []);
         setSentQuestions(data.sent || []);
+        setQuestionAlerts(data.alerts || []);
       }
     } catch (err) {
       console.error('Error fetching questions:', err);
@@ -158,6 +163,40 @@ function Journal() {
       console.error('Error sending question:', err);
     } finally {
       setSendingQuestion(false);
+    }
+  };
+
+  const dismissAlert = async (questionId) => {
+    try {
+      await fetch(`/api/journals/${journalId}/questions/${questionId}/dismiss/${token}`, {
+        method: 'PUT',
+      });
+      setQuestionAlerts(questionAlerts.filter(q => q.id !== questionId));
+    } catch (err) {
+      console.error('Error dismissing alert:', err);
+    }
+  };
+
+  const sendReply = async (questionId) => {
+    if (!replyText.trim() || sendingReply) return;
+
+    setSendingReply(true);
+    try {
+      const response = await fetch(`/api/journals/${journalId}/questions/${questionId}/reply/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: replyText.trim() }),
+      });
+
+      if (response.ok) {
+        setReplyText('');
+        setReplyingTo(null);
+        await fetchPartnerQuestions();
+      }
+    } catch (err) {
+      console.error('Error sending reply:', err);
+    } finally {
+      setSendingReply(false);
     }
   };
 
@@ -285,16 +324,22 @@ function Journal() {
           </div>
         </header>
 
-        {/* Questions from Partner */}
-        {partnerQuestions.length > 0 && (
-          <div className="journal-partner-questions">
-            <h2>Questions from {journalData.partnerName}</h2>
-            {partnerQuestions.map((q) => (
-              <div key={q.id} className="journal-question-card">
-                <p className="journal-question-text">"{q.question_text}"</p>
-                <span className="journal-question-date">
-                  {new Date(q.created_at).toLocaleDateString()}
+        {/* Question Alerts */}
+        {questionAlerts.length > 0 && (
+          <div className="journal-question-alerts">
+            {questionAlerts.map((q) => (
+              <div key={q.id} className="journal-question-alert">
+                <span className="journal-alert-icon">💬</span>
+                <span className="journal-alert-text">
+                  You have a question from {journalData.partnerName}
                 </span>
+                <button
+                  className="journal-alert-dismiss"
+                  onClick={() => dismissAlert(q.id)}
+                  title="Dismiss"
+                >
+                  ✕
+                </button>
               </div>
             ))}
           </div>
@@ -507,36 +552,190 @@ function Journal() {
           </div>
         )}
 
-        {/* Ask Partner a Question */}
-        <div className="journal-ask-partner">
-          <h3>Ask {journalData.partnerName} a Question</h3>
-          <p className="journal-ask-hint">Send a question directly to your partner</p>
-          <div className="journal-ask-form">
-            <textarea
-              value={newQuestion}
-              onChange={(e) => setNewQuestion(e.target.value)}
-              placeholder="What would you like to ask your partner?"
-              rows={3}
-            />
-            <button
-              className="btn btn-primary"
-              onClick={sendPartnerQuestion}
-              disabled={sendingQuestion || !newQuestion.trim()}
-            >
-              {sendingQuestion ? 'Sending...' : 'Send Question'}
-            </button>
+        {/* Your Questions Section */}
+        <div className="journal-questions-section">
+          <h2>Your Questions</h2>
+
+          {/* Ask Partner a Question */}
+          <div className="journal-ask-partner">
+            <h3>Ask {journalData.partnerName} a Question</h3>
+            <div className="journal-ask-form">
+              <textarea
+                value={newQuestion}
+                onChange={(e) => setNewQuestion(e.target.value)}
+                placeholder="What would you like to ask your partner?"
+                rows={3}
+              />
+              <button
+                className="btn btn-primary"
+                onClick={sendPartnerQuestion}
+                disabled={sendingQuestion || !newQuestion.trim()}
+              >
+                {sendingQuestion ? 'Sending...' : 'Send Question'}
+              </button>
+            </div>
           </div>
 
-          {sentQuestions.length > 0 && (
-            <div className="journal-sent-questions">
-              <h4>Questions You've Sent</h4>
-              {sentQuestions.map((q) => (
-                <div key={q.id} className="journal-sent-item">
-                  <p>"{q.question_text}"</p>
-                  <span>{new Date(q.created_at).toLocaleDateString()}</span>
+          {/* Questions from Partner */}
+          {partnerQuestions.length > 0 && (
+            <div className="journal-question-threads">
+              <h3>Questions from {journalData.partnerName}</h3>
+              {partnerQuestions.map((q) => (
+                <div key={q.id} className="journal-question-thread">
+                  <div className="journal-thread-header">
+                    <span className="journal-thread-from">{journalData.partnerName} asked:</span>
+                    <span className="journal-thread-date">
+                      {new Date(q.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="journal-thread-question">
+                    "{q.question_text}"
+                  </div>
+
+                  {/* Messages in thread */}
+                  {q.messages && q.messages.length > 0 && (
+                    <div className="journal-thread-messages">
+                      {q.messages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`journal-thread-message ${msg.from_partner === journalData.partner ? 'own' : 'partner'}`}
+                        >
+                          <span className="journal-message-author">
+                            {msg.from_partner === journalData.partner ? 'You' : journalData.partnerName}:
+                          </span>
+                          <span className="journal-message-content">{msg.content}</span>
+                          <span className="journal-message-time">
+                            {new Date(msg.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Reply form */}
+                  {replyingTo === q.id ? (
+                    <div className="journal-reply-form">
+                      <textarea
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        placeholder="Write your response..."
+                        rows={3}
+                      />
+                      <div className="journal-reply-actions">
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => sendReply(q.id)}
+                          disabled={sendingReply || !replyText.trim()}
+                        >
+                          {sendingReply ? 'Sending...' : 'Send'}
+                        </button>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => {
+                            setReplyingTo(null);
+                            setReplyText('');
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      className="btn btn-ghost btn-sm journal-reply-btn"
+                      onClick={() => setReplyingTo(q.id)}
+                    >
+                      Reply
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Questions You've Sent */}
+          {sentQuestions.length > 0 && (
+            <div className="journal-question-threads">
+              <h3>Questions You've Asked</h3>
+              {sentQuestions.map((q) => (
+                <div key={q.id} className="journal-question-thread sent">
+                  <div className="journal-thread-header">
+                    <span className="journal-thread-from">You asked {journalData.partnerName}:</span>
+                    <span className="journal-thread-date">
+                      {new Date(q.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="journal-thread-question">
+                    "{q.question_text}"
+                  </div>
+
+                  {/* Messages in thread */}
+                  {q.messages && q.messages.length > 0 ? (
+                    <div className="journal-thread-messages">
+                      {q.messages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`journal-thread-message ${msg.from_partner === journalData.partner ? 'own' : 'partner'}`}
+                        >
+                          <span className="journal-message-author">
+                            {msg.from_partner === journalData.partner ? 'You' : journalData.partnerName}:
+                          </span>
+                          <span className="journal-message-content">{msg.content}</span>
+                          <span className="journal-message-time">
+                            {new Date(msg.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="journal-thread-waiting">Waiting for {journalData.partnerName}'s response...</p>
+                  )}
+
+                  {/* Reply to continue conversation */}
+                  {q.messages && q.messages.length > 0 && (
+                    replyingTo === q.id ? (
+                      <div className="journal-reply-form">
+                        <textarea
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder="Continue the conversation..."
+                          rows={3}
+                        />
+                        <div className="journal-reply-actions">
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => sendReply(q.id)}
+                            disabled={sendingReply || !replyText.trim()}
+                          >
+                            {sendingReply ? 'Sending...' : 'Send'}
+                          </button>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => {
+                              setReplyingTo(null);
+                              setReplyText('');
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        className="btn btn-ghost btn-sm journal-reply-btn"
+                        onClick={() => setReplyingTo(q.id)}
+                      >
+                        Continue Conversation
+                      </button>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {partnerQuestions.length === 0 && sentQuestions.length === 0 && (
+            <p className="journal-no-questions">No questions yet. Ask your partner something to start a conversation!</p>
           )}
         </div>
 
@@ -554,7 +753,7 @@ function Journal() {
             </a>
             {journalData.partnerInviteUrl && (
               <a
-                href={`mailto:?subject=Join our RepairCoach Journal&body=I've started a relationship journal for us on RepairCoach. Click this link to join:%0A%0A${window.location.origin}${journalData.partnerInviteUrl}%0A%0AOr enter this code at repaircoach.ai: ${journalData.code}`}
+                href={`mailto:?subject=Join our RepairCoach Journal&body=I've started a relationship journal for us on RepairCoach. The app lets us have our own private journals, while a coach provides feedback based on what both of us say.%0A%0AClick this link to join:%0A${window.location.origin}${journalData.partnerInviteUrl}%0A%0AOr enter this code at repaircoach.ai: ${journalData.code}`}
                 className="btn btn-ghost btn-sm"
               >
                 Email Link to Partner

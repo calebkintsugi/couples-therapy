@@ -3553,3 +3553,203 @@ textarea {
   font-size: 12px;
   color: var(--text-muted);
 }
+
+/* Question Alerts */
+.journal-question-alerts {
+  margin-bottom: var(--space-lg);
+}
+
+.journal-question-alert {
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.journal-alert-icon {
+  font-size: 20px;
+}
+
+.journal-alert-text {
+  flex: 1;
+  font-size: 15px;
+  color: var(--info-text);
+  font-weight: 500;
+}
+
+.journal-alert-dismiss {
+  background: none;
+  border: none;
+  padding: var(--space-xs);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s, color 0.2s;
+}
+
+.journal-alert-dismiss:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+/* Your Questions Section */
+.journal-questions-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+}
+
+.journal-questions-section > h2 {
+  margin-bottom: var(--space-lg);
+}
+
+.journal-questions-section .journal-ask-partner {
+  background: var(--background);
+  margin-bottom: var(--space-lg);
+}
+
+/* Question Threads */
+.journal-question-threads {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border);
+}
+
+.journal-question-threads h3 {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+  font-weight: 600;
+}
+
+.journal-question-thread {
+  background: var(--background);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.journal-question-thread.sent {
+  border-left: 3px solid var(--primary-light);
+}
+
+.journal-thread-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.journal-thread-from {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.journal-thread-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.journal-thread-question {
+  font-size: 15px;
+  color: var(--text-primary);
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+.journal-thread-waiting {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Thread Messages */
+.journal-thread-messages {
+  border-top: 1px solid var(--border-light);
+  padding-top: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.journal-thread-message {
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.journal-thread-message.own {
+  background: var(--primary-light);
+  margin-left: var(--space-lg);
+}
+
+.journal-thread-message.partner {
+  background: var(--secondary-light);
+  margin-right: var(--space-lg);
+}
+
+.journal-message-author {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.journal-message-content {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  display: block;
+}
+
+.journal-message-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 4px;
+}
+
+/* Reply Form */
+.journal-reply-form {
+  margin-top: var(--space-sm);
+}
+
+.journal-reply-form textarea {
+  width: 100%;
+  margin-bottom: var(--space-sm);
+  font-size: 14px;
+  padding: var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+
+.journal-reply-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.journal-reply-btn {
+  margin-top: var(--space-sm);
+}
+
+.journal-no-questions {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--space-lg);
+  font-style: italic;
+}

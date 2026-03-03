@@ -275,6 +275,7 @@ router.put('/:journalId/entry/:entryId/summary/:token', async (req, res) => {
 // Get suggested prompts
 router.get('/prompts', (req, res) => {
   const prompts = [
+    "What's the history or background on your relationship that I should know about?",
     "How are you feeling about your relationship right now?",
     "What is going well in your relationship? What isn't?",
     "What do you appreciate most about your partner lately?",
@@ -344,7 +345,7 @@ router.post('/:journalId/chat/:token', async (req, res) => {
   }
 });
 
-// Get questions sent to this partner
+// Get questions sent to this partner (with messages)
 router.get('/:journalId/questions/:token', async (req, res) => {
   const { journalId, token } = req.params;
 
@@ -366,21 +367,55 @@ router.get('/:journalId/questions/:token', async (req, res) => {
       return res.status(403).json({ error: 'Invalid token' });
     }
 
-    // Get questions sent TO this partner
+    // Get questions sent TO this partner (with messages)
     const received = await db.query(
       `SELECT * FROM journal_questions WHERE journal_id = $1 AND to_partner = $2 ORDER BY created_at DESC`,
       [journalId, partner]
     );
 
-    // Get questions sent BY this partner
+    // Get questions sent BY this partner (with messages)
     const sent = await db.query(
       `SELECT * FROM journal_questions WHERE journal_id = $1 AND from_partner = $2 ORDER BY created_at DESC`,
       [journalId, partner]
     );
 
+    // Get messages for all questions
+    const allQuestionIds = [...received.rows, ...sent.rows].map(q => q.id);
+    let messagesMap = {};
+
+    if (allQuestionIds.length > 0) {
+      const messages = await db.query(
+        `SELECT * FROM journal_question_messages WHERE question_id = ANY($1) ORDER BY created_at ASC`,
+        [allQuestionIds]
+      );
+
+      // Group messages by question_id
+      messages.rows.forEach(msg => {
+        if (!messagesMap[msg.question_id]) {
+          messagesMap[msg.question_id] = [];
+        }
+        messagesMap[msg.question_id].push(msg);
+      });
+    }
+
+    // Attach messages to questions
+    const receivedWithMessages = received.rows.map(q => ({
+      ...q,
+      messages: messagesMap[q.id] || []
+    }));
+
+    const sentWithMessages = sent.rows.map(q => ({
+      ...q,
+      messages: messagesMap[q.id] || []
+    }));
+
+    // Get undismissed questions for alert
+    const undismissedAlerts = received.rows.filter(q => !q.is_dismissed);
+
     res.json({
-      received: received.rows,
-      sent: sent.rows,
+      received: receivedWithMessages,
+      sent: sentWithMessages,
+      alerts: undismissedAlerts,
       partnerName: partner === 'A' ? journal.partner_b_name : journal.partner_a_name,
     });
   } catch (error) {
@@ -429,6 +464,101 @@ router.post('/:journalId/questions/:token', async (req, res) => {
   } catch (error) {
     console.error('Error sending question:', error);
     res.status(500).json({ error: 'Failed to send question' });
+  }
+});
+
+// Dismiss a question alert
+router.put('/:journalId/questions/:questionId/dismiss/:token', async (req, res) => {
+  const { journalId, questionId, token } = req.params;
+
+  try {
+    const journalResult = await db.query('SELECT * FROM journals WHERE id = $1', [journalId]);
+
+    if (journalResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Journal not found' });
+    }
+
+    const journal = journalResult.rows[0];
+
+    let partner = null;
+    if (token === journal.partner_a_token) {
+      partner = 'A';
+    } else if (token === journal.partner_b_token) {
+      partner = 'B';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    // Verify this question was sent to this partner
+    const questionResult = await db.query(
+      'SELECT * FROM journal_questions WHERE id = $1 AND journal_id = $2 AND to_partner = $3',
+      [questionId, journalId, partner]
+    );
+
+    if (questionResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    await db.query(
+      'UPDATE journal_questions SET is_dismissed = TRUE WHERE id = $1',
+      [questionId]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error dismissing question:', error);
+    res.status(500).json({ error: 'Failed to dismiss question' });
+  }
+});
+
+// Reply to a question (add message to thread)
+router.post('/:journalId/questions/:questionId/reply/:token', async (req, res) => {
+  const { journalId, questionId, token } = req.params;
+  const { content } = req.body;
+
+  if (!content || typeof content !== 'string' || content.trim().length === 0) {
+    return res.status(400).json({ error: 'Content is required' });
+  }
+
+  try {
+    const journalResult = await db.query('SELECT * FROM journals WHERE id = $1', [journalId]);
+
+    if (journalResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Journal not found' });
+    }
+
+    const journal = journalResult.rows[0];
+
+    let partner = null;
+    if (token === journal.partner_a_token) {
+      partner = 'A';
+    } else if (token === journal.partner_b_token) {
+      partner = 'B';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    // Verify this question belongs to this journal and involves this partner
+    const questionResult = await db.query(
+      'SELECT * FROM journal_questions WHERE id = $1 AND journal_id = $2 AND (from_partner = $3 OR to_partner = $3)',
+      [questionId, journalId, partner]
+    );
+
+    if (questionResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    // Add the message
+    const messageResult = await db.query(
+      `INSERT INTO journal_question_messages (question_id, from_partner, content)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [questionId, partner, content.trim()]
+    );
+
+    res.json({ message: messageResult.rows[0] });
+  } catch (error) {
+    console.error('Error replying to question:', error);
+    res.status(500).json({ error: 'Failed to send reply' });
   }
 });
 
