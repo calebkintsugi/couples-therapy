@@ -15,6 +15,9 @@ function Journal() {
   const [selectedPrompt, setSelectedPrompt] = useState('');
   const [prompts, setPrompts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [startedAt, setStartedAt] = useState(null);
+  const [editingSummaryId, setEditingSummaryId] = useState(null);
+  const [editingSummaryText, setEditingSummaryText] = useState('');
 
   // AI Chat state
   const [showChat, setShowChat] = useState(false);
@@ -114,6 +117,28 @@ function Journal() {
     }
   };
 
+  const updateSummary = async (entryId) => {
+    if (!editingSummaryText.trim()) return;
+
+    try {
+      const response = await fetch(`/api/journals/${journalId}/entry/${entryId}/summary/${token}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary: editingSummaryText.trim() }),
+      });
+
+      if (response.ok) {
+        setEntries(entries.map(e =>
+          e.id === entryId ? { ...e, summary: editingSummaryText.trim() } : e
+        ));
+        setEditingSummaryId(null);
+        setEditingSummaryText('');
+      }
+    } catch (err) {
+      console.error('Error updating summary:', err);
+    }
+  };
+
   const sendPartnerQuestion = async () => {
     if (!newQuestion.trim() || sendingQuestion) return;
 
@@ -147,6 +172,7 @@ function Journal() {
         body: JSON.stringify({
           content: newEntry.trim(),
           prompt: selectedPrompt || null,
+          startedAt: startedAt,
         }),
       });
 
@@ -166,6 +192,7 @@ function Journal() {
       });
       setNewEntry('');
       setSelectedPrompt('');
+      setStartedAt(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -301,16 +328,26 @@ function Journal() {
 
           <textarea
             value={newEntry}
-            onChange={(e) => setNewEntry(e.target.value)}
+            onChange={(e) => {
+              if (!startedAt && e.target.value.trim()) {
+                setStartedAt(new Date().toISOString());
+              }
+              setNewEntry(e.target.value);
+            }}
             placeholder="What's on your mind about your relationship today?"
             rows={8}
             className="journal-textarea"
           />
 
           <div className="journal-entry-footer">
-            <span className="journal-word-indicator">
-              {wordCount} words
-            </span>
+            <div className="journal-entry-meta">
+              <span className="journal-word-indicator">{wordCount} words</span>
+              {startedAt && (
+                <span className="journal-started-at">
+                  Started: {new Date(startedAt).toLocaleTimeString()}
+                </span>
+              )}
+            </div>
             <button
               className="btn btn-primary"
               onClick={submitEntry}
@@ -338,6 +375,54 @@ function Journal() {
                   </span>
                   <span className="journal-entry-words">{entry.word_count} words</span>
                 </div>
+
+                {/* Timestamps */}
+                {(entry.started_at || entry.ended_at) && (
+                  <div className="journal-entry-timestamps">
+                    {entry.started_at && (
+                      <span>Started: {new Date(entry.started_at).toLocaleTimeString()}</span>
+                    )}
+                    {entry.ended_at && (
+                      <span>Finished: {new Date(entry.ended_at).toLocaleTimeString()}</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Summary */}
+                {entry.summary && (
+                  <div className="journal-entry-summary">
+                    {editingSummaryId === entry.id ? (
+                      <div className="journal-summary-edit">
+                        <input
+                          type="text"
+                          value={editingSummaryText}
+                          onChange={(e) => setEditingSummaryText(e.target.value)}
+                          placeholder="Enter summary..."
+                        />
+                        <button className="btn btn-sm btn-primary" onClick={() => updateSummary(entry.id)}>
+                          Save
+                        </button>
+                        <button className="btn btn-sm btn-ghost" onClick={() => setEditingSummaryId(null)}>
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="journal-summary-display">
+                        <span className="journal-summary-label">Summary:</span>
+                        <span className="journal-summary-text">{entry.summary}</span>
+                        <button
+                          className="journal-summary-edit-btn"
+                          onClick={() => {
+                            setEditingSummaryId(entry.id);
+                            setEditingSummaryText(entry.summary);
+                          }}
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {entry.prompt && (
                   <p className="journal-entry-prompt">Prompt: {entry.prompt}</p>

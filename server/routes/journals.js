@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { nanoid } from 'nanoid';
 import db from '../db.js';
-import { generateJournalResponse, chatWithJournalAI } from '../openai.js';
+import { generateJournalResponse, chatWithJournalAI, generateJournalSummary } from '../openai.js';
 
 const router = Router();
 
@@ -118,7 +118,7 @@ router.get('/:journalId/by-token/:token', async (req, res) => {
 // Add journal entry
 router.post('/:journalId/entry/:token', async (req, res) => {
   const { journalId, token } = req.params;
-  const { content, prompt } = req.body;
+  const { content, prompt, startedAt } = req.body;
 
   if (!content || typeof content !== 'string' || content.trim().length === 0) {
     return res.status(400).json({ error: 'Content is required' });
@@ -144,12 +144,21 @@ router.post('/:journalId/entry/:token', async (req, res) => {
     }
 
     const wordCount = content.trim().split(/\s+/).filter(w => w).length;
+    const endedAt = new Date();
+
+    // Generate AI summary
+    let summary = null;
+    try {
+      summary = await generateJournalSummary(content.trim());
+    } catch (summaryErr) {
+      console.error('Error generating summary:', summaryErr);
+    }
 
     // Insert the entry
     const entryResult = await db.query(
-      `INSERT INTO journal_entries (journal_id, partner, content, prompt, word_count)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [journalId, partner, content.trim(), prompt || null, wordCount]
+      `INSERT INTO journal_entries (journal_id, partner, content, prompt, word_count, started_at, ended_at, summary)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [journalId, partner, content.trim(), prompt || null, wordCount, startedAt || null, endedAt, summary]
     );
 
     // Update total word count
@@ -209,6 +218,57 @@ router.post('/:journalId/entry/:token', async (req, res) => {
   } catch (error) {
     console.error('Error adding entry:', error);
     res.status(500).json({ error: 'Failed to add entry' });
+  }
+});
+
+// Update entry summary
+router.put('/:journalId/entry/:entryId/summary/:token', async (req, res) => {
+  const { journalId, entryId, token } = req.params;
+  const { summary } = req.body;
+
+  if (!summary || typeof summary !== 'string') {
+    return res.status(400).json({ error: 'Summary is required' });
+  }
+
+  try {
+    const journalResult = await db.query('SELECT * FROM journals WHERE id = $1', [journalId]);
+
+    if (journalResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Journal not found' });
+    }
+
+    const journal = journalResult.rows[0];
+
+    // Verify token
+    let partner = null;
+    if (token === journal.partner_a_token) {
+      partner = 'A';
+    } else if (token === journal.partner_b_token) {
+      partner = 'B';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    // Verify entry belongs to this partner
+    const entryResult = await db.query(
+      'SELECT * FROM journal_entries WHERE id = $1 AND journal_id = $2 AND partner = $3',
+      [entryId, journalId, partner]
+    );
+
+    if (entryResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Entry not found' });
+    }
+
+    // Update summary
+    await db.query(
+      'UPDATE journal_entries SET summary = $1 WHERE id = $2',
+      [summary.trim(), entryId]
+    );
+
+    res.json({ success: true, summary: summary.trim() });
+  } catch (error) {
+    console.error('Error updating summary:', error);
+    res.status(500).json({ error: 'Failed to update summary' });
   }
 });
 
