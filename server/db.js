@@ -110,6 +110,39 @@ export async function initDb() {
   } catch (e) {
     // Table may already exist
   }
+
+  // Create journals table
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS journals (
+        id TEXT PRIMARY KEY,
+        code TEXT UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        partner_a_name TEXT,
+        partner_b_name TEXT,
+        partner_a_token TEXT,
+        partner_b_token TEXT,
+        partner_a_word_count INTEGER DEFAULT 0,
+        partner_b_word_count INTEGER DEFAULT 0,
+        ai_activated BOOLEAN DEFAULT FALSE
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS journal_entries (
+        id SERIAL PRIMARY KEY,
+        journal_id TEXT NOT NULL REFERENCES journals(id),
+        partner TEXT NOT NULL CHECK (partner IN ('A', 'B')),
+        content TEXT NOT NULL,
+        prompt TEXT,
+        ai_response TEXT,
+        word_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch (e) {
+    // Tables may already exist
+  }
 }
 
 export default pool;

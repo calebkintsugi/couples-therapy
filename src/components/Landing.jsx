@@ -182,6 +182,28 @@ function Landing() {
         </div>
       </section>
 
+      {/* Journaling Section */}
+      <section className="landing-section journal-promo-section">
+        <div className="landing-container">
+          <div className="journal-promo-card">
+            <div className="journal-promo-icon">📓</div>
+            <div className="journal-promo-content">
+              <h3>Side-by-Side Journaling</h3>
+              <p>
+                Keep private journals about your relationship. Once both partners have written 500+ words,
+                the AI gains insight into both perspectives and starts providing personalized coaching.
+              </p>
+              <button
+                className="btn btn-secondary"
+                onClick={() => navigate('/journal/start')}
+              >
+                Start Journaling Together
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Returning Couple & Disclaimer Section */}
       <section className="landing-section">
         <div className="landing-container">

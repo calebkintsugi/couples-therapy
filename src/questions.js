@@ -1,5 +1,11 @@
 export const categories = [
   {
+    id: 'compatibility',
+    name: 'New Relationship',
+    description: 'Exploring compatibility and building a strong foundation',
+    icon: '💫',
+  },
+  {
     id: 'infidelity',
     name: 'Betrayal',
     description: 'Healing after betrayal and rebuilding trust',
@@ -38,6 +44,68 @@ export const categories = [
 ];
 
 export const questionsByCategory = {
+  compatibility: {
+    scale: [
+      {
+        id: 'excitement',
+        question: 'How excited are you about the potential of this relationship?',
+        lowLabel: 'Uncertain',
+        highLabel: 'Very Excited',
+      },
+      {
+        id: 'values_alignment',
+        question: 'How aligned do you feel on core values and what matters most in life?',
+        lowLabel: 'Very Different',
+        highLabel: 'Very Aligned',
+      },
+      {
+        id: 'authenticity',
+        question: 'How much can you be your true self around this person?',
+        lowLabel: 'I Hold Back',
+        highLabel: 'Completely Myself',
+      },
+      {
+        id: 'communication_ease',
+        question: 'How easy is it to talk about important topics together?',
+        lowLabel: 'Difficult',
+        highLabel: 'Very Easy',
+      },
+      {
+        id: 'future_vision',
+        question: 'How clearly can you picture a future together?',
+        lowLabel: 'Not At All',
+        highLabel: 'Very Clearly',
+      },
+    ],
+    text: [
+      {
+        id: 'attracted_to',
+        question: 'What draws you to this person? What made you want to explore a relationship with them?',
+        placeholder: 'What excites you about them...',
+      },
+      {
+        id: 'hesitation',
+        question: 'What, if anything, gives you pause about this relationship? What questions do you have?',
+        placeholder: 'Any concerns or uncertainties...',
+      },
+      {
+        id: 'need_to_know',
+        question: 'What do you most want to understand about your partner before getting more serious?',
+        placeholder: 'What would help you feel more confident...',
+      },
+      {
+        id: 'best_relationship',
+        question: 'What does your ideal relationship look like? What are the must-haves?',
+        placeholder: 'What you\'re looking for in a partner...',
+      },
+      {
+        id: 'understand_me',
+        question: 'What is one thing you wish your partner better understood about you?',
+        placeholder: 'What do you wish they could see...',
+      },
+    ],
+  },
+
   infidelity: {
     scale: [
       {

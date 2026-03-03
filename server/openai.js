@@ -10,6 +10,11 @@ const genAI = process.env.GOOGLE_API_KEY
   : null;
 
 const categoryDescriptions = {
+  compatibility: {
+    name: 'New Relationship',
+    context: 'exploring compatibility, understanding each other, and building a strong foundation as a new couple',
+    roleInfo: false,
+  },
   infidelity: {
     name: 'Betrayal',
     context: 'healing after betrayal and rebuilding trust',
@@ -489,6 +494,46 @@ ${partnerBName}'s answer:
 Provide your insights based on both responses:`;
 
   return callAI(systemPrompt, userPrompt, aiModel, 500);
+}
+
+// Generate AI response for journal entry
+export async function generateJournalResponse(partnerAEntries, partnerBEntries, latestEntry, latestPartner, partnerAName, partnerBName, aiModel = 'gemini') {
+  const formatEntries = (entries, name) => {
+    if (!entries || entries.length === 0) return `${name} has no entries yet.`;
+    return entries.map((e, i) => {
+      const date = new Date(e.created_at).toLocaleDateString();
+      return `[${date}] ${e.content}`;
+    }).join('\n\n');
+  };
+
+  const yourName = latestPartner === 'A' ? partnerAName : partnerBName;
+  const theirName = latestPartner === 'A' ? partnerBName : partnerAName;
+
+  const systemPrompt = `You are a warm, insightful relationship coach. Two partners are keeping side-by-side journals about their relationship, and you have access to both of their private reflections. This gives you a unique window into both perspectives.
+
+You are responding to ${yourName}'s latest journal entry. Your role is to:
+- Acknowledge what they've shared with empathy
+- Offer insights based on BOTH partners' journal entries (you can see patterns, alignment, and gaps they might not see)
+- Gently surface things from ${theirName}'s journal that might be relevant (without betraying specific private content—synthesize, don't quote)
+- Suggest ways they might connect or communicate with their partner
+- Be warm, direct, and genuinely helpful
+
+Keep your response conversational and focused—2-3 paragraphs. You're like a wise friend who happens to know both sides.`;
+
+  const userPrompt = `${partnerAName}'s journal entries:
+${formatEntries(partnerAEntries, partnerAName)}
+
+${partnerBName}'s journal entries:
+${formatEntries(partnerBEntries, partnerBName)}
+
+---
+
+${yourName} just wrote this new entry:
+"${latestEntry}"
+
+Respond to ${yourName} with insight and care, drawing on what you know from both journals:`;
+
+  return callAI(systemPrompt, userPrompt, aiModel, 800);
 }
 
 // Extract insights from a session to add to couple's memory

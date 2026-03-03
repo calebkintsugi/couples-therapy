@@ -5,6 +5,8 @@ import Questionnaire from './components/Questionnaire';
 import Waiting from './components/Waiting';
 import Results from './components/Results';
 import Tester from './components/Tester';
+import Journal from './components/Journal';
+import JournalStart from './components/JournalStart';
 
 function App() {
   const location = useLocation();
@@ -12,9 +14,10 @@ function App() {
   const isLanding = location.pathname === '/';
   const isHowItWorks = location.pathname === '/how-it-works';
   const isSession = location.pathname.startsWith('/session/');
+  const isJournal = location.pathname.startsWith('/journal');
 
   return (
-    <div className={isTester || isLanding || isHowItWorks || isSession ? '' : 'container'}>
+    <div className={isTester || isLanding || isHowItWorks || isSession || isJournal ? '' : 'container'}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
@@ -22,6 +25,8 @@ function App() {
         <Route path="/session/:sessionId" element={<Questionnaire />} />
         <Route path="/session/:sessionId/waiting" element={<Waiting />} />
         <Route path="/session/:sessionId/results" element={<Results />} />
+        <Route path="/journal/start" element={<JournalStart />} />
+        <Route path="/journal/:journalId" element={<Journal />} />
       </Routes>
     </div>
   );

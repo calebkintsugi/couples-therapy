@@ -10,6 +10,7 @@ import responsesRouter from './routes/responses.js';
 import couplesRouter from './routes/couples.js';
 import followupRouter from './routes/followup.js';
 import partnerQuestionsRouter from './routes/partnerQuestions.js';
+import journalsRouter from './routes/journals.js';
 import { generateAdvice } from './openai.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,6 +29,7 @@ app.use('/api/sessions', responsesRouter);
 app.use('/api/couples', couplesRouter);
 app.use('/api/followup', followupRouter);
 app.use('/api/partner-questions', partnerQuestionsRouter);
+app.use('/api/journals', journalsRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
