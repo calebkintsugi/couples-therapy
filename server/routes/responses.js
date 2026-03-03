@@ -71,7 +71,7 @@ router.post('/:sessionId/responses', async (req, res) => {
         const partnerBName = updatedSession.partner_b_name || 'Partner B';
         const intakeType = updatedSession.intake_type || 'long';
         const coupleCode = updatedSession.couple_code;
-        const aiModel = updatedSession.ai_model || 'openai';
+        const aiModel = updatedSession.ai_model || 'gemini';
 
         // Fetch couple memory and previous sessions if couple code exists
         let coupleMemory = '';
@@ -188,7 +188,7 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
       const partnerAName = session.partner_a_name || 'Partner A';
       const partnerBName = session.partner_b_name || 'Partner B';
       const intakeType = session.intake_type || 'long';
-      const aiModel = session.ai_model || 'openai';
+      const aiModel = session.ai_model || 'gemini';
       advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner, category, session.unfaithful_partner, partnerAName, partnerBName, aiModel, intakeType);
 
       await db.query(
@@ -307,7 +307,7 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
       const validModels = ['openai', 'gemini'];
       const aiModel = (requestedAiModel && validModels.includes(requestedAiModel))
         ? requestedAiModel
-        : (session.ai_model || 'openai');
+        : (session.ai_model || 'gemini');
 
       // Fetch couple memory and previous sessions if couple code exists
       let coupleMemory = '';
@@ -385,7 +385,7 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
       category: session.category,
       unfaithfulPartner: session.unfaithful_partner,
       coupleCode: session.couple_code,
-      aiModel: session.ai_model || 'openai',
+      aiModel: session.ai_model || 'gemini',
       yourName: partner === 'A' ? session.partner_a_name : session.partner_b_name,
       partnerName: partner === 'A' ? session.partner_b_name : session.partner_a_name,
       yourWordCount,

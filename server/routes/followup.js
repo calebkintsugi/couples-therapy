@@ -94,7 +94,7 @@ router.post('/:sessionId/generate-question/:token', async (req, res) => {
       session.partner_a_name,
       session.partner_b_name,
       previousFollowups.rows,
-      session.ai_model || 'openai'
+      session.ai_model || 'gemini'
     );
 
     res.json({ question });
@@ -228,7 +228,7 @@ router.post('/:sessionId/answer/:questionId/:token', async (req, res) => {
           session.category,
           session.partner_a_name,
           session.partner_b_name,
-          session.ai_model || 'openai',
+          session.ai_model || 'gemini',
           previousFollowupsResult.rows
         );
 

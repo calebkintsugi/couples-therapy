@@ -655,54 +655,7 @@ function Results() {
 
             <div className="column-header">
               <h2>{activeTab === 'individual' ? 'Your Guidance' : 'Guidance for Both of You'}</h2>
-              <span className="model-indicator">
-                Powered by {originalModel === 'gemini' ? 'Gemini' : 'ChatGPT'}
-              </span>
             </div>
-
-            {/* Model switch option */}
-            {!showModelChangePrompt && !regenerating && (
-              <div className="model-switch-hint">
-                <button
-                  type="button"
-                  className="link-btn"
-                  onClick={() => {
-                    setAiModel(originalModel === 'gemini' ? 'openai' : 'gemini');
-                    setShowModelChangePrompt(true);
-                  }}
-                >
-                  Try {originalModel === 'gemini' ? 'ChatGPT' : 'Gemini'} instead?
-                </button>
-              </div>
-            )}
-
-            {/* Model change prompt */}
-            {showModelChangePrompt && (
-              <div className="model-change-prompt">
-                <p>Regenerate your guidance using {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}?</p>
-                <div className="model-change-actions">
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => {
-                      setShowModelChangePrompt(false);
-                      regenerateAdvice();
-                    }}
-                    disabled={regenerating}
-                  >
-                    {regenerating ? 'Regenerating...' : 'Yes, regenerate'}
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => {
-                      setShowModelChangePrompt(false);
-                      setAiModel(originalModel);
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Advice sections */}
             <div className="advice-sections">
@@ -789,6 +742,48 @@ function Results() {
                   </form>
                 </div>
               )}
+            </div>
+
+            {/* Model toggle at bottom of guidance column */}
+            <div className="model-toggle-section">
+              <span className="model-toggle-label">
+                Powered by {originalModel === 'gemini' ? 'Gemini' : 'ChatGPT'}
+              </span>
+              {!showModelChangePrompt && !regenerating ? (
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={() => {
+                    setAiModel(originalModel === 'gemini' ? 'openai' : 'gemini');
+                    setShowModelChangePrompt(true);
+                  }}
+                >
+                  Try {originalModel === 'gemini' ? 'ChatGPT' : 'Gemini'}?
+                </button>
+              ) : showModelChangePrompt ? (
+                <div className="model-change-inline">
+                  <span>Switch to {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}?</span>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => {
+                      setShowModelChangePrompt(false);
+                      regenerateAdvice();
+                    }}
+                    disabled={regenerating}
+                  >
+                    {regenerating ? 'Regenerating...' : 'Yes'}
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => {
+                      setShowModelChangePrompt(false);
+                      setAiModel(originalModel);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
 
