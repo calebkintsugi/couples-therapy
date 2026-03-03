@@ -7,6 +7,7 @@ import Results from './components/Results';
 import Tester from './components/Tester';
 import Journal from './components/Journal';
 import JournalStart from './components/JournalStart';
+import Analytics from './components/Analytics';
 
 function App() {
   const location = useLocation();
@@ -27,6 +28,7 @@ function App() {
         <Route path="/session/:sessionId/results" element={<Results />} />
         <Route path="/journal/start" element={<JournalStart />} />
         <Route path="/journal/:journalId" element={<Journal />} />
+        <Route path="/analytics" element={<Analytics />} />
       </Routes>
     </div>
   );

@@ -180,6 +180,22 @@ export async function initDb() {
   } catch (e) {
     // Tables may already exist
   }
+
+  // Analytics table
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS analytics (
+        id SERIAL PRIMARY KEY,
+        event_type TEXT NOT NULL,
+        event_name TEXT NOT NULL,
+        page TEXT,
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch (e) {
+    // Table may already exist
+  }
 }
 
 export default pool;

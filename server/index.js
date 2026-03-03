@@ -11,6 +11,7 @@ import couplesRouter from './routes/couples.js';
 import followupRouter from './routes/followup.js';
 import partnerQuestionsRouter from './routes/partnerQuestions.js';
 import journalsRouter from './routes/journals.js';
+import analyticsRouter from './routes/analytics.js';
 import { generateAdvice } from './openai.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -30,6 +31,7 @@ app.use('/api/couples', couplesRouter);
 app.use('/api/followup', followupRouter);
 app.use('/api/partner-questions', partnerQuestionsRouter);
 app.use('/api/journals', journalsRouter);
+app.use('/api/analytics', analyticsRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

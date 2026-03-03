@@ -4,6 +4,7 @@ import ScaleQuestion from './ScaleQuestion';
 import TextQuestion from './TextQuestion';
 import Disclaimer from './Disclaimer';
 import { categories, questionsByCategory, shortIntakeQuestions, getCategoryById } from '../questions';
+import { trackPageView, trackClick, trackSubmit } from '../analytics';
 
 function Questionnaire() {
   const { sessionId } = useParams();
@@ -63,6 +64,8 @@ function Questionnaire() {
       navigate('/');
       return;
     }
+
+    trackPageView('questionnaire');
 
     // Fetch session data using token
     fetch(`/api/sessions/${sessionId}/by-token/${token}`)
@@ -133,6 +136,7 @@ function Questionnaire() {
       return;
     }
 
+    trackClick('category_selected', { category: setupCategory, intakeType: setupIntakeType });
     setError('');
 
     try {
@@ -241,6 +245,7 @@ function Questionnaire() {
   };
 
   const handleSubmit = async () => {
+    trackSubmit('questionnaire', { category, intakeType, partner });
     setSubmitting(true);
     setError('');
 

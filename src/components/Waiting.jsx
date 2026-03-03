@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { trackPageView } from '../analytics';
 
 function Waiting() {
   const { sessionId } = useParams();
@@ -17,6 +18,8 @@ function Waiting() {
       navigate('/');
       return;
     }
+
+    trackPageView('waiting');
 
     const checkStatus = async () => {
       try {

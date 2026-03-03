@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { trackPageView, trackClick, trackSubmit } from '../analytics';
 
 function Journal() {
   const { journalId } = useParams();
@@ -41,10 +42,21 @@ function Journal() {
       navigate('/');
       return;
     }
+    trackPageView('journal');
     fetchJournal();
     fetchPrompts();
     fetchPartnerQuestions();
   }, [token, journalId]);
+
+  const scrollToQuestion = (questionId, type) => {
+    const elementId = type === 'received' ? `question-received-${questionId}` : `question-sent-${questionId}`;
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.classList.add('highlight');
+      setTimeout(() => element.classList.remove('highlight'), 2000);
+    }
+  };
 
   const fetchJournal = async () => {
     setLoading(true);
@@ -94,6 +106,7 @@ function Journal() {
     e.preventDefault();
     if (!chatInput.trim() || chatLoading) return;
 
+    trackSubmit('journal_chat');
     const userMessage = chatInput.trim();
     setChatInput('');
     setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
@@ -149,6 +162,7 @@ function Journal() {
   const sendPartnerQuestion = async () => {
     if (!newQuestion.trim() || sendingQuestion) return;
 
+    trackSubmit('journal_partner_question');
     setSendingQuestion(true);
     try {
       const response = await fetch(`/api/journals/${journalId}/questions/${token}`, {
@@ -216,6 +230,7 @@ function Journal() {
   const submitEntry = async () => {
     if (!newEntry.trim() || submitting) return;
 
+    trackSubmit('journal_entry', { wordCount: newEntry.trim().split(/\s+/).filter(w => w).length });
     setSubmitting(true);
     try {
       const response = await fetch(`/api/journals/${journalId}/entry/${token}`, {
@@ -346,12 +361,23 @@ function Journal() {
                 <span className="journal-alert-text">
                   You have a question from {journalData.partnerName}
                 </span>
-                <button
-                  className="btn btn-sm btn-ghost journal-alert-btn"
-                  onClick={() => dismissAlert(q.id)}
-                >
-                  Got it
-                </button>
+                <div className="journal-alert-buttons">
+                  <button
+                    className="btn btn-sm btn-primary journal-alert-btn"
+                    onClick={() => {
+                      scrollToQuestion(q.id, 'received');
+                      dismissAlert(q.id);
+                    }}
+                  >
+                    Show me
+                  </button>
+                  <button
+                    className="btn btn-sm btn-ghost journal-alert-btn"
+                    onClick={() => dismissAlert(q.id)}
+                  >
+                    Got it
+                  </button>
+                </div>
               </div>
             ))}
             {responseAlerts.map((q) => (
@@ -360,12 +386,23 @@ function Journal() {
                 <span className="journal-alert-text">
                   {journalData.partnerName} responded to your question
                 </span>
-                <button
-                  className="btn btn-sm btn-ghost journal-alert-btn"
-                  onClick={() => dismissResponseAlert(q.id)}
-                >
-                  Got it
-                </button>
+                <div className="journal-alert-buttons">
+                  <button
+                    className="btn btn-sm btn-primary journal-alert-btn"
+                    onClick={() => {
+                      scrollToQuestion(q.id, 'sent');
+                      dismissResponseAlert(q.id);
+                    }}
+                  >
+                    Show me
+                  </button>
+                  <button
+                    className="btn btn-sm btn-ghost journal-alert-btn"
+                    onClick={() => dismissResponseAlert(q.id)}
+                  >
+                    Got it
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -427,6 +464,17 @@ function Journal() {
               {submitting ? 'Saving...' : 'Save Entry'}
             </button>
           </div>
+
+          {/* AI Generating Indicator */}
+          {submitting && journalData.aiActivated && (
+            <div className="journal-ai-generating">
+              <div className="journal-ai-generating-spinner" />
+              <div className="journal-ai-generating-text">
+                <strong>Your coach is reading and responding...</strong>
+                <span>This can take up to a minute or two.</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Previous Entries */}
@@ -607,7 +655,7 @@ function Journal() {
             <div className="journal-question-threads">
               <h3>Questions from {journalData.partnerName}</h3>
               {partnerQuestions.map((q) => (
-                <div key={q.id} className="journal-question-thread">
+                <div key={q.id} id={`question-received-${q.id}`} className="journal-question-thread">
                   <div className="journal-thread-header">
                     <span className="journal-thread-from">{journalData.partnerName} asked:</span>
                     <span className="journal-thread-date">
@@ -684,7 +732,7 @@ function Journal() {
             <div className="journal-question-threads">
               <h3>Questions You've Asked</h3>
               {sentQuestions.map((q) => (
-                <div key={q.id} className="journal-question-thread sent">
+                <div key={q.id} id={`question-sent-${q.id}`} className="journal-question-thread sent">
                   <div className="journal-thread-header">
                     <span className="journal-thread-from">You asked {journalData.partnerName}:</span>
                     <span className="journal-thread-date">

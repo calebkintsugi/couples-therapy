@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { trackPageView, trackClick, trackSubmit } from '../analytics';
 
 // Parse advice text into sections
 function parseAdviceSections(adviceText) {
@@ -163,6 +164,7 @@ function Results() {
       navigate('/');
       return;
     }
+    trackPageView('results');
     setLoading(false);
   }, [token, navigate]);
 
@@ -305,6 +307,7 @@ function Results() {
   };
 
   const regenerateAdvice = async () => {
+    trackClick('regenerate_advice', { aiModel });
     setRegenerating(true);
     setError('');
     setChatMessages([]);
@@ -340,6 +343,7 @@ function Results() {
     e.preventDefault();
     if (!chatInput.trim() || chatLoading) return;
 
+    trackSubmit('chat_followup');
     const userMessage = chatInput.trim();
     setChatInput('');
     setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
@@ -488,6 +492,7 @@ function Results() {
   const sendPartnerQuestion = async () => {
     if (!newQuestion.trim() || sendingQuestion) return;
 
+    trackSubmit('partner_question');
     setSendingQuestion(true);
     try {
       const response = await fetch(`/api/partner-questions/${sessionId}/send/${token}`, {

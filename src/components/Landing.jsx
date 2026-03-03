@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Disclaimer from './Disclaimer';
 import { categories } from '../questions';
+import { trackPageView, trackClick } from '../analytics';
 
 function Landing() {
   const [loading, setLoading] = useState(false);
@@ -11,6 +12,10 @@ function Landing() {
   const [coupleData, setCoupleData] = useState(null);
   const [lookingUp, setLookingUp] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    trackPageView('landing');
+  }, []);
 
   const createSession = async (existingCoupleCode = null) => {
     setLoading(true);
@@ -89,7 +94,10 @@ function Landing() {
               <div className="hero-ctas">
                 <button
                   className="btn btn-primary"
-                  onClick={() => createSession()}
+                  onClick={() => {
+                    trackClick('new_users_get_started');
+                    createSession();
+                  }}
                   disabled={loading}
                 >
                   {loading ? 'Creating Session...' : 'New Users: Get Started'}
@@ -97,6 +105,7 @@ function Landing() {
                 <button
                   className="btn btn-secondary"
                   onClick={() => {
+                    trackClick('returning_users_enter_code');
                     setShowReturning(true);
                     setTimeout(() => {
                       document.getElementById('returning-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -195,7 +204,10 @@ function Landing() {
               </p>
               <button
                 className="btn btn-secondary"
-                onClick={() => navigate('/journal/start')}
+                onClick={() => {
+                  trackClick('start_journaling_together');
+                  navigate('/journal/start');
+                }}
               >
                 Start Journaling Together
               </button>

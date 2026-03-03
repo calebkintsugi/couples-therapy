@@ -1,7 +1,13 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackPageView } from '../analytics';
 
 function HowItWorks() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    trackPageView('how_it_works');
+  }, []);
 
   return (
     <div className="landing-page">

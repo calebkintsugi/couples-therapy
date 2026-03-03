@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackPageView, trackClick, trackSubmit } from '../analytics';
 
 function JournalStart() {
   const navigate = useNavigate();
   const [mode, setMode] = useState('choice'); // 'choice', 'new', 'join'
+
+  useEffect(() => {
+    trackPageView('journal_start');
+  }, []);
   const [partnerAName, setPartnerAName] = useState('');
   const [partnerBName, setPartnerBName] = useState('');
   const [joinCode, setJoinCode] = useState('');
@@ -17,6 +22,7 @@ function JournalStart() {
       return;
     }
 
+    trackSubmit('create_journal');
     setLoading(true);
     setError('');
 
@@ -50,6 +56,7 @@ function JournalStart() {
       return;
     }
 
+    trackSubmit('join_journal');
     setLoading(true);
     setError('');
 
