@@ -164,6 +164,8 @@ export async function initDb() {
 
     // Add is_dismissed column if it doesn't exist
     await pool.query(`ALTER TABLE journal_questions ADD COLUMN IF NOT EXISTS is_dismissed BOOLEAN DEFAULT FALSE`);
+    // Track if the asker has seen responses
+    await pool.query(`ALTER TABLE journal_questions ADD COLUMN IF NOT EXISTS asker_notified BOOLEAN DEFAULT FALSE`);
 
     // Question responses/conversation table
     await pool.query(`

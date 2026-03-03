@@ -29,6 +29,7 @@ function Journal() {
   const [partnerQuestions, setPartnerQuestions] = useState([]);
   const [sentQuestions, setSentQuestions] = useState([]);
   const [questionAlerts, setQuestionAlerts] = useState([]);
+  const [responseAlerts, setResponseAlerts] = useState([]);
   const [newQuestion, setNewQuestion] = useState('');
   const [sendingQuestion, setSendingQuestion] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
@@ -82,6 +83,7 @@ function Journal() {
         setPartnerQuestions(data.received || []);
         setSentQuestions(data.sent || []);
         setQuestionAlerts(data.alerts || []);
+        setResponseAlerts(data.responseAlerts || []);
       }
     } catch (err) {
       console.error('Error fetching questions:', err);
@@ -174,6 +176,17 @@ function Journal() {
       setQuestionAlerts(questionAlerts.filter(q => q.id !== questionId));
     } catch (err) {
       console.error('Error dismissing alert:', err);
+    }
+  };
+
+  const dismissResponseAlert = async (questionId) => {
+    try {
+      await fetch(`/api/journals/${journalId}/questions/${questionId}/dismiss-response/${token}`, {
+        method: 'PUT',
+      });
+      setResponseAlerts(responseAlerts.filter(q => q.id !== questionId));
+    } catch (err) {
+      console.error('Error dismissing response alert:', err);
     }
   };
 
@@ -325,20 +338,33 @@ function Journal() {
         </header>
 
         {/* Question Alerts */}
-        {questionAlerts.length > 0 && (
+        {(questionAlerts.length > 0 || responseAlerts.length > 0) && (
           <div className="journal-question-alerts">
             {questionAlerts.map((q) => (
-              <div key={q.id} className="journal-question-alert">
+              <div key={`q-${q.id}`} className="journal-question-alert">
                 <span className="journal-alert-icon">💬</span>
                 <span className="journal-alert-text">
                   You have a question from {journalData.partnerName}
                 </span>
                 <button
-                  className="journal-alert-dismiss"
+                  className="btn btn-sm btn-ghost journal-alert-btn"
                   onClick={() => dismissAlert(q.id)}
-                  title="Dismiss"
                 >
-                  ✕
+                  Got it
+                </button>
+              </div>
+            ))}
+            {responseAlerts.map((q) => (
+              <div key={`r-${q.id}`} className="journal-question-alert response">
+                <span className="journal-alert-icon">✉️</span>
+                <span className="journal-alert-text">
+                  {journalData.partnerName} responded to your question
+                </span>
+                <button
+                  className="btn btn-sm btn-ghost journal-alert-btn"
+                  onClick={() => dismissResponseAlert(q.id)}
+                >
+                  Got it
                 </button>
               </div>
             ))}

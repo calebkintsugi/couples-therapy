@@ -409,13 +409,19 @@ router.get('/:journalId/questions/:token', async (req, res) => {
       messages: messagesMap[q.id] || []
     }));
 
-    // Get undismissed questions for alert
+    // Get undismissed questions for alert (questions sent TO this partner)
     const undismissedAlerts = received.rows.filter(q => !q.is_dismissed);
+
+    // Get alerts for responses to questions this partner SENT (that have responses and asker hasn't dismissed)
+    const responseAlerts = sent.rows.filter(q =>
+      !q.asker_notified && messagesMap[q.id] && messagesMap[q.id].length > 0
+    );
 
     res.json({
       received: receivedWithMessages,
       sent: sentWithMessages,
       alerts: undismissedAlerts,
+      responseAlerts: responseAlerts,
       partnerName: partner === 'A' ? journal.partner_b_name : journal.partner_a_name,
     });
   } catch (error) {
@@ -467,7 +473,7 @@ router.post('/:journalId/questions/:token', async (req, res) => {
   }
 });
 
-// Dismiss a question alert
+// Dismiss a question alert (for recipient)
 router.put('/:journalId/questions/:questionId/dismiss/:token', async (req, res) => {
   const { journalId, questionId, token } = req.params;
 
@@ -508,6 +514,50 @@ router.put('/:journalId/questions/:questionId/dismiss/:token', async (req, res) 
   } catch (error) {
     console.error('Error dismissing question:', error);
     res.status(500).json({ error: 'Failed to dismiss question' });
+  }
+});
+
+// Dismiss a response alert (for question asker)
+router.put('/:journalId/questions/:questionId/dismiss-response/:token', async (req, res) => {
+  const { journalId, questionId, token } = req.params;
+
+  try {
+    const journalResult = await db.query('SELECT * FROM journals WHERE id = $1', [journalId]);
+
+    if (journalResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Journal not found' });
+    }
+
+    const journal = journalResult.rows[0];
+
+    let partner = null;
+    if (token === journal.partner_a_token) {
+      partner = 'A';
+    } else if (token === journal.partner_b_token) {
+      partner = 'B';
+    } else {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+
+    // Verify this question was sent BY this partner
+    const questionResult = await db.query(
+      'SELECT * FROM journal_questions WHERE id = $1 AND journal_id = $2 AND from_partner = $3',
+      [questionId, journalId, partner]
+    );
+
+    if (questionResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    await db.query(
+      'UPDATE journal_questions SET asker_notified = TRUE WHERE id = $1',
+      [questionId]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error dismissing response alert:', error);
+    res.status(500).json({ error: 'Failed to dismiss alert' });
   }
 });
 

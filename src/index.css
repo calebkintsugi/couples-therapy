@@ -3581,21 +3581,15 @@ textarea {
   font-weight: 500;
 }
 
-.journal-alert-dismiss {
-  background: none;
-  border: none;
-  padding: var(--space-xs);
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: 18px;
-  line-height: 1;
-  border-radius: var(--radius-sm);
-  transition: background 0.2s, color 0.2s;
+.journal-alert-btn {
+  flex-shrink: 0;
+  font-size: 13px;
+  padding: 6px 12px;
 }
 
-.journal-alert-dismiss:hover {
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--text-primary);
+.journal-question-alert.response {
+  background: var(--secondary-light);
+  border-color: var(--secondary);
 }
 
 /* Your Questions Section */
