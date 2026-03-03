@@ -155,6 +155,10 @@ function Results() {
   const [newQuestion, setNewQuestion] = useState('');
   const [sendingQuestion, setSendingQuestion] = useState(false);
 
+  // Delete state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   // Memoize parsed advice sections
   const adviceSections = useMemo(() => parseAdviceSections(advice), [advice]);
   const coupleSections = useMemo(() => parseAdviceSections(coupleAdvice), [coupleAdvice]);
@@ -509,6 +513,28 @@ function Results() {
       console.error('Error sending question:', err);
     } finally {
       setSendingQuestion(false);
+    }
+  };
+
+  const deleteSession = async () => {
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/delete/session/${sessionId}/${token}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        navigate('/', { replace: true });
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Failed to delete session');
+      }
+    } catch (err) {
+      console.error('Error deleting session:', err);
+      setError('Failed to delete session');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -1106,7 +1132,48 @@ function Results() {
             >
               Start a New Session
             </button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{ color: 'var(--error)' }}
+            >
+              Delete My Data
+            </button>
           </div>
+
+          {/* Delete Confirmation Modal */}
+          {showDeleteConfirm && (
+            <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <h3>Delete All Session Data?</h3>
+                <p>This will permanently delete:</p>
+                <ul style={{ textAlign: 'left', marginBottom: '16px' }}>
+                  <li>All questionnaire responses</li>
+                  <li>All AI-generated advice</li>
+                  <li>All follow-up questions and answers</li>
+                  <li>All partner questions</li>
+                </ul>
+                <p><strong>This cannot be undone.</strong></p>
+                <div className="modal-actions">
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={deleteSession}
+                    disabled={deleting}
+                    style={{ background: 'var(--error)', color: 'white' }}
+                  >
+                    {deleting ? 'Deleting...' : 'Yes, Delete Everything'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="crisis-resources-compact">
             <p>

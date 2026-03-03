@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { nanoid } from 'nanoid';
@@ -12,6 +13,7 @@ import followupRouter from './routes/followup.js';
 import partnerQuestionsRouter from './routes/partnerQuestions.js';
 import journalsRouter from './routes/journals.js';
 import analyticsRouter from './routes/analytics.js';
+import deletionRouter from './routes/deletion.js';
 import { generateAdvice } from './openai.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,9 +22,43 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Rate limiters
+const generalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const sensitiveLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute for sensitive endpoints
+  message: { error: 'Too many attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per 15 minutes
+  message: { error: 'Too many attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Apply general rate limit to all API routes
+app.use('/api/', generalLimiter);
+
+// Apply stricter limits to sensitive endpoints
+app.use('/api/sessions/:id/verify-pin', sensitiveLimiter);
+app.use('/api/couples/by-code', sensitiveLimiter);
+app.use('/api/journals/by-code', sensitiveLimiter);
+app.use('/api/analytics/summary', strictLimiter);
 
 // API Routes
 app.use('/api/sessions', sessionsRouter);
@@ -32,6 +68,7 @@ app.use('/api/followup', followupRouter);
 app.use('/api/partner-questions', partnerQuestionsRouter);
 app.use('/api/journals', journalsRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/delete', deletionRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

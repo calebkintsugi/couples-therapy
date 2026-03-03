@@ -37,6 +37,10 @@ function Journal() {
   const [replyText, setReplyText] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
 
+  // Delete state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     if (!token) {
       navigate('/');
@@ -264,6 +268,28 @@ function Journal() {
       setError(err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const deleteJournal = async () => {
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/delete/journal/${journalId}/${token}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        navigate('/', { replace: true });
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Failed to delete journal');
+      }
+    } catch (err) {
+      console.error('Error deleting journal:', err);
+      setError('Failed to delete journal');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -835,6 +861,51 @@ function Journal() {
             )}
           </div>
         </div>
+
+        {/* Delete Data */}
+        <div className="journal-delete-section">
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => setShowDeleteConfirm(true)}
+            style={{ color: 'var(--error)' }}
+          >
+            Delete My Journal Data
+          </button>
+        </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>Delete All Journal Data?</h3>
+              <p>This will permanently delete:</p>
+              <ul style={{ textAlign: 'left', marginBottom: '16px' }}>
+                <li>All your journal entries</li>
+                <li>All AI coach responses</li>
+                <li>All questions to/from your partner</li>
+                <li>Your partner's entries too (the entire journal)</li>
+              </ul>
+              <p><strong>This cannot be undone.</strong></p>
+              <div className="modal-actions">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn"
+                  onClick={deleteJournal}
+                  disabled={deleting}
+                  style={{ background: 'var(--error)', color: 'white' }}
+                >
+                  {deleting ? 'Deleting...' : 'Yes, Delete Everything'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
