@@ -1010,75 +1010,75 @@ function Results() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
 
-        {/* Word counts and edit section */}
-        <div className="word-count-section">
-          <div className="word-count-stats">
-            <div className="word-count-item">
-              <span className="word-count-label">Your responses:</span>
-              <span className="word-count-value">{yourWordCount} words</span>
-            </div>
-            <div className="word-count-item">
-              <span className="word-count-label">{partnerName || 'Partner'}'s responses:</span>
-              <span className="word-count-value">{partnerWordCount} words</span>
-            </div>
-          </div>
-
-          {(yourWordCount < 100 || partnerWordCount < 100) && (
-            <p className="word-count-suggestion">
-              {yourWordCount < 100 && partnerWordCount < 100
-                ? 'Both of your responses were fairly brief. More detailed answers can lead to richer, more personalized guidance.'
-                : yourWordCount < 100
-                ? 'Your responses were fairly brief. Adding more detail could help generate richer guidance.'
-                : `${partnerName || 'Your partner'}'s responses were brief. They might consider adding more detail for better insights.`}
-            </p>
-          )}
-
-          {!showEditMode ? (
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={loadResponsesForEditing}
-              disabled={loadingResponses}
-            >
-              {loadingResponses ? 'Loading...' : 'Edit Your Responses'}
-            </button>
-          ) : (
-            <div className="edit-responses-panel">
-              <h3>Edit Your Responses</h3>
-              <p className="edit-responses-hint">Update your answers below. Your guidance will be regenerated after saving.</p>
-
-              {editResponses.map((r) => (
-                <div key={r.question_id} className="edit-response-item">
-                  <label>{r.question_id.replace(/_/g, ' ')}</label>
-                  <textarea
-                    value={r.answer}
-                    onChange={(e) => updateEditResponse(r.question_id, e.target.value)}
-                    rows={4}
-                  />
+            {/* Word counts and edit section */}
+            <div className="word-count-section">
+              <div className="word-count-stats">
+                <div className="word-count-item">
+                  <span className="word-count-label">Your responses:</span>
+                  <span className="word-count-value">{yourWordCount} words</span>
                 </div>
-              ))}
-
-              <div className="edit-responses-actions">
-                <button
-                  className="btn btn-primary"
-                  onClick={saveEditedResponses}
-                  disabled={savingResponses}
-                >
-                  {savingResponses ? 'Saving & Regenerating...' : 'Save & Regenerate Guidance'}
-                </button>
-                <button
-                  className="btn btn-ghost"
-                  onClick={() => setShowEditMode(false)}
-                  disabled={savingResponses}
-                >
-                  Cancel
-                </button>
+                <div className="word-count-item">
+                  <span className="word-count-label">{partnerName || 'Partner'}'s responses:</span>
+                  <span className="word-count-value">{partnerWordCount} words</span>
+                </div>
               </div>
+
+              {(yourWordCount < 100 || partnerWordCount < 100) && (
+                <p className="word-count-suggestion">
+                  {yourWordCount < 100 && partnerWordCount < 100
+                    ? 'Both of your responses were fairly brief. More detailed answers can lead to richer, more personalized guidance.'
+                    : yourWordCount < 100
+                    ? 'Your responses were fairly brief. Adding more detail could help generate richer guidance.'
+                    : `${partnerName || 'Your partner'}'s responses were brief. They might consider adding more detail for better insights.`}
+                </p>
+              )}
+
+              {!showEditMode ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={loadResponsesForEditing}
+                  disabled={loadingResponses}
+                >
+                  {loadingResponses ? 'Loading...' : 'Edit Your Responses'}
+                </button>
+              ) : (
+                <div className="edit-responses-panel">
+                  <h3>Edit Your Responses</h3>
+                  <p className="edit-responses-hint">Update your answers below. Your guidance will be regenerated after saving.</p>
+
+                  {editResponses.map((r) => (
+                    <div key={r.question_id} className="edit-response-item">
+                      <label>{r.question_id.replace(/_/g, ' ')}</label>
+                      <textarea
+                        value={r.answer}
+                        onChange={(e) => updateEditResponse(r.question_id, e.target.value)}
+                        rows={4}
+                      />
+                    </div>
+                  ))}
+
+                  <div className="edit-responses-actions">
+                    <button
+                      className="btn btn-primary"
+                      onClick={saveEditedResponses}
+                      disabled={savingResponses}
+                    >
+                      {savingResponses ? 'Saving & Regenerating...' : 'Save & Regenerate Guidance'}
+                    </button>
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => setShowEditMode(false)}
+                      disabled={savingResponses}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Footer actions */}

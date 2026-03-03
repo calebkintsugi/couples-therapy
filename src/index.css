@@ -2681,7 +2681,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
-  margin-bottom: var(--space-xl);
+  margin-top: var(--space-lg);
 }
 
 .word-count-stats {
