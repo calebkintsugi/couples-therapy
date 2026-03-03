@@ -14,8 +14,13 @@ function Analytics() {
   }, [authenticated]);
 
   const fetchAnalytics = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/analytics/summary');
+      const response = await fetch('/api/analytics/summary', {
+        headers: {
+          'x-analytics-password': password,
+        },
+      });
       const result = await response.json();
 
       if (!response.ok) {
@@ -29,6 +34,39 @@ function Analytics() {
       setLoading(false);
     }
   };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (password === 'Islington8*') {
+      setAuthenticated(true);
+      setError('');
+    } else {
+      setError('Incorrect password');
+    }
+  };
+
+  if (!authenticated) {
+    return (
+      <div className="container" style={{ maxWidth: '400px', marginTop: '100px' }}>
+        <div className="card" style={{ padding: '32px' }}>
+          <h2 style={{ marginBottom: '24px', textAlign: 'center' }}>Analytics Login</h2>
+          <form onSubmit={handleLogin}>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              style={{ width: '100%', marginBottom: '16px' }}
+            />
+            {error && <p style={{ color: 'var(--error)', marginBottom: '16px' }}>{error}</p>}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+              Login
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

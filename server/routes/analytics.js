@@ -25,8 +25,16 @@ router.post('/track', async (req, res) => {
   }
 });
 
-// Get analytics summary (protected - you might want to add auth)
+const ANALYTICS_PASSWORD = 'Islington8*';
+
+// Get analytics summary (password protected)
 router.get('/summary', async (req, res) => {
+  const password = req.headers['x-analytics-password'];
+
+  if (password !== ANALYTICS_PASSWORD) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   try {
     // Page visits
     const pageVisits = await db.query(`
