@@ -90,6 +90,17 @@ function Analytics() {
     );
   }
 
+  if (!data) {
+    return (
+      <div className="container">
+        <div className="loading-card">
+          <div className="waiting-spinner" />
+          <p>Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container" style={{ maxWidth: '900px' }}>
       <h1 style={{ marginBottom: '24px' }}>Analytics Dashboard</h1>

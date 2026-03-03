@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
+import { sendAnalyticsAccessNotification } from '../email.js';
 
 const router = Router();
 
@@ -34,6 +35,9 @@ router.get('/summary', async (req, res) => {
   if (password !== ANALYTICS_PASSWORD) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
+
+  // Send email notification (don't await - fire and forget)
+  sendAnalyticsAccessNotification();
 
   try {
     // Page visits
