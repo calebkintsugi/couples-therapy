@@ -1,8 +1,13 @@
 import { Router } from 'express';
 import db from '../db.js';
 import { generateAdvice, generateCoupleAdvice, chatFollowUp, extractMemoryInsights } from '../openai.js';
+import { encrypt, decrypt, decryptFields, decryptRows } from '../encryption.js';
 
 const router = Router();
+
+// Fields to encrypt
+const RESPONSE_ENCRYPTED_FIELDS = ['answer'];
+const ADVICE_ENCRYPTED_FIELDS = ['partner_a_advice', 'partner_b_advice', 'couple_advice'];
 
 // Submit partner responses
 router.post('/:sessionId/responses', async (req, res) => {
@@ -31,13 +36,13 @@ router.post('/:sessionId/responses', async (req, res) => {
       return res.status(400).json({ error: 'Partner has already completed the questionnaire' });
     }
 
-    // Insert responses
+    // Insert responses (encrypt answer field)
     for (const response of responses) {
       await db.query(
         `INSERT INTO responses (session_id, partner, question_id, question_type, answer)
          VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (session_id, partner, question_id) DO UPDATE SET answer = $5`,
-        [sessionId, partner, response.questionId, response.type, response.answer]
+        [sessionId, partner, response.questionId, response.type, encrypt(response.answer)]
       );
     }
 
@@ -64,6 +69,10 @@ router.post('/:sessionId/responses', async (req, res) => {
           [sessionId, 'B']
         );
 
+        // Decrypt answers for AI processing
+        const decryptedA = decryptRows(partnerAResult.rows, RESPONSE_ENCRYPTED_FIELDS);
+        const decryptedB = decryptRows(partnerBResult.rows, RESPONSE_ENCRYPTED_FIELDS);
+
         // Generate advice for both partners
         const category = updatedSession.category || 'communication';
         const unfaithfulPartner = updatedSession.unfaithful_partner;
@@ -83,7 +92,7 @@ router.post('/:sessionId/responses', async (req, res) => {
             [coupleCode]
           );
           if (coupleResult.rows.length > 0) {
-            coupleMemory = coupleResult.rows[0].memory || '';
+            coupleMemory = decrypt(coupleResult.rows[0].memory) || ''; // Decrypt memory
           }
 
           const prevSessionsResult = await db.query(
@@ -94,21 +103,22 @@ router.post('/:sessionId/responses', async (req, res) => {
         }
 
         const [adviceA, adviceB, coupleAdvice] = await Promise.all([
-          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'A', category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions),
-          generateAdvice(partnerAResult.rows, partnerBResult.rows, 'B', category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions),
-          generateCoupleAdvice(partnerAResult.rows, partnerBResult.rows, category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions)
+          generateAdvice(decryptedA, decryptedB, 'A', category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions),
+          generateAdvice(decryptedA, decryptedB, 'B', category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions),
+          generateCoupleAdvice(decryptedA, decryptedB, category, unfaithfulPartner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions)
         ]);
 
+        // Store advice encrypted
         await db.query(
           'UPDATE sessions SET partner_a_advice = $1, partner_b_advice = $2, couple_advice = $3 WHERE id = $4',
-          [adviceA, adviceB, coupleAdvice, sessionId]
+          [encrypt(adviceA), encrypt(adviceB), encrypt(coupleAdvice), sessionId]
         );
 
         // Extract insights and update couple memory (do this async, don't wait)
         if (coupleCode) {
           extractMemoryInsights(
-            partnerAResult.rows,
-            partnerBResult.rows,
+            decryptedA,
+            decryptedB,
             adviceA,
             category,
             partnerAName,
@@ -118,7 +128,7 @@ router.post('/:sessionId/responses', async (req, res) => {
             try {
               await db.query(
                 'UPDATE couples SET memory = $1, last_memory_update = CURRENT_TIMESTAMP WHERE code = $2',
-                [newMemory, coupleCode]
+                [encrypt(newMemory), coupleCode] // Encrypt memory
               );
             } catch (memErr) {
               console.error('Error updating couple memory:', memErr);
@@ -171,7 +181,7 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
     }
 
     const adviceField = partner === 'A' ? 'partner_a_advice' : 'partner_b_advice';
-    let advice = session[adviceField];
+    let advice = decrypt(session[adviceField]); // Decrypt advice from DB
 
     // If advice not yet generated OR regenerate requested, generate it
     if (!advice || regenerate) {
@@ -184,16 +194,21 @@ router.get('/:sessionId/advice/:partner', async (req, res) => {
         [sessionId, 'B']
       );
 
+      // Decrypt responses for AI
+      const decryptedA = decryptRows(partnerAResult.rows, RESPONSE_ENCRYPTED_FIELDS);
+      const decryptedB = decryptRows(partnerBResult.rows, RESPONSE_ENCRYPTED_FIELDS);
+
       const category = session.category || 'communication';
       const partnerAName = session.partner_a_name || 'Partner A';
       const partnerBName = session.partner_b_name || 'Partner B';
       const intakeType = session.intake_type || 'long';
       const aiModel = session.ai_model || 'gemini';
-      advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner, category, session.unfaithful_partner, partnerAName, partnerBName, aiModel, intakeType);
+      advice = await generateAdvice(decryptedA, decryptedB, partner, category, session.unfaithful_partner, partnerAName, partnerBName, aiModel, intakeType);
 
+      // Store encrypted
       await db.query(
         `UPDATE sessions SET ${adviceField} = $1 WHERE id = $2`,
-        [advice, sessionId]
+        [encrypt(advice), sessionId]
       );
     }
 
@@ -226,7 +241,7 @@ router.post('/:sessionId/chat/:partner', async (req, res) => {
 
     const session = sessionResult.rows[0];
     const adviceField = partner === 'A' ? 'partner_a_advice' : 'partner_b_advice';
-    const advice = session[adviceField];
+    const advice = decrypt(session[adviceField]); // Decrypt advice
 
     if (!advice) {
       return res.status(400).json({ error: 'No advice found for this partner' });
@@ -285,7 +300,7 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
     }
 
     const adviceField = partner === 'A' ? 'partner_a_advice' : 'partner_b_advice';
-    let advice = session[adviceField];
+    let advice = decrypt(session[adviceField]); // Decrypt advice from DB
 
     // If advice not yet generated OR regenerate requested, generate it
     if (!advice || regenerate) {
@@ -297,6 +312,10 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
         'SELECT question_id, question_type, answer FROM responses WHERE session_id = $1 AND partner = $2',
         [sessionId, 'B']
       );
+
+      // Decrypt responses for AI
+      const decryptedA = decryptRows(partnerAResult.rows, RESPONSE_ENCRYPTED_FIELDS);
+      const decryptedB = decryptRows(partnerBResult.rows, RESPONSE_ENCRYPTED_FIELDS);
 
       const category = session.category || 'communication';
       const partnerAName = session.partner_a_name || 'Partner A';
@@ -319,7 +338,7 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
           [coupleCode]
         );
         if (coupleResult.rows.length > 0) {
-          coupleMemory = coupleResult.rows[0].memory || '';
+          coupleMemory = decrypt(coupleResult.rows[0].memory) || ''; // Decrypt memory
         }
 
         const prevSessionsResult = await db.query(
@@ -329,18 +348,19 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
         previousSessions = prevSessionsResult.rows;
       }
 
-      advice = await generateAdvice(partnerAResult.rows, partnerBResult.rows, partner, category, session.unfaithful_partner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions);
+      advice = await generateAdvice(decryptedA, decryptedB, partner, category, session.unfaithful_partner, partnerAName, partnerBName, aiModel, intakeType, coupleMemory, previousSessions);
 
+      // Store encrypted
       await db.query(
         `UPDATE sessions SET ${adviceField} = $1 WHERE id = $2`,
-        [advice, sessionId]
+        [encrypt(advice), sessionId]
       );
 
       // Update couple memory if regenerating (async, don't wait)
       if (coupleCode && regenerate) {
         extractMemoryInsights(
-          partnerAResult.rows,
-          partnerBResult.rows,
+          decryptedA,
+          decryptedB,
           advice,
           category,
           partnerAName,
@@ -350,7 +370,7 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
           try {
             await db.query(
               'UPDATE couples SET memory = $1, last_memory_update = CURRENT_TIMESTAMP WHERE code = $2',
-              [newMemory, coupleCode]
+              [encrypt(newMemory), coupleCode] // Encrypt memory
             );
           } catch (memErr) {
             console.error('Error updating couple memory:', memErr);
@@ -359,7 +379,7 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
       }
     }
 
-    // Calculate word counts for both partners
+    // Calculate word counts for both partners (decrypt for counting)
     const partnerAResponses = await db.query(
       'SELECT answer FROM responses WHERE session_id = $1 AND partner = $2 AND question_type = $3',
       [sessionId, 'A', 'text']
@@ -371,7 +391,8 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
 
     const countWords = (responses) => {
       return responses.rows.reduce((total, r) => {
-        return total + (r.answer ? r.answer.trim().split(/\s+/).filter(w => w).length : 0);
+        const decryptedAnswer = decrypt(r.answer);
+        return total + (decryptedAnswer ? decryptedAnswer.trim().split(/\s+/).filter(w => w).length : 0);
       }, 0);
     };
 
@@ -380,7 +401,7 @@ router.get('/:sessionId/advice-by-token/:token', async (req, res) => {
 
     res.json({
       advice,
-      coupleAdvice: session.couple_advice,
+      coupleAdvice: decrypt(session.couple_advice),
       partner,
       category: session.category,
       unfaithfulPartner: session.unfaithful_partner,
@@ -426,7 +447,7 @@ router.post('/:sessionId/chat-by-token/:token', async (req, res) => {
     }
 
     const adviceField = partner === 'A' ? 'partner_a_advice' : 'partner_b_advice';
-    const advice = session[adviceField];
+    const advice = decrypt(session[adviceField]); // Decrypt advice
 
     if (!advice) {
       return res.status(400).json({ error: 'No advice found for this partner' });
@@ -451,7 +472,7 @@ router.post('/:sessionId/chat-by-token/:token', async (req, res) => {
   }
 });
 
-// Get responses for editing
+// Get responses for editing (decrypt for display)
 router.get('/:sessionId/responses-by-token/:token', async (req, res) => {
   const { sessionId, token } = req.params;
 
@@ -479,9 +500,12 @@ router.get('/:sessionId/responses-by-token/:token', async (req, res) => {
       [sessionId, partner]
     );
 
+    // Decrypt responses for editing
+    const decryptedResponses = decryptRows(responses.rows, RESPONSE_ENCRYPTED_FIELDS);
+
     res.json({
       partner,
-      responses: responses.rows,
+      responses: decryptedResponses,
       category: session.category,
       intakeType: session.intake_type || 'long'
     });
@@ -519,11 +543,11 @@ router.put('/:sessionId/responses-by-token/:token', async (req, res) => {
       return res.status(403).json({ error: 'Invalid token' });
     }
 
-    // Update responses
+    // Update responses (encrypt answer)
     for (const response of responses) {
       await db.query(
         `UPDATE responses SET answer = $1 WHERE session_id = $2 AND partner = $3 AND question_id = $4`,
-        [response.answer, sessionId, partner, response.questionId]
+        [encrypt(response.answer), sessionId, partner, response.questionId]
       );
     }
 

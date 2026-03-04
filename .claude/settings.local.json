@@ -12,7 +12,9 @@
       "WebFetch(domain:unsplash.com)",
       "Bash(npm run build:*)",
       "Bash(/opt/homebrew/bin/node:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(node --check:*)",
+      "Bash(/usr/local/bin/node:*)"
     ]
   }
 }

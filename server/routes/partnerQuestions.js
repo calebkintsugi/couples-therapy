@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import db from '../db.js';
+import { encrypt, decrypt, decryptFields, decryptRows } from '../encryption.js';
 
 const router = Router();
+
+// Fields to encrypt
+const QUESTION_ENCRYPTED_FIELDS = ['question_text'];
 
 // Get questions sent to this partner
 router.get('/:sessionId/for/:token', async (req, res) => {
@@ -42,9 +46,10 @@ router.get('/:sessionId/for/:token', async (req, res) => {
       [sessionId, partner]
     );
 
+    // Decrypt questions before returning
     res.json({
-      received: questions.rows,
-      sent: sentQuestions.rows,
+      received: decryptRows(questions.rows, QUESTION_ENCRYPTED_FIELDS),
+      sent: decryptRows(sentQuestions.rows, QUESTION_ENCRYPTED_FIELDS),
       partnerName: partner === 'A' ? session.partner_b_name : session.partner_a_name
     });
   } catch (error) {
@@ -82,13 +87,14 @@ router.post('/:sessionId/send/:token', async (req, res) => {
       return res.status(403).json({ error: 'Invalid token' });
     }
 
-    // Insert the question
+    // Insert the question (encrypted)
     const result = await db.query(
       'INSERT INTO partner_questions (session_id, from_partner, to_partner, question_text) VALUES ($1, $2, $3, $4) RETURNING *',
-      [sessionId, fromPartner, toPartner, question.trim()]
+      [sessionId, fromPartner, toPartner, encrypt(question.trim())]
     );
 
-    res.json({ question: result.rows[0] });
+    // Return decrypted
+    res.json({ question: decryptFields(result.rows[0], QUESTION_ENCRYPTED_FIELDS) });
   } catch (error) {
     console.error('Error sending question:', error);
     res.status(500).json({ error: 'Failed to send question' });

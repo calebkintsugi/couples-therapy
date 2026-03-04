@@ -2,6 +2,12 @@ import { Router } from 'express';
 import { nanoid } from 'nanoid';
 import db from '../db.js';
 import { generateJournalResponse, chatWithJournalAI, generateJournalSummary } from '../openai.js';
+import { encrypt, decrypt, decryptFields, decryptRows } from '../encryption.js';
+
+// Fields to encrypt in journal entries
+const ENTRY_ENCRYPTED_FIELDS = ['content', 'summary', 'ai_response'];
+const QUESTION_ENCRYPTED_FIELDS = ['question_text'];
+const MESSAGE_ENCRYPTED_FIELDS = ['content'];
 
 const router = Router();
 
@@ -91,6 +97,9 @@ router.get('/:journalId/by-token/:token', async (req, res) => {
       [journalId, partner]
     );
 
+    // Decrypt entries
+    const decryptedEntries = decryptRows(entriesResult.rows, ENTRY_ENCRYPTED_FIELDS);
+
     // Calculate if AI is activated
     const aiActivated = journal.partner_a_word_count >= WORD_THRESHOLD ||
                         journal.partner_b_word_count >= WORD_THRESHOLD;
@@ -107,7 +116,7 @@ router.get('/:journalId/by-token/:token', async (req, res) => {
       partnerWordCount: partner === 'A' ? journal.partner_b_word_count : journal.partner_a_word_count,
       aiActivated,
       wordThreshold: WORD_THRESHOLD,
-      entries: entriesResult.rows,
+      entries: decryptedEntries,
     });
   } catch (error) {
     console.error('Error fetching journal:', error);
@@ -145,20 +154,21 @@ router.post('/:journalId/entry/:token', async (req, res) => {
 
     const wordCount = content.trim().split(/\s+/).filter(w => w).length;
     const endedAt = new Date();
+    const trimmedContent = content.trim();
 
     // Generate AI summary
     let summary = null;
     try {
-      summary = await generateJournalSummary(content.trim());
+      summary = await generateJournalSummary(trimmedContent);
     } catch (summaryErr) {
       console.error('Error generating summary:', summaryErr);
     }
 
-    // Insert the entry
+    // Insert the entry (encrypt sensitive fields)
     const entryResult = await db.query(
       `INSERT INTO journal_entries (journal_id, partner, content, prompt, word_count, started_at, ended_at, summary)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [journalId, partner, content.trim(), prompt || null, wordCount, startedAt || null, endedAt, summary]
+      [journalId, partner, encrypt(trimmedContent), prompt || null, wordCount, startedAt || null, endedAt, encrypt(summary)]
     );
 
     // Update total word count
@@ -179,7 +189,7 @@ router.post('/:journalId/entry/:token', async (req, res) => {
     let aiResponse = null;
     if (aiActivated) {
       try {
-        // Get all entries from both partners for context
+        // Get all entries from both partners for context (decrypt for AI)
         const allEntriesA = await db.query(
           'SELECT content, created_at FROM journal_entries WHERE journal_id = $1 AND partner = $2 ORDER BY created_at ASC',
           [journalId, 'A']
@@ -189,27 +199,35 @@ router.post('/:journalId/entry/:token', async (req, res) => {
           [journalId, 'B']
         );
 
+        // Decrypt entries for AI processing
+        const decryptedEntriesA = allEntriesA.rows.map(e => ({ ...e, content: decrypt(e.content) }));
+        const decryptedEntriesB = allEntriesB.rows.map(e => ({ ...e, content: decrypt(e.content) }));
+
         aiResponse = await generateJournalResponse(
-          allEntriesA.rows,
-          allEntriesB.rows,
-          content,
+          decryptedEntriesA,
+          decryptedEntriesB,
+          trimmedContent, // Use original plaintext, not encrypted
           partner,
           updated.partner_a_name,
           updated.partner_b_name
         );
 
-        // Save AI response to the entry
+        // Save AI response to the entry (encrypted)
         await db.query(
           'UPDATE journal_entries SET ai_response = $1 WHERE id = $2',
-          [aiResponse, entryResult.rows[0].id]
+          [encrypt(aiResponse), entryResult.rows[0].id]
         );
       } catch (aiError) {
         console.error('Error generating AI response:', aiError);
       }
     }
 
+    // Return decrypted entry to client
+    const decryptedEntry = decryptFields(entryResult.rows[0], ENTRY_ENCRYPTED_FIELDS);
+    decryptedEntry.ai_response = aiResponse; // Use plaintext AI response we just generated
+
     res.json({
-      entry: { ...entryResult.rows[0], ai_response: aiResponse },
+      entry: decryptedEntry,
       yourWordCount: partner === 'A' ? updated.partner_a_word_count : updated.partner_b_word_count,
       partnerWordCount: partner === 'A' ? updated.partner_b_word_count : updated.partner_a_word_count,
       aiActivated,
@@ -259,10 +277,10 @@ router.put('/:journalId/entry/:entryId/summary/:token', async (req, res) => {
       return res.status(404).json({ error: 'Entry not found' });
     }
 
-    // Update summary
+    // Update summary (encrypted)
     await db.query(
       'UPDATE journal_entries SET summary = $1 WHERE id = $2',
-      [summary.trim(), entryId]
+      [encrypt(summary.trim()), entryId]
     );
 
     res.json({ success: true, summary: summary.trim() });
@@ -318,7 +336,7 @@ router.post('/:journalId/chat/:token', async (req, res) => {
       return res.status(403).json({ error: 'Invalid token' });
     }
 
-    // Get all entries from both partners
+    // Get all entries from both partners (decrypt for AI)
     const entriesA = await db.query(
       'SELECT content, created_at FROM journal_entries WHERE journal_id = $1 AND partner = $2 ORDER BY created_at ASC',
       [journalId, 'A']
@@ -328,9 +346,13 @@ router.post('/:journalId/chat/:token', async (req, res) => {
       [journalId, 'B']
     );
 
+    // Decrypt entries for AI processing
+    const decryptedEntriesA = entriesA.rows.map(e => ({ ...e, content: decrypt(e.content) }));
+    const decryptedEntriesB = entriesB.rows.map(e => ({ ...e, content: decrypt(e.content) }));
+
     const response = await chatWithJournalAI(
-      entriesA.rows,
-      entriesB.rows,
+      decryptedEntriesA,
+      decryptedEntriesB,
       message,
       conversationHistory || [],
       partner,
@@ -389,32 +411,32 @@ router.get('/:journalId/questions/:token', async (req, res) => {
         [allQuestionIds]
       );
 
-      // Group messages by question_id
+      // Group messages by question_id (decrypt each message)
       messages.rows.forEach(msg => {
         if (!messagesMap[msg.question_id]) {
           messagesMap[msg.question_id] = [];
         }
-        messagesMap[msg.question_id].push(msg);
+        messagesMap[msg.question_id].push(decryptFields(msg, MESSAGE_ENCRYPTED_FIELDS));
       });
     }
 
-    // Attach messages to questions
+    // Attach messages to questions (decrypt question_text)
     const receivedWithMessages = received.rows.map(q => ({
-      ...q,
+      ...decryptFields(q, QUESTION_ENCRYPTED_FIELDS),
       messages: messagesMap[q.id] || []
     }));
 
     const sentWithMessages = sent.rows.map(q => ({
-      ...q,
+      ...decryptFields(q, QUESTION_ENCRYPTED_FIELDS),
       messages: messagesMap[q.id] || []
     }));
 
-    // Get undismissed questions for alert (questions sent TO this partner)
-    const undismissedAlerts = received.rows.filter(q => !q.is_dismissed);
+    // Get undismissed questions for alert (questions sent TO this partner) - already decrypted
+    const undismissedAlerts = receivedWithMessages.filter(q => !q.is_dismissed);
 
-    // Get alerts for responses to questions this partner SENT (that have responses and asker hasn't dismissed)
-    const responseAlerts = sent.rows.filter(q =>
-      !q.asker_notified && messagesMap[q.id] && messagesMap[q.id].length > 0
+    // Get alerts for responses to questions this partner SENT (that have responses and asker hasn't dismissed) - already decrypted
+    const responseAlerts = sentWithMessages.filter(q =>
+      !q.asker_notified && q.messages && q.messages.length > 0
     );
 
     res.json({
@@ -463,10 +485,11 @@ router.post('/:journalId/questions/:token', async (req, res) => {
     const result = await db.query(
       `INSERT INTO journal_questions (journal_id, from_partner, to_partner, question_text)
        VALUES ($1, $2, $3, $4) RETURNING *`,
-      [journalId, fromPartner, toPartner, question.trim()]
+      [journalId, fromPartner, toPartner, encrypt(question.trim())]
     );
 
-    res.json({ question: result.rows[0] });
+    // Return decrypted question to client
+    res.json({ question: decryptFields(result.rows[0], QUESTION_ENCRYPTED_FIELDS) });
   } catch (error) {
     console.error('Error sending question:', error);
     res.status(500).json({ error: 'Failed to send question' });
@@ -598,14 +621,15 @@ router.post('/:journalId/questions/:questionId/reply/:token', async (req, res) =
       return res.status(404).json({ error: 'Question not found' });
     }
 
-    // Add the message
+    // Add the message (encrypted)
     const messageResult = await db.query(
       `INSERT INTO journal_question_messages (question_id, from_partner, content)
        VALUES ($1, $2, $3) RETURNING *`,
-      [questionId, partner, content.trim()]
+      [questionId, partner, encrypt(content.trim())]
     );
 
-    res.json({ message: messageResult.rows[0] });
+    // Return decrypted message to client
+    res.json({ message: decryptFields(messageResult.rows[0], MESSAGE_ENCRYPTED_FIELDS) });
   } catch (error) {
     console.error('Error replying to question:', error);
     res.status(500).json({ error: 'Failed to send reply' });
