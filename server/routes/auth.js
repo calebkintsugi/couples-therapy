@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { nanoid } from 'nanoid';
 import crypto from 'crypto';
 import db from '../db.js';
 import { sendMagicLink } from '../email.js';
@@ -28,7 +28,7 @@ router.post('/send-link', async (req, res) => {
 
     let userId;
     if (userResult.rows.length === 0) {
-      userId = uuidv4();
+      userId = nanoid();
       await db.query(
         'INSERT INTO users (id, email) VALUES ($1, $2)',
         [userId, normalizedEmail]
@@ -39,7 +39,7 @@ router.post('/send-link', async (req, res) => {
 
     // Generate secure token
     const token = crypto.randomBytes(32).toString('hex');
-    const linkId = uuidv4();
+    const linkId = nanoid();
     const expiresAt = new Date(Date.now() + MAGIC_LINK_EXPIRY_MS);
 
     // Invalidate any existing unused links for this user
