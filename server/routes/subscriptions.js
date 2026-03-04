@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
 import db from '../db.js';
+import { sendSubscriptionConfirmation } from '../email.js';
 
 const router = Router();
 
@@ -199,6 +200,16 @@ router.post('/webhook', async (req, res) => {
             subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
           ]
         );
+
+        // Send confirmation email
+        const customerEmail = session.customer_email || session.customer_details?.email;
+        if (customerEmail && subscription.trial_end) {
+          sendSubscriptionConfirmation({
+            email: customerEmail,
+            coupleCode: coupleCode,
+            trialEndDate: new Date(subscription.trial_end * 1000),
+          });
+        }
       }
       break;
     }

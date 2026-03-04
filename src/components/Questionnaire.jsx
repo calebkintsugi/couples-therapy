@@ -111,6 +111,31 @@ function Questionnaire() {
     }
   };
 
+  // Open Stripe Customer Portal
+  const openCustomerPortal = async () => {
+    if (!coupleCode) return;
+
+    try {
+      const response = await fetch(`/api/subscriptions/portal/${coupleCode}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          returnUrl: window.location.href,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to open account settings');
+      }
+
+      window.location.href = data.url;
+    } catch (err) {
+      console.error('Error opening customer portal:', err);
+    }
+  };
+
   // Apply promo code
   const applyPromoCode = async () => {
     if (!promoCode.trim() || !coupleCode) return;
@@ -875,6 +900,12 @@ function Questionnaire() {
               Continue to My Questionnaire
             </button>
           </section>
+
+          <div className="manage-subscription-link">
+            <button type="button" className="link-btn" onClick={openCustomerPortal}>
+              Manage Subscription
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -986,6 +1017,12 @@ function Questionnaire() {
             {submitting ? 'Submitting...' : 'Submit'}
           </button>
         )}
+      </div>
+
+      <div className="manage-subscription-link">
+        <button type="button" className="link-btn" onClick={openCustomerPortal}>
+          Manage Subscription
+        </button>
       </div>
 
       {/* Crisis Modal */}

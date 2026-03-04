@@ -4543,3 +4543,20 @@ textarea {
 .trial-started-close:hover {
   opacity: 1;
 }
+
+/* Manage Subscription Link */
+.manage-subscription-link {
+  text-align: center;
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-light);
+}
+
+.manage-subscription-link .link-btn {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.manage-subscription-link .link-btn:hover {
+  color: var(--primary);
+}
