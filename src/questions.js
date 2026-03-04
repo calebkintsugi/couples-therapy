@@ -103,6 +103,11 @@ export const questionsByCategory = {
         question: 'What is one thing you wish your partner better understood about you?',
         placeholder: 'What do you wish they could see...',
       },
+      {
+        id: 'additional_context',
+        question: 'Use this space to share more about your relationship — your history, where you stand now, what concerns you. The more context you provide, the better guidance we can offer. Feel free to leave this blank if you\'ve said enough already.',
+        placeholder: 'Share anything else that would help us understand your situation...',
+      },
     ],
   },
 
@@ -164,6 +169,11 @@ export const questionsByCategory = {
         id: 'understand_me',
         question: 'What is one thing you wish your partner better understood about you?',
         placeholder: 'What do you wish they could see...',
+      },
+      {
+        id: 'additional_context',
+        question: 'Use this space to share more about your relationship — your history, where you stand now, what concerns you. The more context you provide, the better guidance we can offer. Feel free to leave this blank if you\'ve said enough already.',
+        placeholder: 'Share anything else that would help us understand your situation...',
       },
     ],
   },
@@ -227,6 +237,11 @@ export const questionsByCategory = {
         question: 'What is one thing you wish your partner better understood about you?',
         placeholder: 'What do you wish they could see...',
       },
+      {
+        id: 'additional_context',
+        question: 'Use this space to share more about your relationship — your history, where you stand now, what concerns you. The more context you provide, the better guidance we can offer. Feel free to leave this blank if you\'ve said enough already.',
+        placeholder: 'Share anything else that would help us understand your situation...',
+      },
     ],
   },
 
@@ -288,6 +303,11 @@ export const questionsByCategory = {
         id: 'understand_me',
         question: 'What is one thing you wish your partner better understood about you?',
         placeholder: 'What do you wish they could see...',
+      },
+      {
+        id: 'additional_context',
+        question: 'Use this space to share more about your relationship — your history, where you stand now, what concerns you. The more context you provide, the better guidance we can offer. Feel free to leave this blank if you\'ve said enough already.',
+        placeholder: 'Share anything else that would help us understand your situation...',
       },
     ],
   },
@@ -351,6 +371,11 @@ export const questionsByCategory = {
         question: 'What is one thing you wish your partner better understood about you?',
         placeholder: 'What do you wish they could see...',
       },
+      {
+        id: 'additional_context',
+        question: 'Use this space to share more about your relationship — your history, where you stand now, what concerns you. The more context you provide, the better guidance we can offer. Feel free to leave this blank if you\'ve said enough already.',
+        placeholder: 'Share anything else that would help us understand your situation...',
+      },
     ],
   },
 
@@ -412,6 +437,11 @@ export const questionsByCategory = {
         id: 'understand_me',
         question: 'What is one thing you wish your partner better understood about you?',
         placeholder: 'What do you wish they could see...',
+      },
+      {
+        id: 'additional_context',
+        question: 'Use this space to share more about your relationship — your history, where you stand now, what concerns you. The more context you provide, the better guidance we can offer. Feel free to leave this blank if you\'ve said enough already.',
+        placeholder: 'Share anything else that would help us understand your situation...',
       },
     ],
   },
@@ -475,6 +505,11 @@ export const questionsByCategory = {
         question: 'What is one thing you wish your partner better understood about you?',
         placeholder: 'What do you wish they could see...',
       },
+      {
+        id: 'additional_context',
+        question: 'Use this space to share more about your relationship — your history, where you stand now, what concerns you. The more context you provide, the better guidance we can offer. Feel free to leave this blank if you\'ve said enough already.',
+        placeholder: 'Share anything else that would help us understand your situation...',
+      },
     ],
   },
 };
@@ -499,6 +534,11 @@ export const shortIntakeQuestions = {
       id: 'ideal_outcome',
       question: 'What would a successful outcome look like for you?',
       placeholder: 'What do you hope to achieve...',
+    },
+    {
+      id: 'additional_context',
+      question: 'Use this space to share more about your relationship — your history, where you stand now, what concerns you. The more context you provide, the better guidance we can offer. Feel free to leave this blank if you\'ve said enough already.',
+      placeholder: 'Share anything else that would help us understand your situation...',
     },
   ],
 };
