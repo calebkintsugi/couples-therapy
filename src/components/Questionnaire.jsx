@@ -628,8 +628,15 @@ function Questionnaire() {
 
         {/* Payment Modal */}
         {showPaymentModal && (
-          <div className="modal-overlay">
-            <div className="modal-content pricing-modal">
+          <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
+            <div className="modal-content pricing-modal" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="modal-close"
+                onClick={() => setShowPaymentModal(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
               <h2>Start Your Free Trial</h2>
               <p className="pricing-modal-subtitle">
                 Try RepairCoach free for 24 hours. Cancel anytime.
@@ -657,7 +664,7 @@ function Questionnaire() {
               <div className="pricing-trial-box">
                 <div className="pricing-trial-header">24-Hour Free Trial</div>
                 <div className="pricing-price">
-                  <span className="pricing-amount">$4.90</span>
+                  <span className="pricing-amount">$5</span>
                   <span className="pricing-period">/month after trial</span>
                 </div>
                 <p className="pricing-trial-note">You won't be charged today</p>
@@ -846,7 +853,7 @@ function Questionnaire() {
             <p className="setup-step-indicator">Step 2 of 2</p>
             <h1>Share With Your Partner</h1>
             <p className="setup-subtitle">
-              Great choices, {name}. Now invite your partner to join.
+              Now invite your partner to join, {name}.
             </p>
           </header>
 

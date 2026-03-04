@@ -100,25 +100,26 @@ function Landing() {
                   }}
                   disabled={loading}
                 >
-                  {loading ? 'Creating Session...' : 'New Users: Get Started'}
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    trackClick('returning_users_enter_code');
-                    setShowReturning(true);
-                    setTimeout(() => {
-                      document.getElementById('returning-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 100);
-                  }}
-                >
-                  Returning Users: Enter Code
+                  {loading ? 'Creating Session...' : 'Get Started'}
                 </button>
               </div>
 
+              <button
+                className="returning-link"
+                onClick={() => {
+                  trackClick('returning_users_enter_code');
+                  setShowReturning(true);
+                  setTimeout(() => {
+                    document.getElementById('returning-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+              >
+                Returning user? Enter your code
+              </button>
+
               <div className="hero-pricing">
                 <span className="hero-pricing-badge">24-hour free trial</span>
-                <span className="hero-pricing-text">then $4.90/month • cancel anytime</span>
+                <span className="hero-pricing-text">then $5/month • cancel anytime</span>
               </div>
 
               <div className="trust-cues">

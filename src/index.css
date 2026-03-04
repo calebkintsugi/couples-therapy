@@ -335,6 +335,21 @@ textarea {
   margin-bottom: var(--space-md);
 }
 
+.returning-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: var(--space-md);
+  text-decoration: underline;
+}
+
+.returning-link:hover {
+  color: var(--text-primary);
+}
+
 .hero-pricing {
   display: flex;
   align-items: center;

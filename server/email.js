@@ -50,7 +50,7 @@ Your couple code: ${coupleCode}
 Save this code to return to your results anytime.
 
 Your trial ends: ${trialEndFormatted}
-After your trial, you'll be charged $4.90/month.
+After your trial, you'll be charged $5/month.
 
 To cancel anytime, visit ${manageUrl} and click "Manage Subscription" on your results page.
 
@@ -75,7 +75,7 @@ Questions? Reply to this email.
           <div style="background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin: 24px 0;">
             <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">Your trial ends:</p>
             <p style="margin: 0; font-size: 16px; color: #333;"><strong>${trialEndFormatted}</strong></p>
-            <p style="margin: 12px 0 0 0; color: #666; font-size: 14px;">After your trial, you'll be charged $4.90/month.</p>
+            <p style="margin: 12px 0 0 0; color: #666; font-size: 14px;">After your trial, you'll be charged $5/month.</p>
           </div>
 
           <div style="margin: 32px 0; padding: 20px; background: #f5f5f5; border-radius: 8px;">
