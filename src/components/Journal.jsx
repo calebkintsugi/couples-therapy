@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { trackPageView, trackClick, trackSubmit } from '../analytics';
+import { detectCrisis } from '../utils/crisisDetection';
+import CrisisModal from './CrisisModal';
 
 function Journal() {
   const { journalId } = useParams();
@@ -40,6 +42,9 @@ function Journal() {
   // Delete state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Crisis detection state
+  const [crisisModal, setCrisisModal] = useState({ show: false, type: null, action: null });
 
   useEffect(() => {
     if (!token) {
@@ -106,9 +111,18 @@ function Journal() {
     }
   };
 
-  const sendChatMessage = async (e) => {
-    e.preventDefault();
+  const sendChatMessage = async (e, bypassCrisisCheck = false) => {
+    e?.preventDefault();
     if (!chatInput.trim() || chatLoading) return;
+
+    // Check for crisis indicators
+    if (!bypassCrisisCheck) {
+      const crisis = detectCrisis(chatInput);
+      if (crisis.detected) {
+        setCrisisModal({ show: true, type: crisis.type, action: 'chat' });
+        return;
+      }
+    }
 
     trackSubmit('journal_chat');
     const userMessage = chatInput.trim();
@@ -231,8 +245,17 @@ function Journal() {
     }
   };
 
-  const submitEntry = async () => {
+  const submitEntry = async (bypassCrisisCheck = false) => {
     if (!newEntry.trim() || submitting) return;
+
+    // Check for crisis indicators
+    if (!bypassCrisisCheck) {
+      const crisis = detectCrisis(newEntry);
+      if (crisis.detected) {
+        setCrisisModal({ show: true, type: crisis.type, action: 'entry' });
+        return;
+      }
+    }
 
     trackSubmit('journal_entry', { wordCount: newEntry.trim().split(/\s+/).filter(w => w).length });
     setSubmitting(true);
@@ -290,6 +313,17 @@ function Journal() {
     } finally {
       setDeleting(false);
       setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleCrisisContinue = () => {
+    const action = crisisModal.action;
+    setCrisisModal({ show: false, type: null, action: null });
+
+    if (action === 'entry') {
+      submitEntry(true);
+    } else if (action === 'chat') {
+      sendChatMessage(null, true);
     }
   };
 
@@ -905,6 +939,15 @@ function Journal() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Crisis Modal */}
+        {crisisModal.show && (
+          <CrisisModal
+            type={crisisModal.type}
+            onClose={() => setCrisisModal({ show: false, type: null, action: null })}
+            onContinue={handleCrisisContinue}
+          />
         )}
       </div>
     </div>

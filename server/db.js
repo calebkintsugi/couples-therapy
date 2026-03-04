@@ -196,6 +196,64 @@ export async function initDb() {
   } catch (e) {
     // Table may already exist
   }
+
+  // Subscriptions table
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id SERIAL PRIMARY KEY,
+        couple_code TEXT NOT NULL,
+        stripe_customer_id TEXT,
+        stripe_subscription_id TEXT,
+        status TEXT DEFAULT 'inactive',
+        current_period_start TIMESTAMP,
+        current_period_end TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_subscriptions_couple_code ON subscriptions(couple_code)`);
+  } catch (e) {
+    // Table may already exist
+  }
+
+  // Promo codes table
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS promo_codes (
+        id SERIAL PRIMARY KEY,
+        code TEXT UNIQUE NOT NULL,
+        free_months INTEGER NOT NULL DEFAULT 1,
+        max_uses INTEGER,
+        uses_count INTEGER DEFAULT 0,
+        expires_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS promo_redemptions (
+        id SERIAL PRIMARY KEY,
+        promo_code_id INTEGER NOT NULL REFERENCES promo_codes(id),
+        couple_code TEXT NOT NULL,
+        redeemed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(promo_code_id, couple_code)
+      )
+    `);
+
+    // Insert default promo codes if they don't exist
+    await pool.query(`
+      INSERT INTO promo_codes (code, free_months, max_uses)
+      VALUES
+        ('MENSGROUP2026', 3, 50),
+        ('FACEBOOK2026', 3, 50),
+        ('THEFORGE2026', 3, 50)
+      ON CONFLICT (code) DO NOTHING
+    `);
+  } catch (e) {
+    // Tables may already exist
+  }
 }
 
 export default pool;

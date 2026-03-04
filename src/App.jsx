@@ -8,6 +8,7 @@ import Tester from './components/Tester';
 import Journal from './components/Journal';
 import JournalStart from './components/JournalStart';
 import Analytics from './components/Analytics';
+import PromoAdmin from './components/PromoAdmin';
 
 function App() {
   const location = useLocation();
@@ -29,6 +30,7 @@ function App() {
         <Route path="/journal/start" element={<JournalStart />} />
         <Route path="/journal/:journalId" element={<Journal />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/promo-admin" element={<PromoAdmin />} />
       </Routes>
     </div>
   );

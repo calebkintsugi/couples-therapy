@@ -14,6 +14,8 @@ import partnerQuestionsRouter from './routes/partnerQuestions.js';
 import journalsRouter from './routes/journals.js';
 import analyticsRouter from './routes/analytics.js';
 import deletionRouter from './routes/deletion.js';
+import subscriptionsRouter from './routes/subscriptions.js';
+import promoRouter from './routes/promo.js';
 import { generateAdvice } from './openai.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -49,6 +51,10 @@ const strictLimiter = rateLimit({
 
 // Middleware
 app.use(cors());
+
+// Stripe webhook needs raw body - must be before express.json()
+app.use('/api/subscriptions/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 
 // Apply general rate limit to all API routes
@@ -69,6 +75,8 @@ app.use('/api/partner-questions', partnerQuestionsRouter);
 app.use('/api/journals', journalsRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/delete', deletionRouter);
+app.use('/api/subscriptions', subscriptionsRouter);
+app.use('/api/promo', promoRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

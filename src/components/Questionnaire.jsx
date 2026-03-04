@@ -3,8 +3,10 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import ScaleQuestion from './ScaleQuestion';
 import TextQuestion from './TextQuestion';
 import Disclaimer from './Disclaimer';
+import CrisisModal from './CrisisModal';
 import { categories, questionsByCategory, shortIntakeQuestions, getCategoryById } from '../questions';
 import { trackPageView, trackClick, trackSubmit } from '../analytics';
+import { detectCrisisInMultiple } from '../utils/crisisDetection';
 
 function Questionnaire() {
   const { sessionId } = useParams();
@@ -38,6 +40,9 @@ function Questionnaire() {
   const [setupRole, setSetupRole] = useState(null);
   const [pin, setPin] = useState('');
   const [aiModel, setAiModel] = useState('gemini');
+
+  // Crisis detection state
+  const [crisisModal, setCrisisModal] = useState({ show: false, type: null });
 
   // Get questions based on category and intake type
   const getQuestions = () => {
@@ -244,7 +249,20 @@ function Questionnaire() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (bypassCrisisCheck = false) => {
+    // Check for crisis indicators in text answers
+    if (!bypassCrisisCheck) {
+      const textAnswers = Object.entries(answers)
+        .filter(([key]) => textQuestions.some(q => q.id === key))
+        .map(([, value]) => String(value));
+
+      const crisis = detectCrisisInMultiple(textAnswers);
+      if (crisis.detected) {
+        setCrisisModal({ show: true, type: crisis.type });
+        return;
+      }
+    }
+
     trackSubmit('questionnaire', { category, intakeType, partner });
     setSubmitting(true);
     setError('');
@@ -775,13 +793,25 @@ function Questionnaire() {
         ) : (
           <button
             className="btn btn-primary"
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={!canProceed() || submitting}
           >
             {submitting ? 'Submitting...' : 'Submit'}
           </button>
         )}
       </div>
+
+      {/* Crisis Modal */}
+      {crisisModal.show && (
+        <CrisisModal
+          type={crisisModal.type}
+          onClose={() => setCrisisModal({ show: false, type: null })}
+          onContinue={() => {
+            setCrisisModal({ show: false, type: null });
+            handleSubmit(true);
+          }}
+        />
+      )}
     </div>
   );
 }
