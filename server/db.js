@@ -208,11 +208,14 @@ export async function initDb() {
         status TEXT DEFAULT 'inactive',
         current_period_start TIMESTAMP,
         current_period_end TIMESTAMP,
+        trial_end TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_subscriptions_couple_code ON subscriptions(couple_code)`);
+    // Add trial_end column if it doesn't exist (for existing databases)
+    await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS trial_end TIMESTAMP`);
   } catch (e) {
     // Table may already exist
   }

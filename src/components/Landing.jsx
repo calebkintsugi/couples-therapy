@@ -11,11 +11,105 @@ function Landing() {
   const [coupleCode, setCoupleCode] = useState('');
   const [coupleData, setCoupleData] = useState(null);
   const [lookingUp, setLookingUp] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [pendingSession, setPendingSession] = useState(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     trackPageView('landing');
   }, []);
+
+  const createSessionAndShowPayment = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // Create session first to get couple code
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create session');
+      }
+
+      const { sessionId, partnerAToken, coupleCode } = await response.json();
+      setPendingSession({ sessionId, partnerAToken, coupleCode });
+      setShowPricingModal(true);
+    } catch (err) {
+      setError(err.message || 'Failed to create session. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startCheckout = async () => {
+    if (!pendingSession) return;
+
+    try {
+      const response = await fetch('/api/subscriptions/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coupleCode: pendingSession.coupleCode,
+          returnUrl: `${window.location.origin}/session/${pendingSession.sessionId}?p=${pendingSession.partnerAToken}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to start checkout');
+      }
+
+      // Redirect to Stripe
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const applyPromoCode = async () => {
+    if (!promoCode.trim() || !pendingSession) return;
+    setApplyingPromo(true);
+    setPromoError('');
+    setPromoSuccess('');
+
+    try {
+      const response = await fetch('/api/promo/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          coupleCode: pendingSession.coupleCode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid promo code');
+      }
+
+      setPromoSuccess(data.message);
+      // Promo applied - redirect to session after short delay
+      setTimeout(() => {
+        navigate(`/session/${pendingSession.sessionId}?p=${pendingSession.partnerAToken}`);
+      }, 1500);
+    } catch (err) {
+      setPromoError(err.message);
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
 
   const createSession = async (existingCoupleCode = null) => {
     setLoading(true);
@@ -96,7 +190,7 @@ function Landing() {
                   className="btn btn-primary"
                   onClick={() => {
                     trackClick('new_users_get_started');
-                    createSession();
+                    createSessionAndShowPayment();
                   }}
                   disabled={loading}
                 >
@@ -322,6 +416,87 @@ function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Pricing Modal */}
+      {showPricingModal && (
+        <div className="modal-overlay" onClick={() => setShowPricingModal(false)}>
+          <div className="modal-content pricing-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="modal-close"
+              onClick={() => setShowPricingModal(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+            <h2>Start Your Free Trial</h2>
+            <p className="pricing-modal-subtitle">
+              Try RepairCoach free for 24 hours. Cancel anytime.
+            </p>
+
+            <div className="pricing-features">
+              <div className="pricing-feature">
+                <span className="pricing-feature-icon">✓</span>
+                <span>Personalized guidance for both partners</span>
+              </div>
+              <div className="pricing-feature">
+                <span className="pricing-feature-icon">✓</span>
+                <span>Private AI chat for follow-up questions</span>
+              </div>
+              <div className="pricing-feature">
+                <span className="pricing-feature-icon">✓</span>
+                <span>Couple insights and exercises</span>
+              </div>
+              <div className="pricing-feature">
+                <span className="pricing-feature-icon">✓</span>
+                <span>Cancel anytime — no questions asked</span>
+              </div>
+            </div>
+
+            <div className="pricing-trial-box">
+              <div className="pricing-trial-header">24-Hour Free Trial</div>
+              <div className="pricing-price">
+                <span className="pricing-amount">$4.95</span>
+                <span className="pricing-period">/month after trial</span>
+              </div>
+              <p className="pricing-trial-note">You won't be charged today</p>
+            </div>
+
+            <button
+              className="btn btn-primary btn-block"
+              onClick={startCheckout}
+            >
+              Start Free Trial
+            </button>
+
+            <div className="promo-section">
+              <p className="promo-label">Have a promo code?</p>
+              <div className="promo-input-group">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  placeholder="Enter code"
+                  className="promo-input"
+                />
+                <button
+                  className="btn btn-secondary"
+                  onClick={applyPromoCode}
+                  disabled={applyingPromo || !promoCode.trim()}
+                >
+                  {applyingPromo ? '...' : 'Apply'}
+                </button>
+              </div>
+              {promoError && <p className="promo-error">{promoError}</p>}
+              {promoSuccess && <p className="promo-success">{promoSuccess}</p>}
+            </div>
+
+            <p className="pricing-disclaimer">
+              Secure payment via Stripe. Cancel anytime in your account settings.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

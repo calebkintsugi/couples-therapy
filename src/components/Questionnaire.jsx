@@ -14,6 +14,7 @@ function Questionnaire() {
   const navigate = useNavigate();
 
   const token = searchParams.get('p');
+  const paymentSuccess = searchParams.get('success') === 'true';
   const [partner, setPartner] = useState(null);
   const [partnerBToken, setPartnerBToken] = useState(null);
   const [coupleCode, setCoupleCode] = useState(null);
@@ -23,6 +24,7 @@ function Questionnaire() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [showTrialStarted, setShowTrialStarted] = useState(paymentSuccess);
 
   // Flow state for Partner A: 'setup' -> 'share' -> 'questions'
   // Flow state for Partner B: 'name' -> 'category-display' -> 'role-display' (if infidelity) -> 'questions'
@@ -63,6 +65,17 @@ function Questionnaire() {
   const isScale = currentQuestion < scaleQuestions.length;
 
   const partnerBLink = partnerBToken ? `${window.location.origin}/session/${sessionId}?p=${partnerBToken}` : '';
+
+  // Auto-dismiss trial started message and clean up URL
+  useEffect(() => {
+    if (paymentSuccess) {
+      // Clean up URL params
+      window.history.replaceState({}, '', `${window.location.pathname}?p=${token}`);
+      // Auto-dismiss after 5 seconds
+      const timer = setTimeout(() => setShowTrialStarted(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [paymentSuccess, token]);
 
   useEffect(() => {
     if (!token) {
@@ -354,6 +367,21 @@ function Questionnaire() {
 
     return (
       <div className="setup-page">
+        {/* Trial Started Banner */}
+        {showTrialStarted && (
+          <div className="trial-started-banner">
+            <span className="trial-started-icon">✓</span>
+            <span>Your 24-hour free trial has started!</span>
+            <button
+              className="trial-started-close"
+              onClick={() => setShowTrialStarted(false)}
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         <div className="setup-container">
           {/* Header */}
           <header className="setup-header">

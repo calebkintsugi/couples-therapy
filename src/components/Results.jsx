@@ -166,11 +166,9 @@ function Results() {
 
   // Subscription/payment state
   const [subscriptionActive, setSubscriptionActive] = useState(false);
+  const [isTrialing, setIsTrialing] = useState(false);
+  const [trialEnd, setTrialEnd] = useState(null);
   const [checkingSubscription, setCheckingSubscription] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [applyingPromo, setApplyingPromo] = useState(false);
-  const [promoError, setPromoError] = useState('');
-  const [promoSuccess, setPromoSuccess] = useState('');
 
   // Memoize parsed advice sections
   const adviceSections = useMemo(() => parseAdviceSections(advice), [advice]);
@@ -281,6 +279,10 @@ function Results() {
       const response = await fetch(`/api/subscriptions/status/${code}`);
       const data = await response.json();
       setSubscriptionActive(data.active);
+      setIsTrialing(data.isTrialing || false);
+      if (data.trialEnd) {
+        setTrialEnd(new Date(data.trialEnd));
+      }
     } catch (err) {
       console.error('Error checking subscription:', err);
       setSubscriptionActive(false);
@@ -289,46 +291,13 @@ function Results() {
     }
   };
 
-  // Apply promo code
-  const applyPromoCode = async () => {
-    if (!promoCode.trim() || !coupleCode) return;
-    setApplyingPromo(true);
-    setPromoError('');
-    setPromoSuccess('');
-
+  // Open Stripe Customer Portal
+  const openCustomerPortal = async () => {
     try {
-      const response = await fetch('/api/promo/validate', {
+      const response = await fetch(`/api/subscriptions/portal/${coupleCode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code: promoCode.trim(),
-          coupleCode: coupleCode,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Invalid promo code');
-      }
-
-      setPromoSuccess(data.message);
-      setSubscriptionActive(true);
-    } catch (err) {
-      setPromoError(err.message);
-    } finally {
-      setApplyingPromo(false);
-    }
-  };
-
-  // Start Stripe checkout
-  const startCheckout = async () => {
-    try {
-      const response = await fetch('/api/subscriptions/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          coupleCode: coupleCode,
           returnUrl: window.location.href,
         }),
       });
@@ -336,14 +305,27 @@ function Results() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to start checkout');
+        throw new Error(data.error || 'Failed to open account settings');
       }
 
-      // Redirect to Stripe
       window.location.href = data.url;
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  // Calculate time remaining in trial
+  const getTrialTimeRemaining = () => {
+    if (!trialEnd) return null;
+    const now = new Date();
+    const diff = trialEnd - now;
+    if (diff <= 0) return null;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
   };
 
   // Check for payment success in URL
@@ -749,6 +731,25 @@ function Results() {
   return (
     <div className="guidance-page">
       <div className="guidance-container">
+        {/* Trial Banner */}
+        {isTrialing && trialEnd && (
+          <div className="trial-banner">
+            <div className="trial-banner-content">
+              <span className="trial-banner-icon">⏰</span>
+              <span className="trial-banner-text">
+                Free trial ends in <strong>{getTrialTimeRemaining()}</strong>
+              </span>
+            </div>
+            <button
+              type="button"
+              className="trial-banner-link"
+              onClick={openCustomerPortal}
+            >
+              Manage Subscription
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <header className="guidance-header">
           <h1>Relationship Guidance for You{yourName ? `, ${yourName}` : ''}</h1>
@@ -808,93 +809,25 @@ function Results() {
                   <p>Regenerating with {aiModel === 'openai' ? 'ChatGPT' : 'Gemini'}...</p>
                 </div>
               ) : activeTab === 'individual' ? (
-                <>
-                  {/* Show first section as preview */}
-                  {adviceSections.slice(0, 1).map((section, index) => (
-                    <AdviceSection
-                      key={index}
-                      icon={section.icon}
-                      title={section.title}
-                      content={section.content}
-                      defaultExpanded={true}
-                    />
-                  ))}
-
-                  {/* Payment gate if not subscribed */}
-                  {!subscriptionActive && adviceSections.length > 1 && (
-                    <div className="payment-gate">
-                      <h2>Unlock Your Full Guidance</h2>
-                      <p>You've seen a preview. Subscribe to access all sections, couple guidance, and AI chat.</p>
-                      <div className="payment-gate-price">
-                        $4.95<span>/month</span>
-                      </div>
-                      <ul className="payment-gate-features">
-                        <li>All personalized guidance sections</li>
-                        <li>Couple guidance for both partners</li>
-                        <li>Private AI chat for follow-up questions</li>
-                        <li>Journal access for ongoing reflection</li>
-                        <li>Unlimited sessions on any topic</li>
-                      </ul>
-
-                      <div className="promo-input-group">
-                        <input
-                          type="text"
-                          value={promoCode}
-                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                          placeholder="Promo code"
-                        />
-                        <button
-                          className="btn btn-secondary"
-                          onClick={applyPromoCode}
-                          disabled={applyingPromo || !promoCode.trim()}
-                        >
-                          {applyingPromo ? '...' : 'Apply'}
-                        </button>
-                      </div>
-                      {promoError && <p className="promo-error">{promoError}</p>}
-                      {promoSuccess && <p className="promo-success">{promoSuccess}</p>}
-
-                      <button
-                        className="btn btn-primary"
-                        onClick={startCheckout}
-                        style={{ marginTop: 'var(--space-md)' }}
-                      >
-                        Subscribe Now
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Show remaining sections if subscribed */}
-                  {subscriptionActive && adviceSections.slice(1).map((section, index) => (
-                    <AdviceSection
-                      key={index + 1}
-                      icon={section.icon}
-                      title={section.title}
-                      content={section.content}
-                      defaultExpanded={false}
-                    />
-                  ))}
-                </>
+                adviceSections.map((section, index) => (
+                  <AdviceSection
+                    key={index}
+                    icon={section.icon}
+                    title={section.title}
+                    content={section.content}
+                    defaultExpanded={index === 0}
+                  />
+                ))
               ) : coupleSections.length > 0 ? (
-                subscriptionActive ? (
-                  coupleSections.map((section, index) => (
-                    <AdviceSection
-                      key={index}
-                      icon={section.icon}
-                      title={section.title}
-                      content={section.content}
-                      defaultExpanded={index === 0}
-                    />
-                  ))
-                ) : (
-                  <div className="payment-gate">
-                    <h2>Couple Guidance Locked</h2>
-                    <p>Subscribe to view guidance for both of you together.</p>
-                    <button className="btn btn-primary" onClick={startCheckout}>
-                      Subscribe for $4.95/month
-                    </button>
-                  </div>
-                )
+                coupleSections.map((section, index) => (
+                  <AdviceSection
+                    key={index}
+                    icon={section.icon}
+                    title={section.title}
+                    content={section.content}
+                    defaultExpanded={index === 0}
+                  />
+                ))
               ) : (
                 <div className="no-couple-advice">
                   <p>Couple guidance is being generated...</p>
@@ -902,8 +835,7 @@ function Results() {
               )}
             </div>
 
-            {/* Private chat toggle - only for subscribers */}
-            {subscriptionActive && (
+            {/* Private chat toggle */}
             <div className="chat-section">
               <button
                 type="button"
@@ -955,7 +887,6 @@ function Results() {
                 </div>
               )}
             </div>
-            )}
 
             {/* Model toggle at bottom of guidance column */}
             <div className="model-toggle-section">
@@ -1383,6 +1314,7 @@ function Results() {
           }}
         />
       )}
+
     </div>
   );
 }

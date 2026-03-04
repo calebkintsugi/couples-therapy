@@ -4188,3 +4188,334 @@ textarea {
   font-size: 14px;
   margin-top: var(--space-sm);
 }
+
+/* Advice Preview (for non-subscribers) */
+.advice-preview {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-align: center;
+  position: relative;
+}
+
+.advice-preview-content {
+  position: relative;
+  text-align: left;
+  margin-bottom: var(--space-lg);
+}
+
+.advice-preview-content h3 {
+  font-size: 18px;
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.advice-preview-content p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+.advice-preview-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(transparent, var(--surface));
+  pointer-events: none;
+}
+
+/* Payment Modal */
+.payment-modal {
+  max-width: 420px;
+  position: relative;
+}
+
+.payment-modal h2 {
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.payment-modal-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+.modal-close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: var(--space-xs);
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.payment-features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+  text-align: left;
+}
+
+.payment-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+}
+
+.payment-feature-icon {
+  font-size: 20px;
+}
+
+.payment-feature span:last-child {
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.payment-price {
+  margin-bottom: var(--space-lg);
+}
+
+.payment-amount {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.payment-period {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.promo-section {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-light);
+}
+
+.promo-label {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.promo-input {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.payment-disclaimer {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: var(--space-lg);
+  margin-bottom: 0;
+}
+
+/* Pricing Modal (Landing Page) */
+.pricing-modal {
+  max-width: 440px;
+  position: relative;
+}
+
+.pricing-modal h2 {
+  font-size: 26px;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.pricing-modal-subtitle {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-bottom: var(--space-xl);
+}
+
+.pricing-features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+  text-align: left;
+}
+
+.pricing-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.pricing-feature-icon {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.pricing-feature span:last-child {
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.pricing-trial-box {
+  background: var(--primary-light);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  text-align: center;
+}
+
+.pricing-trial-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-sm);
+}
+
+.pricing-price {
+  margin-bottom: var(--space-xs);
+}
+
+.pricing-amount {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pricing-period {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.pricing-trial-note {
+  font-size: 14px;
+  color: var(--primary);
+  font-weight: 500;
+  margin: 0;
+}
+
+.pricing-disclaimer {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: var(--space-lg);
+  margin-bottom: 0;
+}
+
+/* Trial Banner */
+.trial-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  background: linear-gradient(90deg, var(--primary-light), #f0e6eb);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.trial-banner-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.trial-banner-icon {
+  font-size: 18px;
+}
+
+.trial-banner-text {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.trial-banner-text strong {
+  color: var(--primary);
+}
+
+.trial-banner-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.trial-banner-link:hover {
+  color: var(--primary-dark);
+}
+
+@media (max-width: 600px) {
+  .trial-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-sm);
+  }
+}
+
+/* Trial Started Banner (Success Toast) */
+.trial-started-banner {
+  position: fixed;
+  top: var(--space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  background: #16a34a;
+  color: white;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.trial-started-icon {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.trial-started-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: var(--space-sm);
+  opacity: 0.8;
+}
+
+.trial-started-close:hover {
+  opacity: 1;
+}

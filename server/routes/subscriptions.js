@@ -17,11 +17,11 @@ router.get('/status/:coupleCode', async (req, res) => {
   const { coupleCode } = req.params;
 
   try {
-    // Check for active subscription
+    // Check for active subscription (including trialing)
     const subResult = await db.query(
       `SELECT * FROM subscriptions
        WHERE couple_code = $1
-       AND status = 'active'
+       AND status IN ('active', 'trialing')
        AND current_period_end > NOW()
        ORDER BY current_period_end DESC
        LIMIT 1`,
@@ -33,7 +33,9 @@ router.get('/status/:coupleCode', async (req, res) => {
       return res.json({
         active: true,
         expiresAt: sub.current_period_end,
-        status: sub.status
+        status: sub.status,
+        trialEnd: sub.trial_end,
+        isTrialing: sub.status === 'trialing'
       });
     }
 
@@ -106,7 +108,7 @@ router.post('/create-checkout', async (req, res) => {
       return res.status(400).json({ error: 'Already have an active subscription' });
     }
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session with 24-hour free trial
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
@@ -126,11 +128,14 @@ router.post('/create-checkout', async (req, res) => {
           quantity: 1,
         },
       ],
+      subscription_data: {
+        trial_period_days: 1, // 24-hour free trial
+      },
       metadata: {
         coupleCode: coupleCode.toUpperCase(),
       },
-      success_url: `${returnUrl}?success=true&couple_code=${coupleCode.toUpperCase()}`,
-      cancel_url: `${returnUrl}?canceled=true`,
+      success_url: `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}success=true`,
+      cancel_url: `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}canceled=true`,
     });
 
     res.json({ url: session.url, sessionId: session.id });
@@ -174,14 +179,15 @@ router.post('/webhook', async (req, res) => {
         const subscription = await stripe.subscriptions.retrieve(session.subscription);
 
         await db.query(
-          `INSERT INTO subscriptions (couple_code, stripe_customer_id, stripe_subscription_id, status, current_period_start, current_period_end)
-           VALUES ($1, $2, $3, $4, to_timestamp($5), to_timestamp($6))
+          `INSERT INTO subscriptions (couple_code, stripe_customer_id, stripe_subscription_id, status, current_period_start, current_period_end, trial_end)
+           VALUES ($1, $2, $3, $4, to_timestamp($5), to_timestamp($6), $7)
            ON CONFLICT (couple_code) DO UPDATE SET
              stripe_customer_id = $2,
              stripe_subscription_id = $3,
              status = $4,
              current_period_start = to_timestamp($5),
              current_period_end = to_timestamp($6),
+             trial_end = $7,
              updated_at = NOW()`,
           [
             coupleCode,
@@ -190,6 +196,7 @@ router.post('/webhook', async (req, res) => {
             subscription.status,
             subscription.current_period_start,
             subscription.current_period_end,
+            subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
           ]
         );
       }
@@ -265,8 +272,8 @@ router.post('/cancel/:coupleCode', async (req, res) => {
 
   try {
     const subResult = await db.query(
-      'SELECT stripe_subscription_id FROM subscriptions WHERE couple_code = $1 AND status = $2',
-      [coupleCode.toUpperCase(), 'active']
+      'SELECT stripe_subscription_id FROM subscriptions WHERE couple_code = $1 AND status IN ($2, $3)',
+      [coupleCode.toUpperCase(), 'active', 'trialing']
     );
 
     if (subResult.rows.length === 0) {
@@ -282,6 +289,37 @@ router.post('/cancel/:coupleCode', async (req, res) => {
   } catch (error) {
     console.error('Error canceling subscription:', error);
     res.status(500).json({ error: 'Failed to cancel subscription' });
+  }
+});
+
+// Create Stripe Customer Portal session
+router.post('/portal/:coupleCode', async (req, res) => {
+  const { coupleCode } = req.params;
+  const { returnUrl } = req.body;
+
+  if (!stripe) {
+    return res.status(500).json({ error: 'Payment system not configured' });
+  }
+
+  try {
+    const subResult = await db.query(
+      'SELECT stripe_customer_id FROM subscriptions WHERE couple_code = $1 AND status IN ($2, $3)',
+      [coupleCode.toUpperCase(), 'active', 'trialing']
+    );
+
+    if (subResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No active subscription found' });
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: subResult.rows[0].stripe_customer_id,
+      return_url: returnUrl || `${req.headers.origin || 'https://repaircoach.ai'}`,
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Error creating portal session:', error);
+    res.status(500).json({ error: 'Failed to create portal session' });
   }
 });
 
