@@ -344,14 +344,13 @@ textarea {
 }
 
 .hero-pricing-badge {
-  background: var(--primary);
-  color: white;
-  font-size: 12px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 13px;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  border: 2px solid var(--primary);
 }
 
 .hero-pricing-text {
@@ -2067,7 +2066,8 @@ textarea {
 .setup-badge {
   position: absolute;
   top: -10px;
-  right: var(--space-md);
+  left: 50%;
+  transform: translateX(-50%);
   background: var(--primary);
   color: white;
   font-size: 11px;
@@ -2127,7 +2127,7 @@ textarea {
 
 .setup-pin-input {
   width: 100%;
-  max-width: 180px;
+  max-width: 220px;
   padding: var(--space-md);
   font-size: 20px;
   letter-spacing: 0.15em;
