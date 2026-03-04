@@ -591,6 +591,79 @@ function Questionnaire() {
             <p className="setup-cta-helper">You can change these choices later.</p>
           </section>
         </div>
+
+        {/* Payment Modal */}
+        {showPaymentModal && (
+          <div className="modal-overlay">
+            <div className="modal-content pricing-modal">
+              <h2>Start Your Free Trial</h2>
+              <p className="pricing-modal-subtitle">
+                Try RepairCoach free for 24 hours. Cancel anytime.
+              </p>
+
+              <div className="pricing-features">
+                <div className="pricing-feature">
+                  <span className="pricing-feature-icon">✓</span>
+                  <span>Personalized guidance for both partners</span>
+                </div>
+                <div className="pricing-feature">
+                  <span className="pricing-feature-icon">✓</span>
+                  <span>Private AI chat for follow-up questions</span>
+                </div>
+                <div className="pricing-feature">
+                  <span className="pricing-feature-icon">✓</span>
+                  <span>Couple insights and exercises</span>
+                </div>
+                <div className="pricing-feature">
+                  <span className="pricing-feature-icon">✓</span>
+                  <span>Cancel anytime — no questions asked</span>
+                </div>
+              </div>
+
+              <div className="pricing-trial-box">
+                <div className="pricing-trial-header">24-Hour Free Trial</div>
+                <div className="pricing-price">
+                  <span className="pricing-amount">$4.90</span>
+                  <span className="pricing-period">/month after trial</span>
+                </div>
+                <p className="pricing-trial-note">You won't be charged today</p>
+              </div>
+
+              <button
+                className="btn btn-primary btn-block"
+                onClick={startCheckout}
+              >
+                Start Free Trial
+              </button>
+
+              <div className="promo-section">
+                <p className="promo-label">Have a promo code?</p>
+                <div className="promo-input-group">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    placeholder="Enter code"
+                    className="promo-input"
+                  />
+                  <button
+                    className="btn btn-secondary"
+                    onClick={applyPromoCode}
+                    disabled={applyingPromo || !promoCode.trim()}
+                  >
+                    {applyingPromo ? '...' : 'Apply'}
+                  </button>
+                </div>
+                {promoError && <p className="promo-error">{promoError}</p>}
+                {promoSuccess && <p className="promo-success">{promoSuccess}</p>}
+              </div>
+
+              <p className="pricing-disclaimer">
+                Secure payment via Stripe. Cancel anytime in your account settings.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -925,79 +998,6 @@ function Questionnaire() {
             handleSubmit(true);
           }}
         />
-      )}
-
-      {/* Payment Modal */}
-      {showPaymentModal && (
-        <div className="modal-overlay">
-          <div className="modal-content pricing-modal">
-            <h2>Start Your Free Trial</h2>
-            <p className="pricing-modal-subtitle">
-              Try RepairCoach free for 24 hours. Cancel anytime.
-            </p>
-
-            <div className="pricing-features">
-              <div className="pricing-feature">
-                <span className="pricing-feature-icon">✓</span>
-                <span>Personalized guidance for both partners</span>
-              </div>
-              <div className="pricing-feature">
-                <span className="pricing-feature-icon">✓</span>
-                <span>Private AI chat for follow-up questions</span>
-              </div>
-              <div className="pricing-feature">
-                <span className="pricing-feature-icon">✓</span>
-                <span>Couple insights and exercises</span>
-              </div>
-              <div className="pricing-feature">
-                <span className="pricing-feature-icon">✓</span>
-                <span>Cancel anytime — no questions asked</span>
-              </div>
-            </div>
-
-            <div className="pricing-trial-box">
-              <div className="pricing-trial-header">24-Hour Free Trial</div>
-              <div className="pricing-price">
-                <span className="pricing-amount">$4.90</span>
-                <span className="pricing-period">/month after trial</span>
-              </div>
-              <p className="pricing-trial-note">You won't be charged today</p>
-            </div>
-
-            <button
-              className="btn btn-primary btn-block"
-              onClick={startCheckout}
-            >
-              Start Free Trial
-            </button>
-
-            <div className="promo-section">
-              <p className="promo-label">Have a promo code?</p>
-              <div className="promo-input-group">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  placeholder="Enter code"
-                  className="promo-input"
-                />
-                <button
-                  className="btn btn-secondary"
-                  onClick={applyPromoCode}
-                  disabled={applyingPromo || !promoCode.trim()}
-                >
-                  {applyingPromo ? '...' : 'Apply'}
-                </button>
-              </div>
-              {promoError && <p className="promo-error">{promoError}</p>}
-              {promoSuccess && <p className="promo-success">{promoSuccess}</p>}
-            </div>
-
-            <p className="pricing-disclaimer">
-              Secure payment via Stripe. Cancel anytime in your account settings.
-            </p>
-          </div>
-        </div>
       )}
     </div>
   );
