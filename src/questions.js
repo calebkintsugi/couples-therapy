@@ -1,11 +1,5 @@
 export const categories = [
   {
-    id: 'compatibility',
-    name: 'New Relationship',
-    description: 'Exploring compatibility and building a strong foundation',
-    icon: '💫',
-  },
-  {
     id: 'infidelity',
     name: 'Betrayal',
     description: 'Healing after betrayal and rebuilding trust',
@@ -40,6 +34,12 @@ export const categories = [
     name: 'Overall Relationship Management',
     description: 'Proactively strengthening a healthy relationship',
     icon: '🌱',
+  },
+  {
+    id: 'compatibility',
+    name: 'New Relationship',
+    description: 'Exploring compatibility and building a strong foundation',
+    icon: '💫',
   },
 ];
 

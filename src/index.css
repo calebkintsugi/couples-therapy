@@ -648,6 +648,11 @@ textarea {
   gap: var(--space-md);
 }
 
+/* Center the last category card when it's alone on a row (7 items = 3+3+1) */
+.categories-grid .category-card:last-child:nth-child(3n + 1) {
+  grid-column: 2;
+}
+
 .category-card {
   background: var(--surface);
   border: 2px solid var(--border);
@@ -2316,6 +2321,13 @@ textarea {
 
   .categories-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Center the last category card when it's alone on a row (7 items in 2 cols) */
+  .categories-grid .category-card:last-child:nth-child(2n + 1) {
+    grid-column: 1 / -1;
+    max-width: 50%;
+    justify-self: center;
   }
 
   /* Guidance page responsive */
