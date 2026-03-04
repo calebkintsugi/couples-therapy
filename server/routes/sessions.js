@@ -17,6 +17,7 @@ function generateCoupleCode() {
 // Create a new session
 router.post('/', async (req, res) => {
   const { coupleCode } = req.body || {};
+  const userId = req.headers['x-user-id'];
   const sessionId = nanoid(10);
   const partnerAToken = nanoid(8);
   const partnerBToken = nanoid(8);
@@ -50,6 +51,21 @@ router.post('/', async (req, res) => {
       'INSERT INTO sessions (id, partner_a_token, partner_b_token, couple_code) VALUES ($1, $2, $3, $4)',
       [sessionId, partnerAToken, partnerBToken, finalCoupleCode]
     );
+
+    // If user is logged in, link them to this couple
+    if (userId) {
+      try {
+        await db.query(
+          `INSERT INTO user_couples (user_id, couple_code, partner)
+           VALUES ($1, $2, 'A')
+           ON CONFLICT (user_id, couple_code) DO NOTHING`,
+          [userId, finalCoupleCode]
+        );
+      } catch (e) {
+        // Non-critical, continue even if linking fails
+        console.error('Error linking user to couple:', e);
+      }
+    }
 
     res.json({
       sessionId,

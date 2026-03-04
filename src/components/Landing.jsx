@@ -11,11 +11,69 @@ function Landing() {
   const [coupleCode, setCoupleCode] = useState('');
   const [coupleData, setCoupleData] = useState(null);
   const [lookingUp, setLookingUp] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [email, setEmail] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     trackPageView('landing');
   }, []);
+
+  const createSessionWithEmail = async (existingCoupleCode = null) => {
+    if (!email.trim() || !email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // First, create or get user account
+      const authResponse = await fetch('/api/auth/create-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      if (!authResponse.ok) {
+        const data = await authResponse.json();
+        throw new Error(data.error || 'Failed to create account');
+      }
+
+      const { userId } = await authResponse.json();
+
+      // Store user info locally
+      localStorage.setItem('auth_user', JSON.stringify({
+        userId,
+        email: email.trim().toLowerCase(),
+        couples: [],
+      }));
+
+      // Now create the session
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
+        },
+        body: JSON.stringify({ coupleCode: existingCoupleCode }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create session');
+      }
+
+      const { sessionId, partnerAToken } = await response.json();
+      navigate(`/session/${sessionId}?p=${partnerAToken}`);
+    } catch (err) {
+      setError(err.message || 'Failed to create session. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const createSession = async (existingCoupleCode = null) => {
     setLoading(true);
@@ -92,18 +150,49 @@ function Landing() {
 
               {error && <div className="error-message">{error}</div>}
 
-              <div className="hero-ctas">
-                <button
-                  className="btn btn-primary"
-                  onClick={() => {
-                    trackClick('new_users_get_started');
-                    createSession();
-                  }}
-                  disabled={loading}
-                >
-                  {loading ? 'Creating Session...' : 'Get Started'}
-                </button>
-              </div>
+              {!showEmailForm ? (
+                <div className="hero-ctas">
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      trackClick('new_users_get_started');
+                      setShowEmailForm(true);
+                    }}
+                    disabled={loading}
+                  >
+                    Get Started
+                  </button>
+                </div>
+              ) : (
+                <div className="hero-email-form">
+                  <p className="hero-email-label">Enter your email to create an account</p>
+                  <div className="hero-email-input-group">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="hero-email-input"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          createSessionWithEmail();
+                        }
+                      }}
+                    />
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => createSessionWithEmail()}
+                      disabled={loading || !email.trim()}
+                    >
+                      {loading ? 'Creating...' : 'Continue'}
+                    </button>
+                  </div>
+                  <p className="hero-email-note">
+                    You can sign in anytime with this email. No password needed.
+                  </p>
+                </div>
+              )}
 
               <div className="returning-options">
                 <button
@@ -128,26 +217,6 @@ function Landing() {
                 >
                   Sign in with email
                 </button>
-              </div>
-
-              <div className="hero-pricing">
-                <span className="hero-pricing-badge">24-hour free trial</span>
-                <span className="hero-pricing-text">then $5/month • cancel anytime</span>
-              </div>
-
-              <div className="trust-cues">
-                <div className="trust-cue">
-                  <span className="trust-cue-icon">⏱️</span>
-                  <span>2–10 minutes</span>
-                </div>
-                <div className="trust-cue">
-                  <span className="trust-cue-icon">🔒</span>
-                  <span>Private by default</span>
-                </div>
-                <div className="trust-cue">
-                  <span className="trust-cue-icon">💡</span>
-                  <span>Guidance, not therapy</span>
-                </div>
               </div>
             </div>
 

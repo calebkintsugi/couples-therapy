@@ -9,6 +9,41 @@ const router = Router();
 // How long magic links are valid (15 minutes)
 const MAGIC_LINK_EXPIRY_MS = 15 * 60 * 1000;
 
+// Create account without requiring email verification (for frictionless signup)
+router.post('/create-account', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ error: 'Valid email is required' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  try {
+    // Find or create user
+    let userResult = await db.query(
+      'SELECT id FROM users WHERE email = $1',
+      [normalizedEmail]
+    );
+
+    let userId;
+    if (userResult.rows.length === 0) {
+      userId = nanoid();
+      await db.query(
+        'INSERT INTO users (id, email) VALUES ($1, $2)',
+        [userId, normalizedEmail]
+      );
+    } else {
+      userId = userResult.rows[0].id;
+    }
+
+    res.json({ success: true, userId, email: normalizedEmail });
+  } catch (error) {
+    console.error('Error creating account:', error);
+    res.status(500).json({ error: 'Failed to create account' });
+  }
+});
+
 // Send magic link to email
 router.post('/send-link', async (req, res) => {
   const { email, coupleCode, partner } = req.body;
