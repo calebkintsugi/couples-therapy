@@ -9,8 +9,8 @@ const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
-const MONTHLY_PRICE = 495; // $4.95 in cents
-const PRICE_DISPLAY = '$4.95';
+const MONTHLY_PRICE = 490; // $4.90 in cents
+const PRICE_DISPLAY = '$4.90';
 
 // Check subscription status for a couple
 router.get('/status/:coupleCode', async (req, res) => {

@@ -332,7 +332,31 @@ textarea {
 .hero-ctas {
   display: flex;
   gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.hero-pricing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.hero-pricing-badge {
+  background: var(--primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hero-pricing-text {
+  font-size: 14px;
+  color: var(--text-muted);
 }
 
 .trust-cues {

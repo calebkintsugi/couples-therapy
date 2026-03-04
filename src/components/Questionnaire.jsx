@@ -46,6 +46,13 @@ function Questionnaire() {
   // Crisis detection state
   const [crisisModal, setCrisisModal] = useState({ show: false, type: null });
 
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [promoSuccess, setPromoSuccess] = useState('');
+
   // Get questions based on category and intake type
   const getQuestions = () => {
     if (intakeType === 'short') {
@@ -76,6 +83,69 @@ function Questionnaire() {
       return () => clearTimeout(timer);
     }
   }, [paymentSuccess, token]);
+
+  // Start Stripe checkout
+  const startCheckout = async () => {
+    if (!coupleCode) return;
+
+    try {
+      const response = await fetch('/api/subscriptions/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coupleCode: coupleCode,
+          returnUrl: `${window.location.origin}/session/${sessionId}?p=${token}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to start checkout');
+      }
+
+      // Redirect to Stripe
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Apply promo code
+  const applyPromoCode = async () => {
+    if (!promoCode.trim() || !coupleCode) return;
+    setApplyingPromo(true);
+    setPromoError('');
+    setPromoSuccess('');
+
+    try {
+      const response = await fetch('/api/promo/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          coupleCode: coupleCode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid promo code');
+      }
+
+      setPromoSuccess(data.message);
+      // Promo applied - proceed to share step after short delay
+      setTimeout(() => {
+        setShowPaymentModal(false);
+        setStep('share');
+      }, 1500);
+    } catch (err) {
+      setPromoError(err.message);
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
 
   useEffect(() => {
     if (!token) {
@@ -186,7 +256,8 @@ function Questionnaire() {
       if (setupCategory === 'infidelity') {
         setRole(setupRole);
       }
-      setStep('share');
+      // Show payment modal after setup
+      setShowPaymentModal(true);
     } catch (err) {
       setError(err.message);
     }
@@ -648,6 +719,21 @@ function Questionnaire() {
     const intakeLabel = intakeType === 'short' ? 'Quick Check-In' : 'Full Assessment';
     return (
       <div className="setup-page">
+        {/* Trial Started Banner */}
+        {showTrialStarted && (
+          <div className="trial-started-banner">
+            <span className="trial-started-icon">✓</span>
+            <span>Your 24-hour free trial has started!</span>
+            <button
+              className="trial-started-close"
+              onClick={() => setShowTrialStarted(false)}
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         <div className="setup-container">
           <header className="setup-header">
             <p className="setup-step-indicator">Step 2 of 2</p>
@@ -839,6 +925,79 @@ function Questionnaire() {
             handleSubmit(true);
           }}
         />
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="modal-overlay">
+          <div className="modal-content pricing-modal">
+            <h2>Start Your Free Trial</h2>
+            <p className="pricing-modal-subtitle">
+              Try RepairCoach free for 24 hours. Cancel anytime.
+            </p>
+
+            <div className="pricing-features">
+              <div className="pricing-feature">
+                <span className="pricing-feature-icon">✓</span>
+                <span>Personalized guidance for both partners</span>
+              </div>
+              <div className="pricing-feature">
+                <span className="pricing-feature-icon">✓</span>
+                <span>Private AI chat for follow-up questions</span>
+              </div>
+              <div className="pricing-feature">
+                <span className="pricing-feature-icon">✓</span>
+                <span>Couple insights and exercises</span>
+              </div>
+              <div className="pricing-feature">
+                <span className="pricing-feature-icon">✓</span>
+                <span>Cancel anytime — no questions asked</span>
+              </div>
+            </div>
+
+            <div className="pricing-trial-box">
+              <div className="pricing-trial-header">24-Hour Free Trial</div>
+              <div className="pricing-price">
+                <span className="pricing-amount">$4.90</span>
+                <span className="pricing-period">/month after trial</span>
+              </div>
+              <p className="pricing-trial-note">You won't be charged today</p>
+            </div>
+
+            <button
+              className="btn btn-primary btn-block"
+              onClick={startCheckout}
+            >
+              Start Free Trial
+            </button>
+
+            <div className="promo-section">
+              <p className="promo-label">Have a promo code?</p>
+              <div className="promo-input-group">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  placeholder="Enter code"
+                  className="promo-input"
+                />
+                <button
+                  className="btn btn-secondary"
+                  onClick={applyPromoCode}
+                  disabled={applyingPromo || !promoCode.trim()}
+                >
+                  {applyingPromo ? '...' : 'Apply'}
+                </button>
+              </div>
+              {promoError && <p className="promo-error">{promoError}</p>}
+              {promoSuccess && <p className="promo-success">{promoSuccess}</p>}
+            </div>
+
+            <p className="pricing-disclaimer">
+              Secure payment via Stripe. Cancel anytime in your account settings.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
