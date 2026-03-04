@@ -220,6 +220,45 @@ export async function initDb() {
     // Table may already exist
   }
 
+  // Users table for magic link authentication
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS magic_links (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        token TEXT UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        used_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Link users to couples
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_couples (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        couple_code TEXT NOT NULL,
+        partner TEXT CHECK (partner IN ('A', 'B')),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, couple_code)
+      )
+    `);
+
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_magic_links_token ON magic_links(token)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
+  } catch (e) {
+    // Tables may already exist
+  }
+
   // Promo codes table
   try {
     await pool.query(`

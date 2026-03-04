@@ -102,6 +102,79 @@ Questions? Reply to this email.
   }
 }
 
+export async function sendMagicLink({ email, magicLinkUrl }) {
+  // Skip if email not configured
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log('Email not configured - skipping magic link email');
+    console.log('Magic link URL (for testing):', magicLinkUrl);
+    return;
+  }
+
+  if (!email) {
+    console.log('No email provided - skipping magic link');
+    return;
+  }
+
+  try {
+    const transporter = createTransporter();
+
+    await transporter.sendMail({
+      from: `"RepairCoach" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Sign in to RepairCoach',
+      text: `
+Sign in to RepairCoach
+
+Click this link to sign in:
+${magicLinkUrl}
+
+This link expires in 15 minutes.
+
+If you didn't request this email, you can safely ignore it.
+
+— The RepairCoach Team
+      `.trim(),
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #7c5c6b; margin-bottom: 24px;">Sign in to RepairCoach</h1>
+
+          <p style="font-size: 16px; color: #333; line-height: 1.6;">
+            Click the button below to sign in to your account:
+          </p>
+
+          <div style="margin: 32px 0;">
+            <a href="${magicLinkUrl}" style="display: inline-block; background-color: #7c5c6b; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+              Sign In
+            </a>
+          </div>
+
+          <p style="font-size: 14px; color: #666; margin-top: 24px;">
+            Or copy and paste this link into your browser:
+          </p>
+          <p style="font-size: 14px; color: #7c5c6b; word-break: break-all;">
+            ${magicLinkUrl}
+          </p>
+
+          <div style="margin-top: 32px; padding: 16px; background: #f5f5f5; border-radius: 8px;">
+            <p style="margin: 0; font-size: 13px; color: #666;">
+              This link expires in 15 minutes. If you didn't request this email, you can safely ignore it.
+            </p>
+          </div>
+
+          <p style="font-size: 14px; color: #999; margin-top: 24px;">
+            — The RepairCoach Team
+          </p>
+        </div>
+      `,
+    });
+
+    console.log(`Magic link email sent to ${email}`);
+  } catch (error) {
+    console.error('Error sending magic link email:', error);
+    throw error; // Re-throw so the caller knows it failed
+  }
+}
+
 export async function sendAnalyticsAccessNotification() {
   // Skip if email not configured
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {

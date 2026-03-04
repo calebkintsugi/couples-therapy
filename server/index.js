@@ -16,6 +16,7 @@ import analyticsRouter from './routes/analytics.js';
 import deletionRouter from './routes/deletion.js';
 import subscriptionsRouter from './routes/subscriptions.js';
 import promoRouter from './routes/promo.js';
+import authRouter from './routes/auth.js';
 import { generateAdvice } from './openai.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -65,6 +66,7 @@ app.use('/api/sessions/:id/verify-pin', sensitiveLimiter);
 app.use('/api/couples/by-code', sensitiveLimiter);
 app.use('/api/journals/by-code', sensitiveLimiter);
 app.use('/api/analytics/summary', strictLimiter);
+app.use('/api/auth/send-link', sensitiveLimiter);
 
 // API Routes
 app.use('/api/sessions', sessionsRouter);
@@ -77,6 +79,7 @@ app.use('/api/analytics', analyticsRouter);
 app.use('/api/delete', deletionRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 app.use('/api/promo', promoRouter);
+app.use('/api/auth', authRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

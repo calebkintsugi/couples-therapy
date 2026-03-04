@@ -104,18 +104,30 @@ function Landing() {
                 </button>
               </div>
 
-              <button
-                className="returning-link"
-                onClick={() => {
-                  trackClick('returning_users_enter_code');
-                  setShowReturning(true);
-                  setTimeout(() => {
-                    document.getElementById('returning-section')?.scrollIntoView({ behavior: 'smooth' });
-                  }, 100);
-                }}
-              >
-                Returning user? Enter your code
-              </button>
+              <div className="returning-options">
+                <button
+                  className="returning-link"
+                  onClick={() => {
+                    trackClick('returning_users_enter_code');
+                    setShowReturning(true);
+                    setTimeout(() => {
+                      document.getElementById('returning-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
+                >
+                  Returning user? Enter your code
+                </button>
+                <span className="returning-divider">or</span>
+                <button
+                  className="returning-link"
+                  onClick={() => {
+                    trackClick('sign_in_link');
+                    navigate('/login');
+                  }}
+                >
+                  Sign in with email
+                </button>
+              </div>
 
               <div className="hero-pricing">
                 <span className="hero-pricing-badge">24-hour free trial</span>

@@ -335,6 +335,15 @@ textarea {
   margin-bottom: var(--space-md);
 }
 
+.returning-options {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
 .returning-link {
   background: none;
   border: none;
@@ -342,12 +351,16 @@ textarea {
   font-size: 14px;
   cursor: pointer;
   padding: 0;
-  margin-bottom: var(--space-md);
   text-decoration: underline;
 }
 
 .returning-link:hover {
   color: var(--text-primary);
+}
+
+.returning-divider {
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
 .hero-pricing {
@@ -4574,4 +4587,422 @@ textarea {
 
 .manage-subscription-link .link-btn:hover {
   color: var(--primary);
+}
+
+/* ========================================
+   AUTH PAGES (Login, Verify, Account)
+   ======================================== */
+
+.login-page,
+.auth-verify-page,
+.account-page {
+  min-height: 100vh;
+  background: var(--background);
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+.login-container,
+.auth-verify-container,
+.account-container {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Login Page */
+.login-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.login-card h1 {
+  font-size: 32px;
+  text-align: center;
+  margin-bottom: var(--space-sm);
+}
+
+.login-description {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+.login-success-icon {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: var(--space-md);
+}
+
+.login-note {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-xl);
+}
+
+.login-form {
+  margin-bottom: var(--space-lg);
+}
+
+.login-form .form-group {
+  margin-bottom: var(--space-lg);
+}
+
+.login-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.login-form input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.login-footer {
+  text-align: center;
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-light);
+}
+
+.login-footer p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.login-footer a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Auth Verify Page */
+.auth-verify-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.auth-verify-card h2 {
+  font-size: 24px;
+  margin-bottom: var(--space-sm);
+}
+
+.auth-verify-card p {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.auth-verify-note {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-xl);
+}
+
+.auth-verify-success .success-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--success);
+  color: white;
+  font-size: 32px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-lg);
+}
+
+.auth-verify-error .error-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--error);
+  color: white;
+  font-size: 32px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-lg);
+}
+
+/* Account Page */
+.account-container {
+  max-width: 640px;
+}
+
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+}
+
+.account-header h1 {
+  font-size: 32px;
+  margin: 0;
+}
+
+.account-info-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.account-email {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account-email .label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.account-email .value {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.account-section {
+  margin-bottom: var(--space-xl);
+}
+
+.account-section h2 {
+  font-size: 20px;
+  margin-bottom: var(--space-md);
+}
+
+.session-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.session-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.session-category {
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: capitalize;
+}
+
+.session-date {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.session-card-names {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.session-card-links {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.session-card-status {
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-light);
+}
+
+.status-pending {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.couple-codes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.couple-code-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.couple-code-card .couple-code {
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.couple-code-card .couple-names {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.subscription-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.subscription-badge.active {
+  background: var(--success);
+  color: white;
+}
+
+.subscription-badge.trialing {
+  background: var(--warning);
+  color: white;
+}
+
+.account-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--border-light);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--text-muted);
+}
+
+.empty-state p {
+  margin-bottom: var(--space-lg);
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: var(--space-xl) auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Button small */
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+/* Save Email Section */
+.save-email-section {
+  margin-bottom: var(--space-lg);
+}
+
+.save-email-form {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.save-email-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s;
+}
+
+.save-email-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.save-email-error {
+  color: var(--error);
+  font-size: 13px;
+  margin-top: var(--space-xs);
+}
+
+.save-email-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin: var(--space-lg) 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.save-email-divider::before,
+.save-email-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.save-email-success {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--secondary-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-lg);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.save-email-success .success-icon {
+  color: var(--success);
+  font-weight: bold;
+}
+
+.save-email-success a {
+  color: var(--primary);
+  font-weight: 500;
 }

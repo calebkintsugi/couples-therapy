@@ -53,6 +53,12 @@ function Questionnaire() {
   const [promoError, setPromoError] = useState('');
   const [promoSuccess, setPromoSuccess] = useState('');
 
+  // Email save state (for magic link auth)
+  const [saveEmail, setSaveEmail] = useState('');
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [emailSaved, setEmailSaved] = useState(false);
+  const [emailError, setEmailError] = useState('');
+
   // Get questions based on category and intake type
   const getQuestions = () => {
     if (intakeType === 'short') {
@@ -178,6 +184,43 @@ function Questionnaire() {
       setPromoError(err.message);
     } finally {
       setApplyingPromo(false);
+    }
+  };
+
+  // Save email for easy sign-in
+  const handleSaveEmail = async () => {
+    if (!saveEmail.trim() || !coupleCode) return;
+    if (!saveEmail.includes('@')) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+
+    setSavingEmail(true);
+    setEmailError('');
+
+    try {
+      // Send magic link with couple code - linking happens on the server
+      const response = await fetch('/api/auth/send-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: saveEmail.trim(),
+          coupleCode: coupleCode,
+          partner: partner,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save email');
+      }
+
+      setEmailSaved(true);
+    } catch (err) {
+      setEmailError(err.message || 'Failed to save email');
+    } finally {
+      setSavingEmail(false);
     }
   };
 
@@ -882,9 +925,46 @@ function Questionnaire() {
           {coupleCode && (
             <section className="setup-section">
               <div className="setup-card setup-card-code">
-                <p className="setup-code-label">⚠️ Save This Code</p>
+                <p className="setup-code-label">⚠️ Save Your Access</p>
+
+                {!emailSaved ? (
+                  <div className="save-email-section">
+                    <p className="setup-code-helper" style={{ marginBottom: '12px' }}>
+                      Save your email so you can sign in anytime without remembering codes.
+                    </p>
+                    <div className="save-email-form">
+                      <input
+                        type="email"
+                        value={saveEmail}
+                        onChange={(e) => setSaveEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className="save-email-input"
+                        disabled={savingEmail}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleSaveEmail}
+                        disabled={savingEmail || !saveEmail.trim()}
+                      >
+                        {savingEmail ? 'Saving...' : 'Save Email'}
+                      </button>
+                    </div>
+                    {emailError && <p className="save-email-error">{emailError}</p>}
+
+                    <div className="save-email-divider">
+                      <span>or save your code</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="save-email-success">
+                    <span className="success-icon">✓</span>
+                    <span>Check your email for a confirmation link. Once verified, you can sign in anytime at <a href="/login">/login</a>.</span>
+                  </div>
+                )}
+
                 <code className="setup-code-value">{coupleCode}</code>
-                <p className="setup-code-helper">You'll need this to return to your results.</p>
+                <p className="setup-code-helper">Alternative: save this code to return to your results.</p>
                 <div className="setup-code-actions">
                   <button type="button" className="btn btn-secondary btn-sm" onClick={copyCode}>
                     {codeCopied ? '✓ Copied!' : 'Copy Code'}
@@ -893,7 +973,7 @@ function Questionnaire() {
                     href={`mailto:?subject=Your RepairCoach Couple Code&body=Your RepairCoach Couple Code is: ${coupleCode}%0A%0ASave this code to return to your results at https://repaircoach.ai`}
                     className="btn btn-ghost btn-sm"
                   >
-                    Email to Myself
+                    Email Code to Myself
                   </a>
                 </div>
               </div>

@@ -9,6 +9,9 @@ import Journal from './components/Journal';
 import JournalStart from './components/JournalStart';
 import Analytics from './components/Analytics';
 import PromoAdmin from './components/PromoAdmin';
+import Login from './components/Login';
+import AuthVerify from './components/AuthVerify';
+import Account from './components/Account';
 
 function App() {
   const location = useLocation();
@@ -17,9 +20,10 @@ function App() {
   const isHowItWorks = location.pathname === '/how-it-works';
   const isSession = location.pathname.startsWith('/session/');
   const isJournal = location.pathname.startsWith('/journal');
+  const isAuth = location.pathname.startsWith('/auth') || location.pathname === '/login' || location.pathname === '/account';
 
   return (
-    <div className={isTester || isLanding || isHowItWorks || isSession || isJournal ? '' : 'container'}>
+    <div className={isTester || isLanding || isHowItWorks || isSession || isJournal || isAuth ? '' : 'container'}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
@@ -31,6 +35,9 @@ function App() {
         <Route path="/journal/:journalId" element={<Journal />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/promo-admin" element={<PromoAdmin />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/auth/verify" element={<AuthVerify />} />
+        <Route path="/account" element={<Account />} />
       </Routes>
     </div>
   );
