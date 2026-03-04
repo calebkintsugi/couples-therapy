@@ -84,9 +84,10 @@ function Landing() {
               </p>
 
               <ul className="hero-benefits">
-                <li>Each partner answers privately — no peeking</li>
+                <li>Each partner answers privately</li>
                 <li>AI analyzes both perspectives together</li>
                 <li>Receive personalized, actionable guidance</li>
+                <li>Free 24-hour trial, then $5/month, cancel anytime</li>
               </ul>
 
               {error && <div className="error-message">{error}</div>}

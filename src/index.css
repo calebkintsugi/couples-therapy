@@ -5,26 +5,26 @@
 }
 
 :root {
-  /* Warm Earth Tones */
-  --primary: #b5785a;
-  --primary-dark: #96604a;
-  --primary-light: #faf3ef;
-  --secondary: #7a8c6e;
-  --secondary-light: #eef2eb;
-  --background: #fdfbf8;
+  /* Calm Blue - Clinical/Trustworthy */
+  --primary: #4a7c9b;
+  --primary-dark: #3a6280;
+  --primary-light: #eef4f8;
+  --secondary: #6b9a8a;
+  --secondary-light: #ebf5f1;
+  --background: #f8fafb;
   --surface: #ffffff;
-  --text-primary: #3d352f;
-  --text-secondary: #5c534b;
-  --text-muted: #8a8279;
-  --border: #e6dfd8;
-  --border-light: #f2ede8;
-  --error: #c46b5c;
-  --success: #7a9a6d;
-  --warning: #d4a55a;
-  --accent: #c9b8a8;
-  --info-bg: #f5f2ed;
-  --info-border: #e0d8ce;
-  --info-text: #5c534b;
+  --text-primary: #2d3748;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --border: #e2e8f0;
+  --border-light: #edf2f7;
+  --error: #c53030;
+  --success: #38a169;
+  --warning: #d69e2e;
+  --accent: #81a4b8;
+  --info-bg: #ebf8ff;
+  --info-border: #bee3f8;
+  --info-text: #2c5282;
 
   /* Spacing scale */
   --space-xs: 8px;
@@ -341,13 +341,13 @@ textarea {
   padding: 18px 32px;
   font-size: 18px;
   font-weight: 600;
-  box-shadow: 0 4px 14px rgba(181, 120, 90, 0.35);
+  box-shadow: 0 4px 14px rgba(74, 124, 155, 0.35);
   transition: all 0.2s ease;
 }
 
 .hero-ctas .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(181, 120, 90, 0.45);
+  box-shadow: 0 6px 20px rgba(74, 124, 155, 0.45);
 }
 
 .returning-options {
