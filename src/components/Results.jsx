@@ -293,6 +293,11 @@ function Results() {
 
   // Open Stripe Customer Portal
   const openCustomerPortal = async () => {
+    if (!coupleCode) {
+      alert('No subscription found.');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/subscriptions/portal/${coupleCode}`, {
         method: 'POST',
@@ -305,12 +310,17 @@ function Results() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to open account settings');
+        if (response.status === 404) {
+          alert('No active subscription found.');
+        } else {
+          alert(data.error || 'Failed to open account settings');
+        }
+        return;
       }
 
       window.location.href = data.url;
     } catch (err) {
-      setError(err.message);
+      alert('Failed to open subscription settings. Please try again.');
     }
   };
 

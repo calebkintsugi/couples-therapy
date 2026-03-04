@@ -14,7 +14,8 @@
       "Bash(/opt/homebrew/bin/node:*)",
       "Bash(npm install:*)",
       "Bash(node --check:*)",
-      "Bash(/usr/local/bin/node:*)"
+      "Bash(/usr/local/bin/node:*)",
+      "Bash(echo:*)"
     ]
   }
 }
