@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { trackPageView, trackClick, trackSubmit } from '../analytics';
 import { detectCrisis } from '../utils/crisisDetection';
 import CrisisModal from './CrisisModal';
+import { PAYMENTS_ENABLED } from '../config';
 
 // Parse advice text into sections
 function parseAdviceSections(adviceText) {
@@ -742,7 +743,7 @@ function Results() {
     <div className="guidance-page">
       <div className="guidance-container">
         {/* Trial Banner */}
-        {isTrialing && trialEnd && (
+        {PAYMENTS_ENABLED && isTrialing && trialEnd && (
           <div className="trial-banner">
             <div className="trial-banner-content">
               <span className="trial-banner-icon">⏰</span>

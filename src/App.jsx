@@ -12,6 +12,7 @@ import PromoAdmin from './components/PromoAdmin';
 import Login from './components/Login';
 import AuthVerify from './components/AuthVerify';
 import Account from './components/Account';
+import Header from './components/Header';
 
 function App() {
   const location = useLocation();
@@ -22,9 +23,14 @@ function App() {
   const isJournal = location.pathname.startsWith('/journal');
   const isAuth = location.pathname.startsWith('/auth') || location.pathname === '/login' || location.pathname === '/account';
 
+  // Hide header on tester and admin pages
+  const showHeader = !isTester && location.pathname !== '/analytics' && location.pathname !== '/promo-admin';
+
   return (
-    <div className={isTester || isLanding || isHowItWorks || isSession || isJournal || isAuth ? '' : 'container'}>
-      <Routes>
+    <>
+      {showHeader && <Header />}
+      <div className={isTester || isLanding || isHowItWorks || isSession || isJournal || isAuth ? '' : 'container'}>
+        <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/tester" element={<Tester />} />
@@ -39,7 +45,8 @@ function App() {
         <Route path="/auth/verify" element={<AuthVerify />} />
         <Route path="/account" element={<Account />} />
       </Routes>
-    </div>
+      </div>
+    </>
   );
 }
 

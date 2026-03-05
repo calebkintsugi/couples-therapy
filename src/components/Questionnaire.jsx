@@ -7,6 +7,7 @@ import CrisisModal from './CrisisModal';
 import { categories, questionsByCategory, shortIntakeQuestions, getCategoryById } from '../questions';
 import { trackPageView, trackClick, trackSubmit } from '../analytics';
 import { detectCrisisInMultiple } from '../utils/crisisDetection';
+import { PAYMENTS_ENABLED } from '../config';
 
 function Questionnaire() {
   const { sessionId } = useParams();
@@ -24,7 +25,7 @@ function Questionnaire() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
-  const [showTrialStarted, setShowTrialStarted] = useState(paymentSuccess);
+  const [showTrialStarted, setShowTrialStarted] = useState(PAYMENTS_ENABLED && paymentSuccess);
 
   // Flow state for Partner A: 'setup' -> 'share' -> 'questions'
   // Flow state for Partner B: 'name' -> 'category-display' -> 'role-display' (if infidelity) -> 'questions'
@@ -333,8 +334,12 @@ function Questionnaire() {
       if (setupCategory === 'infidelity') {
         setRole(setupRole);
       }
-      // Show payment modal after setup
-      setShowPaymentModal(true);
+      // Show payment modal after setup (if payments enabled)
+      if (PAYMENTS_ENABLED) {
+        setShowPaymentModal(true);
+      } else {
+        setStep('share');
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -997,11 +1002,13 @@ function Questionnaire() {
             </button>
           </section>
 
-          <div className="manage-subscription-link">
-            <button type="button" className="link-btn" onClick={openCustomerPortal}>
-              Manage Subscription
-            </button>
-          </div>
+          {PAYMENTS_ENABLED && (
+            <div className="manage-subscription-link">
+              <button type="button" className="link-btn" onClick={openCustomerPortal}>
+                Manage Subscription
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1115,11 +1122,13 @@ function Questionnaire() {
         )}
       </div>
 
-      <div className="manage-subscription-link">
-        <button type="button" className="link-btn" onClick={openCustomerPortal}>
-          Manage Subscription
-        </button>
-      </div>
+      {PAYMENTS_ENABLED && (
+        <div className="manage-subscription-link">
+          <button type="button" className="link-btn" onClick={openCustomerPortal}>
+            Manage Subscription
+          </button>
+        </div>
+      )}
 
       {/* Crisis Modal */}
       {crisisModal.show && (

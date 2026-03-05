@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Disclaimer from './Disclaimer';
 import { categories } from '../questions';
 import { trackPageView, trackClick } from '../analytics';
+import { PAYMENTS_ENABLED } from '../config';
 
 function Landing() {
   const [loading, setLoading] = useState(false);
@@ -145,7 +146,7 @@ function Landing() {
                 <li>Each partner answers privately</li>
                 <li>AI analyzes both perspectives together</li>
                 <li>Receive personalized, actionable guidance</li>
-                <li>Free 24-hour trial, then $5/month, cancel anytime</li>
+                {PAYMENTS_ENABLED && <li>Free 24-hour trial, then $5/month, cancel anytime</li>}
               </ul>
 
               {error && <div className="error-message">{error}</div>}
