@@ -4,6 +4,7 @@ import Disclaimer from './Disclaimer';
 import { categories } from '../questions';
 import { trackPageView, trackClick } from '../analytics';
 import { PAYMENTS_ENABLED } from '../config';
+import { useAuth } from '../context/AuthContext';
 
 function Landing() {
   const [loading, setLoading] = useState(false);
@@ -15,6 +16,7 @@ function Landing() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState('');
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     trackPageView('landing');
@@ -196,28 +198,27 @@ function Landing() {
               )}
 
               <div className="returning-options">
-                <button
-                  className="returning-link"
-                  onClick={() => {
-                    trackClick('returning_users_enter_code');
-                    setShowReturning(true);
-                    setTimeout(() => {
-                      document.getElementById('returning-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 100);
-                  }}
-                >
-                  Returning user? Enter your code
-                </button>
-                <span className="returning-divider">or</span>
-                <button
-                  className="returning-link"
-                  onClick={() => {
-                    trackClick('sign_in_link');
-                    navigate('/login');
-                  }}
-                >
-                  Sign in with email
-                </button>
+                {user ? (
+                  <button
+                    className="returning-link"
+                    onClick={() => {
+                      trackClick('go_to_sessions');
+                      navigate('/account');
+                    }}
+                  >
+                    Go to your existing sessions
+                  </button>
+                ) : (
+                  <button
+                    className="returning-link"
+                    onClick={() => {
+                      trackClick('sign_in_to_resume');
+                      navigate('/login');
+                    }}
+                  >
+                    Sign in to resume sessions
+                  </button>
+                )}
               </div>
             </div>
 
